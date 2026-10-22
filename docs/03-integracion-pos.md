@@ -13,6 +13,7 @@
 ## El contrato
 
 Toda llamada entre servidores lleva:
+
 - Header `X-Timestamp`: epoch en segundos.
 - Header `X-Signature`: `hex(HMAC_SHA256(secret, timestamp + "." + body))`.
 - Se rechaza si la firma no coincide o si el timestamp tiene más de 300 segundos.
@@ -24,6 +25,7 @@ Toda llamada entre servidores lleva:
 Request: `{ "sale_uuid": "…" }`
 
 Response 200:
+
 ```json
 {
   "found": true,
@@ -36,6 +38,7 @@ Response 200:
   }
 }
 ```
+
 - `channel`: `local` | `glovo` | `togoo` (derivado de `forma_pago` y `sale_mode`).
 - Si no existe (o todavía no sincronizó): `{ "found": false }`.
 - Devuelve **solo** esos campos. Nada de productos, clientes ni caja.
@@ -47,9 +50,15 @@ Response 200:
 Request: `{ "code": "MIGA-7K3P" }`
 
 Response 200:
+
 ```json
-{ "valid": true, "reward": { "id": "…", "name": "Un café", "kind": "points" }, "customer_name": "Lucía" }
+{
+  "valid": true,
+  "reward": { "id": "…", "name": "Un café", "kind": "points" },
+  "customer_name": "Lucía"
+}
 ```
+
 o `{ "valid": false, "reason": "expired" | "used" | "not_found" }`.
 
 La validación marca el código como usado en el mismo paso (operación atómica).
@@ -66,7 +75,7 @@ durante unos 60 segundos o hasta que se cierre.
 
 ```ts
 interface PosAdapter {
-  getSale(saleUuid: string): Promise<PosSale | null>;
+  getSale(saleUuid: string): Promise<PosSale | null>
 }
 ```
 

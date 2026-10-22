@@ -38,8 +38,10 @@ React + TypeScript + Vite · Tailwind CSS · Motion (`motion/react`) · React Ro
 - Si una decisión de negocio no está definida (ver "Decisiones abiertas" en docs/01), preguntar en vez de inventar. Si hay que avanzar, dejarla configurable en la tabla `settings`.
 - Si algo del plan parece mal, decirlo antes de hacerlo.
 
-## Comandos (completar a medida que existan)
+## Comandos
 
-- `npm run dev` — frontend local
-- `npx supabase start` — Supabase local
-- `npm run lint` / `npm run typecheck` / `npm test`
+- `npm run dev` — frontend local (accesible desde el celular en la red local)
+- `npm run build` / `npm run preview` — build de producción (con PWA) y vista previa
+- `npm run lint` / `npm run typecheck` / `npm test` — chequeos (los tres deben quedar en verde antes de cada commit)
+- `npm run format` — Prettier
+- `npx supabase start` — Supabase local (requiere Docker Desktop encendido)

@@ -13,6 +13,7 @@
 ## Flujos
 
 ### 1. Registro (una vez)
+
 1. El cliente escanea el QR fijo del mostrador → abre la app.
 2. Puede ver una portada atractiva de cómo funciona el programa sin estar logueado.
 3. Toca "Entrar con Google".
@@ -21,6 +22,7 @@
 6. Se le sugiere "Agregar a la pantalla de inicio".
 
 ### 2. Sumar una compra
+
 1. El cliente compra en el local; la venta se cobra en el POS como siempre.
 2. Al confirmar la venta, la tablet muestra un QR con la URL `https://<app>/s/<venta_uuid>`.
 3. El cliente lo escanea con el **escáner dentro de la app** (camino principal) o con la cámara nativa del celular (también funciona).
@@ -29,6 +31,7 @@
 6. Pantalla de celebración: "+62 puntos", premio desbloqueado si corresponde, cuánto falta para el próximo.
 
 **Validaciones del servidor:**
+
 - La venta existe y no está anulada.
 - Es reciente (ventana configurable, por defecto 2 horas).
 - No fue reclamada antes (una venta, un solo dueño).
@@ -37,6 +40,7 @@
 - Si una venta ya acreditada se anula después, se descuentan sus puntos con un movimiento inverso.
 
 ### 3. Canjear un premio
+
 1. Cuando el cliente alcanza un premio, se desbloquea en su panel.
 2. Toca "Canjear" → el servidor genera un código único (ej. `MIGA-7K3P`) con vencimiento (por defecto 15 minutos).
 3. Lo muestra en caja. En la tablet del POS se carga el código.
@@ -44,6 +48,7 @@
 5. Los puntos se descuentan **al validar el código en caja**, no al generarlo. Si el código vence, no se pierde nada.
 
 ### 4. Juegos (fase posterior del plan)
+
 Ver docs/04. Resultados siempre decididos por el servidor, con límites diarios.
 
 ## Decisiones de producto (octubre 2026)
@@ -71,20 +76,20 @@ Hay un boceto de referencia de Panel, Resultado y Canje (diseño limpio, tipogra
 
 ## Reglas de negocio (valores iniciales, todos configurables en `settings`)
 
-| Clave | Valor inicial | Nota |
-|---|---|---|
-| `points_per_euro` | 1 | Puntos por cada euro de la venta, redondeo hacia abajo |
-| `claim_window_hours` | 2 | Tiempo para reclamar una venta |
-| `redeem_code_minutes` | 15 | Validez del código de canje |
-| `excluded_channels` | glovo, togoo | Ventas que no suman |
+| Clave                 | Valor inicial | Nota                                                   |
+| --------------------- | ------------- | ------------------------------------------------------ |
+| `points_per_euro`     | 1             | Puntos por cada euro de la venta, redondeo hacia abajo |
+| `claim_window_hours`  | 2             | Tiempo para reclamar una venta                         |
+| `redeem_code_minutes` | 15            | Validez del código de canje                            |
+| `excluded_channels`   | glovo, togoo  | Ventas que no suman                                    |
 
 ### Premios iniciales (tabla `rewards`)
 
-| Premio | Tipo | Umbral |
-|---|---|---|
-| Un café | puntos | 150 |
-| Un sanguche de miga | puntos | 300 |
-| Gorra Uno de Miga | puntos | 1000 |
+| Premio                | Tipo    | Umbral     |
+| --------------------- | ------- | ---------- |
+| Un café               | puntos  | 150        |
+| Un sanguche de miga   | puntos  | 300        |
+| Gorra Uno de Miga     | puntos  | 1000       |
 | Media docena de migas | compras | 50 compras |
 
 Los premios por **compras** cuentan compras confirmadas y no consumen puntos.

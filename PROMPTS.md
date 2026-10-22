@@ -1,6 +1,7 @@
 # Plan de trabajo · prompts para Claude Code
 
 Cómo usarlo:
+
 - **Una fase por sesión.** Al terminar una fase, empezá una conversación nueva para la siguiente (el contexto queda en CLAUDE.md y docs/, así que no se pierde nada).
 - Pedile siempre que **planifique primero** y aprobá el plan antes de que escriba código.
 - Probá vos lo que hizo antes de pasar a la siguiente fase.

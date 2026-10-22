@@ -43,6 +43,7 @@ Antes de hacer nada, leé completos: `CLAUDE.md`, `docs/01-producto.md`, `docs/0
 ## 6. Al terminar
 
 Escribí en `docs/INFORME-FINAL.md`:
+
 - Qué quedó hecho y cómo probar cada flujo en mi celular (paso a paso, en lenguaje simple).
 - Las decisiones que tomaste por defecto y dónde cambiarlas.
 - Lo que queda pendiente de mi lado.

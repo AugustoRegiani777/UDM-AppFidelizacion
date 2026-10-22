@@ -8,17 +8,17 @@
 
 **Provisorios.** La marca oficial de Uno de Miga es **crema y rojo, con tipografías bold (Poppins Bold, Bebas Neue)**. Si el brandbook está en `docs/marca/`, sus valores reemplazan a esta tabla: el rojo de marca pasa a ser el acento principal y las tipografías se ajustan. La estructura de tokens (bg, surface, ink, muted, track, acento, éxito) se mantiene.
 
-| Token | Valor | Uso |
-|---|---|---|
-| `bg` | `#FAF6EF` | Fondo crema |
-| `surface` | `#FFFFFF` | Tarjetas |
-| `ink` | `#1E1B16` | Texto y botones principales |
-| `muted` | `#5F584E` | Texto secundario |
-| `track` | `#EFE6D6` | Fondo de barras y separadores |
-| `gold` | `#D9962B` | Progreso, brillos, acentos (no para texto chico) |
-| `gold-soft` | `#FBEFD9` | Fondos de avisos |
-| `green` | `#3F7A26` | Desbloqueado, éxito |
-| `green-ink` | `#2B5419` | Texto sobre verde claro, "+puntos" |
+| Token       | Valor     | Uso                                              |
+| ----------- | --------- | ------------------------------------------------ |
+| `bg`        | `#FAF6EF` | Fondo crema                                      |
+| `surface`   | `#FFFFFF` | Tarjetas                                         |
+| `ink`       | `#1E1B16` | Texto y botones principales                      |
+| `muted`     | `#5F584E` | Texto secundario                                 |
+| `track`     | `#EFE6D6` | Fondo de barras y separadores                    |
+| `gold`      | `#D9962B` | Progreso, brillos, acentos (no para texto chico) |
+| `gold-soft` | `#FBEFD9` | Fondos de avisos                                 |
+| `green`     | `#3F7A26` | Desbloqueado, éxito                              |
+| `green-ink` | `#2B5419` | Texto sobre verde claro, "+puntos"               |
 
 - Tipografías: **Bricolage Grotesque** (títulos y números grandes) e **Inter** (texto).
 - El saldo de puntos es el protagonista: 88–96 px.
@@ -40,15 +40,15 @@ Todo vive en `src/motion/`:
 
 ### Catálogo de momentos
 
-| Momento | Animación |
-|---|---|
-| Entrar al panel | Tarjetas entran en cascada; el saldo cuenta desde 0 |
-| Compra sumada | Check que se dibuja, "+62" que salta, confetti, el saldo sube |
-| Premio desbloqueado | Popup de regalo que se abre, brillo dorado, botón "Canjear" que late suave |
-| Cerca de un premio (≥80%) | La barra brilla y aparece "¡Te falta poquito!" |
-| Código de canje | El código se "imprime" letra por letra; cuenta regresiva real |
-| Racha de visitas | Llamita que crece por semana seguida |
-| Error o pendiente | Animación calma, nunca roja ni alarmante |
+| Momento                   | Animación                                                                  |
+| ------------------------- | -------------------------------------------------------------------------- |
+| Entrar al panel           | Tarjetas entran en cascada; el saldo cuenta desde 0                        |
+| Compra sumada             | Check que se dibuja, "+62" que salta, confetti, el saldo sube              |
+| Premio desbloqueado       | Popup de regalo que se abre, brillo dorado, botón "Canjear" que late suave |
+| Cerca de un premio (≥80%) | La barra brilla y aparece "¡Te falta poquito!"                             |
+| Código de canje           | El código se "imprime" letra por letra; cuenta regresiva real              |
+| Racha de visitas          | Llamita que crece por semana seguida                                       |
+| Error o pendiente         | Animación calma, nunca roja ni alarmante                                   |
 
 ### Reglas técnicas
 
@@ -60,12 +60,12 @@ Todo vive en `src/motion/`:
 
 ## Juegos (fase posterior)
 
-| Juego | Cómo funciona |
-|---|---|
+| Juego                 | Cómo funciona                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Raspadita post-compra | Después de sumar una compra, raspás con el dedo (canvas). Premio chico: puntos extra o "seguí participando". |
-| Ruleta diaria | Un giro por día. Física con Motion, desacelera y rebota. |
-| Cofre de racha | Se abre al cumplir X semanas seguidas viniendo. |
-| Álbum de sabores | Cada sabor de miga que probás desbloquea una figurita. |
+| Ruleta diaria         | Un giro por día. Física con Motion, desacelera y rebota.                                                     |
+| Cofre de racha        | Se abre al cumplir X semanas seguidas viniendo.                                                              |
+| Álbum de sabores      | Cada sabor de miga que probás desbloquea una figurita.                                                       |
 
 **El resultado de cada juego lo decide el servidor** (`play-game`) antes de que empiece la animación. La animación solo "actúa" el resultado. Límites diarios y presupuesto de premios configurables.
 

@@ -15,12 +15,12 @@ Este documento explica **para quién** es la app. Usalo para decidir textos, pre
 
 ## Los clientes (y qué significa cada uno para la app)
 
-| Segmento | Cómo se comporta | Qué implica para la app |
-|---|---|---|
-| **Argentinos en Valencia** | Reconocen el producto y entran directo. Son el núcleo fiel. | Son los primeros usuarios. El humor y la identidad argentina les hablan directo. |
-| **Oficinas cercanas** | Potencial de compra diaria (café, almuerzo) y de catering. | El premio del café y las rachas semanales son clave. Es el segmento donde la fidelización más rinde. |
-| **Españoles que pasan** | Muchos pasan de largo porque no conocen la miga. | La app puede ser la excusa para probar: primera compra con sorpresa, álbum de sabores para descubrir variedades. |
-| **Turistas** | Les atrae el diseño del local, pero no suelen entrar, y casi nunca vuelven. | No son el objetivo de la fidelización. Igual, dejar la app preparada para inglés (i18n) sin traducir todo ahora. |
+| Segmento                   | Cómo se comporta                                                            | Qué implica para la app                                                                                          |
+| -------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Argentinos en Valencia** | Reconocen el producto y entran directo. Son el núcleo fiel.                 | Son los primeros usuarios. El humor y la identidad argentina les hablan directo.                                 |
+| **Oficinas cercanas**      | Potencial de compra diaria (café, almuerzo) y de catering.                  | El premio del café y las rachas semanales son clave. Es el segmento donde la fidelización más rinde.             |
+| **Españoles que pasan**    | Muchos pasan de largo porque no conocen la miga.                            | La app puede ser la excusa para probar: primera compra con sorpresa, álbum de sabores para descubrir variedades. |
+| **Turistas**               | Les atrae el diseño del local, pero no suelen entrar, y casi nunca vuelven. | No son el objetivo de la fidelización. Igual, dejar la app preparada para inglés (i18n) sin traducir todo ahora. |
 
 **Conclusión:** la app está hecha para el cliente que **vuelve**: argentinos, gente que trabaja en la zona y vecinos. Todo debe empujar a la segunda, tercera y décima visita.
 

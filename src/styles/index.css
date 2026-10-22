@@ -1,0 +1,43 @@
+@import 'tailwindcss';
+@import '@fontsource/poppins/latin-400.css';
+@import '@fontsource/poppins/latin-600.css';
+@import '@fontsource/poppins/latin-700.css';
+@import '@fontsource/bebas-neue/latin-400.css';
+
+/*
+ * Tokens provisorios: crema y rojo de marca. Cuando esté el brandbook en docs/marca/
+ * se cambian solo estos valores (la estructura bg/surface/ink/muted/track/acento/éxito se mantiene).
+ */
+@theme {
+  --color-bg: #faf3e3;
+  --color-surface: #ffffff;
+  --color-ink: #2a1a14;
+  --color-muted: #6b5a4f;
+  --color-track: #efe2c8;
+  --color-brand: #c8102e;
+  --color-brand-ink: #9c0c23;
+  --color-brand-soft: #fbe3e7;
+  --color-green: #3f7a26;
+  --color-green-ink: #2b5419;
+  --color-green-soft: #e4f1dc;
+
+  --font-display: 'Bebas Neue', 'Poppins', system-ui, sans-serif;
+  --font-sans: 'Poppins', system-ui, sans-serif;
+
+  --radius-card: 1.5rem;
+  --radius-chip: 0.875rem;
+}
+
+html,
+body,
+#root {
+  min-height: 100dvh;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}

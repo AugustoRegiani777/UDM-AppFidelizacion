@@ -16,13 +16,13 @@
 
 ### Fase 2 · Base de datos local
 
-- [ ] 2.1 Supabase CLI init + levantar local (requiere Docker). _Hecho cuando:_ `supabase start` responde.
-- [ ] 2.2 Migraciones: tablas, constraints, índices, funciones de saldo/dashboard. _Hecho cuando:_ `db reset` aplica sin errores.
-- [ ] 2.3 RLS en todas las tablas. _Hecho cuando:_ todas con RLS activo.
-- [ ] 2.4 Tests SQL de RLS (cliente A no ve/escribe datos de B). _Hecho cuando:_ pasan.
-- [ ] 2.5 seed.sql: settings, rewards, dev_mock_sales con casos. _Hecho cuando:_ seed carga.
-- [ ] 2.6 Tipos TS generados en src/lib. _Hecho cuando:_ typecheck verde con tipos.
-- [ ] 2.7 Hook/evento de cambio de saldo (preparación Wallet). _Hecho cuando:_ tabla/función de eventos documentada.
+- [x] 2.1 Supabase CLI init + levantar local (requiere Docker). _Hecho cuando:_ `supabase start` responde.
+- [x] 2.2 Migraciones: tablas, constraints, índices, funciones de saldo/dashboard. _Hecho cuando:_ `db reset` aplica sin errores.
+- [x] 2.3 RLS en todas las tablas. _Hecho cuando:_ todas con RLS activo.
+- [x] 2.4 Tests SQL de RLS (cliente A no ve/escribe datos de B). _Hecho cuando:_ pasan.
+- [x] 2.5 seed.sql: settings, rewards, dev_mock_sales con casos. _Hecho cuando:_ seed carga.
+- [x] 2.6 Tipos TS generados en src/lib. _Hecho cuando:_ typecheck verde con tipos.
+- [x] 2.7 Hook/evento de cambio de saldo (preparación Wallet). _Hecho cuando:_ tabla/función de eventos documentada.
 
 ### Fase 3 · Login con Google y bienvenida
 
@@ -84,6 +84,11 @@
 - Canjear por puntos descuenta puntos al validar en caja (modelo de docs/01).
 - Premios por compras: se ganan una vez por hito de 50 compras, repetible (50, 100…) y no consumen puntos. Configurable.
 - Los puntos no vencen.
+
+- Settings y rewards iniciales van en una migración (`..._seed_config.sql`) y no en `seed.sql`, porque deben existir también en producción. `seed.sql` solo tiene `dev_mock_sales`.
+- Un premio por puntos reserva sus puntos mientras el código está vigente (no se puede generar otro código que supere el saldo); el descuento ocurre al validar en caja.
+- Tras una anulación (reversal) el saldo puede quedar negativo; se permite.
+- Perfil/consentimientos se editan solo vía funciones (`complete_onboarding`, `update_profile`), no con UPDATE directo, para que las fechas las ponga el servidor.
 
 ## Ideas para después
 

@@ -36,8 +36,34 @@ export const es = {
   },
   panel: { hello: (name: string) => `Hola, ${name}` },
   sale: {
-    saving: 'Guardamos tu compra',
-    savedBody: 'Ya casi: la estamos por sumar a tu cuenta.',
+    loading: 'Sumando tu compra…',
+    confirmedTitle: (points: number) => `¡Sumaste ${points} puntos!`,
+    confirmedNearReward: (name: string, remaining: number) =>
+      `Ya casi tenés tu ${name.toLowerCase()} 🥪 Te faltan ${remaining}.`,
+    confirmedGeneric: 'Gracias por volver, che. Tu saldo ya está al día.',
+    unlocked: (name: string) => `Che, ${name.toLowerCase()} va por la casa 🎉`,
+    repeatTitle: 'Esta compra ya estaba sumada',
+    repeatBody: 'No te preocupes, tus puntos están en su lugar.',
+    pendingTitle: 'Tu compra todavía no llegó',
+    pendingBody:
+      'Te la sumamos apenas aparezca. No hace falta que hagas nada, podés cerrar esta pantalla.',
+    rejected: {
+      voided: 'Esa venta fue anulada en el local, así que no suma puntos.',
+      excluded_channel:
+        'Las compras por Glovo y Too Good To Go no suman puntos, ¡pero las de acá sí!',
+      too_old: 'Pasó el tiempo para sumar esta compra. Escaneá el QR apenas pagues.',
+      already_claimed: 'Esta compra ya la sumó otra cuenta.',
+      not_found:
+        'No encontramos esa compra. Si fue en el local, mostrale el QR a quien te atendió.',
+    } as Record<string, string>,
+    rejectedFallback: 'No pudimos sumar esta compra.',
+    rejectedTitle: 'Uy, esta no se pudo sumar',
+    errorTitle: 'Uy, algo falló',
+    errorBody: 'No pudimos conectar. Probá de nuevo en un ratito, tu compra no se pierde.',
+    retry: 'Probar de nuevo',
+    toPanel: 'Ir a mi panel',
+    points: 'puntos',
+    balanceLabel: 'Tu saldo',
   },
   profile: {
     title: 'Tu perfil',

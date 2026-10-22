@@ -35,11 +35,11 @@
 
 ### Fase 4 · Sumar compras (POS mock)
 
-- [ ] 4.1 `_shared`: pos-adapter, hmac, cors, errors.
-- [ ] 4.2 `claim-sale` con todas las validaciones, transaccional, pending.
-- [ ] 4.3 Ruta `/s/:uuid` con resultado / pendiente / error amable.
-- [ ] 4.4 `/dev` simulador de tablet (crear venta mock + QR).
-- [ ] 4.5 Tests por caso: válida, duplicada, anulada, glovo, vieja, inexistente, pendiente.
+- [x] 4.1 `_shared`: pos-adapter, hmac, cors, errors.
+- [x] 4.2 `claim-sale` con todas las validaciones, transaccional, pending.
+- [x] 4.3 Ruta `/s/:uuid` con resultado / pendiente / error amable.
+- [x] 4.4 `/dev` simulador de tablet (crear venta mock + QR).
+- [x] 4.5 Tests por caso: válida, duplicada, anulada, glovo, vieja, inexistente, pendiente.
 
 ### Fase 5 · Panel
 
@@ -93,6 +93,14 @@
 - Login con Google configurado en `supabase/config.toml` leyendo `GOOGLE_CLIENT_ID/SECRET` del entorno; hasta que Augusto cargue credenciales, se usa el login por email solo en dev (`VITE_DEV_TOOLS=true` y `import.meta.env.DEV`).
 - La retoma de `/s/:uuid` usa dos vías: el uuid viaja en la URL de retorno del login y además queda en localStorage (cubre iPhone: Safari y PWA no comparten almacenamiento).
 - Texto de privacidad provisorio (lo revisa la gestoría; está en `src/copy/es.ts`).
+
+- Reglas de reclamo en SQL (`claim_sale_apply`), no en TypeScript: transaccional, con lock por venta y testeado con pgTAP. La Edge Function solo consulta al POS.
+- Si el POS no responde (modo real) la venta queda `pending` en vez de dar error; `reconcile` (fase 9) la reintenta.
+- Una pendiente que aparece tarde se evalúa contra la hora en que el cliente la reclamó, no contra "ahora" (para no castigar a la tablet offline).
+- Límite de ritmo: 15 reclamos por minuto por cliente (`settings.rate_limits`).
+- Primer cliente en escanear una venta se la queda (una venta, un dueño).
+- Las Edge Functions (Deno) no pasan por `tsc`; se validan al servirlas y con los tests de integración.
+- Cómo correr cada nivel de tests: `npm test` (unitarios), `npx supabase test db` (SQL), `npm run test:integration` y `npm run test:e2e` (requieren `npx supabase start` y `npm run functions` corriendo).
 
 ## Ideas para después
 

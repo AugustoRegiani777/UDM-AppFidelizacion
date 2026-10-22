@@ -1,5 +1,12 @@
-import { createBrowserRouter, Navigate, redirect, type LoaderFunctionArgs } from 'react-router'
+import {
+  createBrowserRouter,
+  Navigate,
+  redirect,
+  type LoaderFunctionArgs,
+  type RouteObject,
+} from 'react-router'
 import { isSaleUuid, savePendingSale } from '@/features/claims/pendingSale'
+import { env } from '@/lib/env'
 import { LandingScreen } from '@/screens/landing/LandingScreen'
 import { LoginScreen } from '@/screens/login/LoginScreen'
 import { PanelScreen } from '@/screens/panel/PanelScreen'
@@ -15,6 +22,17 @@ function saleLoader({ params }: LoaderFunctionArgs) {
   savePendingSale(params.uuid)
   return null
 }
+
+/** Herramientas de desarrollo: el chunk ni se genera en producción (import.meta.env.DEV es constante). */
+const devRoutes: RouteObject[] =
+  import.meta.env.DEV && env.devTools
+    ? [
+        {
+          path: '/dev',
+          lazy: async () => ({ Component: (await import('@/screens/dev/DevScreen')).DevScreen }),
+        },
+      ]
+    : []
 
 export const router = createBrowserRouter([
   { path: '/', element: <LandingScreen /> },
@@ -34,5 +52,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  ...devRoutes,
   { path: '*', element: <Navigate to="/" replace /> },
 ])

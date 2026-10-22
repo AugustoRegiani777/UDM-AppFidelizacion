@@ -381,19 +381,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_sale_apply: {
+        Args: { p_customer: string; p_sale: Json; p_sale_uuid: string }
+        Returns: Json
+      }
       complete_onboarding: {
         Args: { p_display_name: string; p_promo_consent: boolean }
         Returns: undefined
       }
+      create_redemption: { Args: { p_customer: string; p_reward: string }; Returns: Json }
       customer_balance: { Args: { p_customer: string }; Returns: number }
       customer_dashboard: { Args: Record<PropertyKey, never>; Returns: Json }
       customer_purchase_count: { Args: { p_customer: string }; Returns: number }
       customer_streak_weeks: { Args: { p_customer: string }; Returns: number }
+      expire_pending_claims: { Args: Record<PropertyKey, never>; Returns: number }
+      expire_redemptions: { Args: { p_customer?: string }; Returns: number }
+      generate_redemption_code: { Args: Record<PropertyKey, never>; Returns: string }
+      newly_unlocked_rewards: {
+        Args: {
+          p_balance_after: number
+          p_balance_before: number
+          p_purchases_after: number
+          p_purchases_before: number
+        }
+        Returns: Json
+      }
+      rate_limit_hit: { Args: { p_action: string; p_customer: string }; Returns: boolean }
+      reverse_claim: { Args: { p_sale_uuid: string }; Returns: boolean }
       setting_json: { Args: { p_key: string }; Returns: Json }
       update_profile: {
         Args: { p_display_name: string; p_promo_consent: boolean }
         Returns: undefined
       }
+      validate_redemption: { Args: { p_code: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

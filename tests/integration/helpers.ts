@@ -1,6 +1,7 @@
 // Ayudas para los tests de integración: Supabase local + Edge Functions servidas (npm run test:integration).
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
+import { signedHeaders } from '../../supabase/functions/_shared/hmac'
 import type { Database } from '../../src/lib/database.types'
 
 // Claves de DEMO de Supabase local (públicas, iguales en toda instalación local).
@@ -96,3 +97,36 @@ export async function balanceOf(customer: Customer): Promise<number> {
 }
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// --- Caja (POS) ---------------------------------------------------------------------------
+const POS_INBOUND_SECRET = process.env.POS_INBOUND_HMAC_SECRET ?? 'dev-secret-pos-a-fidelizacion'
+
+/** Llama a validate-redemption como lo haría el servidor del POS: firmado con HMAC. */
+export async function validateAsPos(
+  code: string,
+  options: { secret?: string; timestampOffsetSeconds?: number; tamperBody?: boolean } = {},
+) {
+  const body = JSON.stringify({ code })
+  const now = Math.floor(Date.now() / 1000) + (options.timestampOffsetSeconds ?? 0)
+  const headers = await signedHeaders(options.secret ?? POS_INBOUND_SECRET, body, now)
+  return callFunction('validate-redemption', null, {
+    token: null,
+    headers,
+    rawBody: options.tamperBody ? JSON.stringify({ code: 'MIGA-AAAA' }) : body,
+  })
+}
+
+/** Le da puntos a un cliente de la forma real: reclamando una venta del POS falso. */
+export async function giveSalePoints(customer: Customer, euros: number): Promise<void> {
+  const sale = await createMockSale({ total_cents: euros * 100 })
+  await claimSale(customer, sale)
+}
+
+export async function rewardId(name: string): Promise<string> {
+  const { data, error } = await admin.from('rewards').select('id').eq('name', name).single()
+  if (error) throw error
+  return data.id
+}
+
+export const createRedemption = (customer: Customer, reward: string) =>
+  callFunction('create-redemption', { reward_id: reward }, { token: customer.token })

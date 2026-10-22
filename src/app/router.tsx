@@ -13,6 +13,7 @@ import { LoginScreen } from '@/screens/login/LoginScreen'
 import { PanelScreen } from '@/screens/panel/PanelScreen'
 import { PrivacyScreen } from '@/screens/privacy/PrivacyScreen'
 import { ProfileScreen } from '@/screens/profile/ProfileScreen'
+import { RedeemScreen } from '@/screens/redeem/RedeemScreen'
 import { SaleScreen } from '@/screens/sale/SaleScreen'
 import { ScannerScreen } from '@/screens/scanner/ScannerScreen'
 import { WelcomeScreen } from '@/screens/welcome/WelcomeScreen'
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
         element: <RequireOnboarded />,
         children: [
           { path: '/panel', element: <PanelScreen /> },
+          { path: '/canje/:id', element: <RedeemScreen /> },
           { path: '/historial', element: <HistoryScreen /> },
           { path: '/escanear', element: <ScannerScreen /> },
           { path: '/perfil', element: <ProfileScreen /> },

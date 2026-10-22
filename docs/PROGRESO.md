@@ -50,10 +50,10 @@
 
 ### Fase 6 · Canje
 
-- [ ] 6.1 `create-redemption` + pantalla de código con cuenta regresiva.
-- [ ] 6.2 `validate-redemption` con HMAC, atómica.
-- [ ] 6.3 Simulador de caja en /dev.
-- [ ] 6.4 Tests: válido, vencido, usado, no alcanzado, doble validación simultánea.
+- [x] 6.1 `create-redemption` + pantalla de código con cuenta regresiva.
+- [x] 6.2 `validate-redemption` con HMAC, atómica.
+- [x] 6.3 Simulador de caja en /dev.
+- [x] 6.4 Tests: válido, vencido, usado, no alcanzado, doble validación simultánea.
 
 ### Fase 7 · Motion y celebraciones
 
@@ -106,6 +106,9 @@
 - Escáner: `BarcodeDetector` si el navegador lo trae; si no, `jsqr` (se descarga bajo demanda). Un QR que no sea de una venta se ignora y sigue buscando.
 - "Escribir el código a mano" = pegar el link (o uuid) de la compra: el uuid de una venta es demasiado largo para tipearlo.
 - Tests e2e usan una cámara falsa de Chromium con un video de un QR generado al vuelo.
+
+- Códigos de canje: formato MIGA-XXXX sin caracteres ambiguos; un solo código vigente por cliente y premio; premios por compras repetibles cada N compras.
+- Pendiente de verificar a mano en navegador: pantalla /canje/:id y el simulador de caja de /dev (la lógica ya está probada por SQL e integración).
 
 ## Ideas para después
 

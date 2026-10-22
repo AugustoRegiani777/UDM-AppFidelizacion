@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import type { Dashboard } from '@/features/dashboard/useDashboard'
@@ -34,9 +35,11 @@ const base: Dashboard = {
 function renderPanel(data: Dashboard) {
   dashboardState = { isPending: false, isError: false, data, refetch: vi.fn() }
   render(
-    <MemoryRouter>
-      <PanelScreen />
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter>
+        <PanelScreen />
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 

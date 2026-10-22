@@ -7,12 +7,14 @@ import {
 } from 'react-router'
 import { isSaleUuid, savePendingSale } from '@/features/claims/pendingSale'
 import { env } from '@/lib/env'
+import { HistoryScreen } from '@/screens/history/HistoryScreen'
 import { LandingScreen } from '@/screens/landing/LandingScreen'
 import { LoginScreen } from '@/screens/login/LoginScreen'
 import { PanelScreen } from '@/screens/panel/PanelScreen'
 import { PrivacyScreen } from '@/screens/privacy/PrivacyScreen'
 import { ProfileScreen } from '@/screens/profile/ProfileScreen'
 import { SaleScreen } from '@/screens/sale/SaleScreen'
+import { ScannerScreen } from '@/screens/scanner/ScannerScreen'
 import { WelcomeScreen } from '@/screens/welcome/WelcomeScreen'
 import { RequireAuth, RequireOnboarded } from './guards'
 
@@ -46,6 +48,8 @@ export const router = createBrowserRouter([
         element: <RequireOnboarded />,
         children: [
           { path: '/panel', element: <PanelScreen /> },
+          { path: '/historial', element: <HistoryScreen /> },
+          { path: '/escanear', element: <ScannerScreen /> },
           { path: '/perfil', element: <ProfileScreen /> },
           { path: '/s/:uuid', loader: saleLoader, element: <SaleScreen /> },
         ],

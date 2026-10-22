@@ -5,16 +5,9 @@ function required(name: string, value: string | undefined): string {
   return value
 }
 
-/**
- * En desarrollo, si abrís la app desde el celular por IP (ej. 192.168.1.20:5173),
- * "127.0.0.1" apuntaría al celular. Reemplazamos el host por el de la página.
- */
+/** En desarrollo se pasa por el proxy de Vite (`/supabase`): funciona igual desde el celular y con HTTPS. */
 function resolveSupabaseUrl(url: string): string {
-  if (!import.meta.env.DEV) return url
-  const target = new URL(url)
-  if (['127.0.0.1', 'localhost'].includes(target.hostname))
-    target.hostname = window.location.hostname
-  return target.origin
+  return import.meta.env.DEV ? `${window.location.origin}/supabase` : url
 }
 
 export const env = {

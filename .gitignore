@@ -9,3 +9,4 @@ supabase/.branches
 playwright-report
 test-results
 .DS_Store
+tests/e2e/.fake-camera

@@ -43,10 +43,10 @@
 
 ### Fase 5 · Panel
 
-- [ ] 5.1 Panel con `customer_dashboard` + TanStack Query.
-- [ ] 5.2 Skeletons y estado vacío.
-- [ ] 5.3 Historial de puntos.
-- [ ] 5.4 Escáner interno (BarcodeDetector + fallback + permiso + código manual).
+- [x] 5.1 Panel con `customer_dashboard` + TanStack Query.
+- [x] 5.2 Skeletons y estado vacío.
+- [x] 5.3 Historial de puntos.
+- [x] 5.4 Escáner interno (BarcodeDetector + fallback + permiso + código manual).
 
 ### Fase 6 · Canje
 
@@ -101,6 +101,11 @@
 - Primer cliente en escanear una venta se la queda (una venta, un dueño).
 - Las Edge Functions (Deno) no pasan por `tsc`; se validan al servirlas y con los tests de integración.
 - Cómo correr cada nivel de tests: `npm test` (unitarios), `npx supabase test db` (SQL), `npm run test:integration` y `npm run test:e2e` (requieren `npx supabase start` y `npm run functions` corriendo).
+
+- En desarrollo la app habla con Supabase por un proxy de Vite (`/supabase`), así funciona desde el celular y con HTTPS (`npm run dev:https`, necesario para la cámara en el celular).
+- Escáner: `BarcodeDetector` si el navegador lo trae; si no, `jsqr` (se descarga bajo demanda). Un QR que no sea de una venta se ignora y sigue buscando.
+- "Escribir el código a mano" = pegar el link (o uuid) de la compra: el uuid de una venta es demasiado largo para tipearlo.
+- Tests e2e usan una cámara falsa de Chromium con un video de un QR generado al vuelo.
 
 ## Ideas para después
 

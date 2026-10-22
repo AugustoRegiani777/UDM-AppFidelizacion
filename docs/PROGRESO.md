@@ -26,12 +26,12 @@
 
 ### Fase 3 · Login con Google y bienvenida
 
-- [ ] 3.1 Cliente Supabase, provider de sesión.
-- [ ] 3.2 Login Google + login email solo en dev (bandera).
-- [ ] 3.3 Portada sin login (punto de entrada NFC/QR fijo).
-- [ ] 3.4 Bienvenida con consentimientos separados y fechas.
-- [ ] 3.5 Rutas protegidas + `/s/:uuid` que sobrevive al login (también PWA iPhone).
-- [ ] 3.6 Perfil: cerrar sesión, borrar cuenta (Edge Function delete-account).
+- [x] 3.1 Cliente Supabase, provider de sesión.
+- [x] 3.2 Login Google + login email solo en dev (bandera).
+- [x] 3.3 Portada sin login (punto de entrada NFC/QR fijo).
+- [x] 3.4 Bienvenida con consentimientos separados y fechas.
+- [x] 3.5 Rutas protegidas + `/s/:uuid` que sobrevive al login (también PWA iPhone).
+- [x] 3.6 Perfil: cerrar sesión, borrar cuenta (Edge Function delete-account).
 
 ### Fase 4 · Sumar compras (POS mock)
 
@@ -89,6 +89,10 @@
 - Un premio por puntos reserva sus puntos mientras el código está vigente (no se puede generar otro código que supere el saldo); el descuento ocurre al validar en caja.
 - Tras una anulación (reversal) el saldo puede quedar negativo; se permite.
 - Perfil/consentimientos se editan solo vía funciones (`complete_onboarding`, `update_profile`), no con UPDATE directo, para que las fechas las ponga el servidor.
+
+- Login con Google configurado en `supabase/config.toml` leyendo `GOOGLE_CLIENT_ID/SECRET` del entorno; hasta que Augusto cargue credenciales, se usa el login por email solo en dev (`VITE_DEV_TOOLS=true` y `import.meta.env.DEV`).
+- La retoma de `/s/:uuid` usa dos vías: el uuid viaja en la URL de retorno del login y además queda en localStorage (cubre iPhone: Safari y PWA no comparten almacenamiento).
+- Texto de privacidad provisorio (lo revisa la gestoría; está en `src/copy/es.ts`).
 
 ## Ideas para después
 

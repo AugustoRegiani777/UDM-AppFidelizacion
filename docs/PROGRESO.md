@@ -64,11 +64,11 @@
 
 ### Fase 8 · Juegos
 
-- [ ] 8.1 Tabla de premios/probabilidades (valores por defecto en settings).
-- [ ] 8.2 `play-game` (servidor decide, límites diarios).
-- [ ] 8.3 Raspadita post-compra.
-- [ ] 8.4 Ruleta diaria.
-- [ ] 8.5 "¿Cómo funciona?" con probabilidades.
+- [x] 8.1 Tabla de premios/probabilidades (valores por defecto en settings).
+- [x] 8.2 `play-game` (servidor decide, límites diarios).
+- [x] 8.3 Raspadita post-compra.
+- [x] 8.4 Ruleta diaria.
+- [x] 8.5 "¿Cómo funciona?" con probabilidades.
 
 ### Fase 9 · Reconciliación y producción
 
@@ -116,6 +116,12 @@
 - Pantallas secundarias cargadas bajo demanda (code splitting) para bajar el peso inicial.
 - Guía de prueba de rendimiento: `docs/RENDIMIENTO.md`.
 
+- Juegos (tabla de premios aprobada por defecto, editable en `settings.games`): **raspadita** (60 % sin premio, 25 % +5, 10 % +10, 5 % +25; una por compra confirmada, válida 24 h) y **ruleta diaria** (1 giro por día; +5 30 %, +10 18 %, +20 8 %, +50 4 %, sin premio 40 %). Valor esperado ≈ 3,5 puntos por raspadita y 6,9 por giro.
+- Tope diario global de puntos regalados por juegos: 1000 (`daily_points_budget`). Agotado, se juega igual pero sin premio; esto se explica en "¿Cómo funciona?".
+- Cofre de racha y álbum de sabores quedan para después (ver Ideas).
+- La raspadita se acredita al abrirla (el servidor ya decidió); si el cliente sale sin raspar, el premio igual queda en su saldo.
+
 ## Ideas para después
+- Cofre de racha (se abre al cumplir X semanas seguidas) y álbum de sabores (docs/04): requieren definir premios y datos de variedades.
 
 - (vacío)

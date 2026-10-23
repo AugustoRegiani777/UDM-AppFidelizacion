@@ -30,6 +30,7 @@ describe('SaleScreen', () => {
       points: 162,
       balance: 162,
       repeat: false,
+      claim_id: 'c1',
       unlocked: [{ id: '1', name: 'Un café', kind: 'points' }],
     })
     expect(screen.getByText('¡Sumaste 162 puntos!')).toBeInTheDocument()
@@ -53,7 +54,7 @@ describe('SaleScreen', () => {
   })
 
   it('no vuelve a celebrar una compra ya sumada', () => {
-    renderSale({ status: 'confirmed', points: 62, balance: 62, repeat: true })
+    renderSale({ status: 'confirmed', points: 62, balance: 62, repeat: true, claim_id: 'c1' })
     expect(screen.getByText('Esta compra ya estaba sumada')).toBeInTheDocument()
   })
 

@@ -5,6 +5,7 @@ import {
   type LoaderFunctionArgs,
   type RouteObject,
 } from 'react-router'
+import { FullScreenLoader } from '@/components/FullScreenLoader'
 import { isSaleUuid, savePendingSale } from '@/features/claims/pendingSale'
 import { env } from '@/lib/env'
 import { LandingScreen } from '@/screens/landing/LandingScreen'
@@ -36,6 +37,7 @@ const devRoutes: RouteObject[] =
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    hydrateFallbackElement: <FullScreenLoader />,
     children: [
       { path: '/', element: <LandingScreen /> },
       { path: '/login', element: <LoginScreen /> },
@@ -53,6 +55,18 @@ export const router = createBrowserRouter([
             element: <RequireOnboarded />,
             children: [
               { path: '/panel', element: <PanelScreen /> },
+              {
+                path: '/ruleta',
+                lazy: async () => ({
+                  Component: (await import('@/screens/games/RouletteScreen')).RouletteScreen,
+                }),
+              },
+              {
+                path: '/raspadita/:claimId',
+                lazy: async () => ({
+                  Component: (await import('@/screens/games/ScratchScreen')).ScratchScreen,
+                }),
+              },
               {
                 path: '/canje/:id',
                 lazy: async () => ({

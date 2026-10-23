@@ -12,6 +12,7 @@ export type ClaimResult =
       points: number
       balance: number
       repeat: boolean
+      claim_id: string
       unlocked?: UnlockedReward[]
     }
   | { status: 'pending'; points: 0; repeat?: boolean }

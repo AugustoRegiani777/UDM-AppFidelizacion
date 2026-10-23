@@ -75,6 +75,32 @@ export const es = {
     error: 'Uy, no pudimos generar tu código. Probá de nuevo.',
     backToPanel: 'Volver al panel',
   },
+  games: {
+    sectionTitle: 'Juegos',
+    play: 'Jugar',
+    scratchTitle: '¡Raspá tu premio!',
+    scratchHere: 'Raspá acá',
+    revealButton: 'Mostrar el resultado',
+    scratchUnavailable: 'Esta raspadita ya no está disponible',
+    rouletteTitle: 'Ruleta diaria',
+    rouletteDone: 'Ya giraste hoy',
+    rouletteTomorrow: 'Hoy ya giraste. Mañana hay otro giro.',
+    nextPurchaseHint: 'Con tu próxima compra, otra raspadita.',
+    spin: 'Girar',
+    spinning: 'Girando…',
+    won: (points: number) => `¡Ganaste ${points} puntos!`,
+    noPrize: 'Esta vez no hubo premio. ¡Seguí participando!',
+    error: 'Uy, no pudimos jugar ahora. Probá de nuevo en un ratito.',
+    how: '¿Cómo funciona?',
+    howTitle: '¿Cómo funciona?',
+    oddsCaption: 'Probabilidad de cada premio',
+    scratchRules: (hours: number) =>
+      `Ganás una raspadita con cada compra y tenés ${hours} horas para usarla. El resultado ya está decidido antes de que raspes: no cambia por cómo ni cuándo raspes.`,
+    rouletteRules: (limit: number) =>
+      `Tenés ${limit} ${limit === 1 ? 'giro' : 'giros'} por día. El resultado lo decide el servidor antes de que gire la rueda.`,
+    fairness: (budget: number) =>
+      `Los puntos de los juegos tienen un tope diario del local (${budget} puntos en total). Si se agotó, igual podés jugar pero ese día no hay premio.`,
+  },
   history: {
     title: 'Historial de puntos',
     empty: 'Todavía no hay movimientos. Tu primera compra va a aparecer acá.',

@@ -142,6 +142,7 @@ export type Database = {
           game: string
           id: string
           points: number
+          ref_id: string | null
           result: NonNullable<Json>
         }
         ComputedFields: never
@@ -151,6 +152,7 @@ export type Database = {
           game: string
           id?: string
           points?: number
+          ref_id?: string | null
           result?: NonNullable<Json>
         }
         Update: {
@@ -159,6 +161,7 @@ export type Database = {
           game?: string
           id?: string
           points?: number
+          ref_id?: string | null
           result?: NonNullable<Json>
         }
         Relationships: [
@@ -396,7 +399,9 @@ export type Database = {
       customer_streak_weeks: { Args: { p_customer: string }; Returns: number }
       expire_pending_claims: { Args: Record<PropertyKey, never>; Returns: number }
       expire_redemptions: { Args: { p_customer?: string }; Returns: number }
+      games_status: { Args: Record<PropertyKey, never>; Returns: Json }
       generate_redemption_code: { Args: Record<PropertyKey, never>; Returns: string }
+      local_day_start: { Args: Record<PropertyKey, never>; Returns: string }
       newly_unlocked_rewards: {
         Args: {
           p_balance_after: number
@@ -406,6 +411,8 @@ export type Database = {
         }
         Returns: Json
       }
+      pick_prize: { Args: { p_prizes: Json }; Returns: Json }
+      play_game: { Args: { p_customer: string; p_game: string; p_ref?: string }; Returns: Json }
       rate_limit_hit: { Args: { p_action: string; p_customer: string }; Returns: boolean }
       reverse_claim: { Args: { p_sale_uuid: string }; Returns: boolean }
       setting_json: { Args: { p_key: string }; Returns: Json }

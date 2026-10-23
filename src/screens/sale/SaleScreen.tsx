@@ -66,6 +66,9 @@ function ConfirmedView({ result }: { result: Extract<ClaimResult, { status: 'con
       <p className="text-lg">
         {unlocked ? copy.sale.unlocked(unlocked.name) : copy.sale.confirmedGeneric}
       </p>
+      <Link to={`/raspadita/${result.claim_id}`} className="font-bold underline">
+        {copy.games.scratchTitle}
+      </Link>
       <PanelLink />
     </Screen>
   )

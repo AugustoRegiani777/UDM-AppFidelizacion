@@ -8,6 +8,8 @@ import { TextField } from '@/components/TextField'
 import { signOut } from '@/features/auth/signIn'
 import { deleteAccount, updateProfile } from '@/features/profile/profileApi'
 import { useInvalidateProfile, useProfile } from '@/features/profile/useProfile'
+import { setSoundEnabled, useSoundEnabled } from '@/motion/preferences'
+import { Sheet } from '@/motion/Sheet'
 import { copy } from '@/copy'
 
 export function ProfileScreen() {
@@ -65,6 +67,7 @@ function ProfileForm({ name: initialName, promo }: { name: string; promo: boolea
           </p>
         )}
       </form>
+      <SoundToggle />
       <Button variant="ghost" onClick={() => signOut()}>
         {copy.profile.signOut}
       </Button>
@@ -73,9 +76,18 @@ function ProfileForm({ name: initialName, promo }: { name: string; promo: boolea
   )
 }
 
+function SoundToggle() {
+  const enabled = useSoundEnabled()
+  return (
+    <Checkbox checked={enabled} onChange={(e) => setSoundEnabled(e.target.checked)}>
+      {copy.profile.sound}
+    </Checkbox>
+  )
+}
+
 function DeleteAccount() {
   const navigate = useNavigate()
-  const [confirming, setConfirming] = useState(false)
+  const [open, setOpen] = useState(false)
   const [error, setError] = useState(false)
   const [busy, setBusy] = useState(false)
 
@@ -91,28 +103,27 @@ function DeleteAccount() {
     }
   }
 
-  if (!confirming) {
-    return (
-      <Button variant="danger" onClick={() => setConfirming(true)}>
+  return (
+    <>
+      <Button variant="danger" onClick={() => setOpen(true)}>
         {copy.profile.deleteTitle}
       </Button>
-    )
-  }
-
-  return (
-    <div className="bg-brand-soft rounded-card flex flex-col gap-3 p-4">
-      <p className="text-sm">{copy.profile.deleteBody}</p>
-      {error && (
-        <p role="alert" className="text-brand-ink text-sm">
-          {copy.profile.deleteError}
-        </p>
-      )}
-      <Button variant="danger" disabled={busy} onClick={handleDelete}>
-        {copy.profile.deleteConfirm}
-      </Button>
-      <Button variant="ghost" onClick={() => setConfirming(false)}>
-        {copy.profile.deleteCancel}
-      </Button>
-    </div>
+      <Sheet open={open} onClose={() => setOpen(false)} title={copy.profile.deleteTitle}>
+        <div className="mt-3 flex flex-col gap-3">
+          <p className="text-muted">{copy.profile.deleteBody}</p>
+          {error && (
+            <p role="alert" className="text-brand-ink text-sm">
+              {copy.profile.deleteError}
+            </p>
+          )}
+          <Button variant="danger" disabled={busy} onClick={handleDelete}>
+            {copy.profile.deleteConfirm}
+          </Button>
+          <Button variant="ghost" onClick={() => setOpen(false)}>
+            {copy.profile.deleteCancel}
+          </Button>
+        </div>
+      </Sheet>
+    </>
   )
 }

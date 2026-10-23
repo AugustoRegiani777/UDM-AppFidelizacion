@@ -17,6 +17,7 @@ export function RewardCard({ reward }: { reward: DashboardReward }) {
   const navigate = useNavigate()
   const create = useCreateRedemption()
   const done = reward.unlocked || reward.active_redemption !== null
+  const almost = !done && reward.current / reward.threshold >= 0.8
 
   return (
     <Card className="flex flex-col gap-3">
@@ -24,6 +25,7 @@ export function RewardCard({ reward }: { reward: DashboardReward }) {
         <div>
           <h3 className="text-lg font-bold">{reward.name}</h3>
           <p className="text-muted text-sm">{done ? reward.description : remainingText(reward)}</p>
+          {almost && <p className="text-brand-ink text-sm font-bold">{copy.panel.almost}</p>}
         </div>
         {done && (
           <span className="bg-green-soft text-green-ink shrink-0 rounded-full px-3 py-1 text-sm font-bold">

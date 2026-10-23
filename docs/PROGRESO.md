@@ -57,10 +57,10 @@
 
 ### Fase 7 · Motion y celebraciones
 
-- [ ] 7.1 presets, CountUp, ProgressBar, Pressable, Sheet.
-- [ ] 7.2 Celebration, PopupQueue, transiciones de pantalla.
-- [ ] 7.3 Aplicar el catálogo de momentos de docs/04.
-- [ ] 7.4 Reduced motion + guía de prueba de rendimiento.
+- [x] 7.1 presets, CountUp, ProgressBar, Pressable, Sheet.
+- [x] 7.2 Celebration, PopupQueue, transiciones de pantalla.
+- [x] 7.3 Aplicar el catálogo de momentos de docs/04.
+- [x] 7.4 Reduced motion + guía de prueba de rendimiento.
 
 ### Fase 8 · Juegos
 
@@ -109,6 +109,12 @@
 
 - Códigos de canje: formato MIGA-XXXX sin caracteres ambiguos; un solo código vigente por cliente y premio; premios por compras repetibles cada N compras.
 - Pendiente de verificar a mano en navegador: pantalla /canje/:id y el simulador de caja de /dev (la lógica ya está probada por SQL e integración).
+
+- Celebraciones con SVG animado (check que se dibuja, regalo que se abre) en vez de archivos Lottie: pesa menos y no depende de assets externos. `canvas-confetti` se carga bajo demanda. Si más adelante hay un Lottie de marca, se agrega en `src/motion/Celebration.tsx`.
+- Sonido: sintetizado con Web Audio (sin archivos), apagado por defecto, toggle en el perfil.
+- Los popups viven en la raíz del router (`RootLayout`) porque necesitan navegar. El popup de premio desbloqueado aparece tras una acción del cliente, por eso no cuenta como "espontáneo".
+- Pantallas secundarias cargadas bajo demanda (code splitting) para bajar el peso inicial.
+- Guía de prueba de rendimiento: `docs/RENDIMIENTO.md`.
 
 ## Ideas para después
 

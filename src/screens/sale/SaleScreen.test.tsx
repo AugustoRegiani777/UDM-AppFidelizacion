@@ -5,6 +5,11 @@ import { SaleScreen } from './SaleScreen'
 
 let queryState: { isPending: boolean; isError: boolean; data?: ClaimResult; refetch: () => void }
 
+vi.mock('@/motion/feedback', () => ({
+  fireConfetti: vi.fn(),
+  vibrate: vi.fn(),
+  playChime: vi.fn(),
+}))
 vi.mock('@/features/claims/useClaimSale', () => ({ useClaimSale: () => queryState }))
 
 function renderSale(data: ClaimResult) {

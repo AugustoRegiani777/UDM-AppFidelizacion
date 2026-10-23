@@ -39,7 +39,8 @@ describe('ScannerScreen', () => {
     expect(await screen.findByText('La cámara está bloqueada')).toBeInTheDocument()
     expect(screen.getByText(/iphone: tocá "aa"/i)).toBeInTheDocument()
 
-    await userEvent.type(screen.getByLabelText(/link o código/i), `https://miga.app/s/${UUID}`)
+    await userEvent.click(screen.getByLabelText(/link o código/i))
+    await userEvent.paste(`https://miga.app/s/${UUID}`)
     await userEvent.click(screen.getByRole('button', { name: 'Sumar esta compra' }))
     await waitFor(() => expect(screen.getByText('COMPRA')).toBeInTheDocument())
   })

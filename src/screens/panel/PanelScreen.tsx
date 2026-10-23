@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { Button } from '@/components/Button'
 import { Screen } from '@/components/Screen'
 import { useDashboard, type Dashboard } from '@/features/dashboard/useDashboard'
+import { Cascade, CascadeItem } from '@/motion/Cascade'
 import { copy } from '@/copy'
 import { BalanceHero } from './BalanceHero'
 import { EmptyState } from './EmptyState'
@@ -55,9 +56,13 @@ function PanelContent({ data }: { data: Dashboard }) {
         <h2 id="rewards" className="font-display text-3xl">
           {copy.panel.rewardsTitle}
         </h2>
-        {data.rewards.map((reward) => (
-          <RewardCard key={reward.id} reward={reward} />
-        ))}
+        <Cascade className="flex flex-col gap-3">
+          {data.rewards.map((reward) => (
+            <CascadeItem key={reward.id}>
+              <RewardCard reward={reward} />
+            </CascadeItem>
+          ))}
+        </Cascade>
       </section>
 
       {!isNew && <RecentPurchases claims={data.recent_claims} />}

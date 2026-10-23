@@ -1,4 +1,5 @@
 import { CountUp } from '@/motion/CountUp'
+import { StreakFlame } from './StreakFlame'
 import { copy } from '@/copy'
 
 interface BalanceHeroProps {
@@ -14,11 +15,7 @@ export function BalanceHero({ balance, streakWeeks, pending }: BalanceHeroProps)
       <p className="text-muted font-semibold">{copy.panel.balanceLabel}</p>
       <CountUp value={balance} className="font-display text-brand block text-[96px] leading-none" />
       <div className="mt-2 flex flex-wrap justify-center gap-2">
-        {streakWeeks > 0 && (
-          <span className="bg-brand-soft text-brand-ink rounded-full px-3 py-1 text-sm font-semibold">
-            🔥 {copy.panel.streak(streakWeeks)}
-          </span>
-        )}
+        {streakWeeks > 0 && <StreakFlame weeks={streakWeeks} />}
         {pending > 0 && (
           <span className="bg-track text-ink rounded-full px-3 py-1 text-sm font-semibold">
             {copy.panel.pending(pending)}

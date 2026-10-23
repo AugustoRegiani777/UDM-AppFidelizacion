@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { Button } from '@/components/Button'
 import { FullScreenLoader } from '@/components/FullScreenLoader'
 import { Screen } from '@/components/Screen'
+import { CodeReveal } from '@/motion/CodeReveal'
 import type { RedemptionDetail } from '@/features/redemptions/redemptionApi'
 import {
   formatCountdown,
@@ -37,12 +38,10 @@ function RedemptionView({ redemption }: { redemption: RedemptionDetail }) {
     <Screen className="items-center justify-center gap-4 text-center">
       <p className="text-muted font-semibold">{copy.redeem.title}</p>
       <h1 className="text-2xl font-bold">{rewardName}</h1>
-      <p
+      <CodeReveal
+        code={redemption.code}
         className="font-display text-brand rounded-card bg-surface px-6 py-4 text-[64px] leading-none tracking-wider"
-        aria-label={redemption.code}
-      >
-        {redemption.code}
-      </p>
+      />
       <p className="text-lg">{copy.redeem.instructions}</p>
       <p role="timer" className="text-muted font-semibold">
         {copy.redeem.expiresIn(formatCountdown(remaining))}

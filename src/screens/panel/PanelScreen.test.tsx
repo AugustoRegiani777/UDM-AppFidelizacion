@@ -102,7 +102,7 @@ describe('PanelScreen', () => {
     expect(screen.getByText('Desbloqueado')).toBeInTheDocument()
     expect(screen.getByText('Te faltan 121 puntos')).toBeInTheDocument()
     expect(screen.getByText('Te faltan 47 compras')).toBeInTheDocument()
-    expect(screen.getByText('🔥 3 semanas seguidas')).toBeInTheDocument()
+    expect(screen.getByText(/3 semanas seguidas/)).toBeInTheDocument()
     expect(screen.getByText('1 compra esperando confirmación')).toBeInTheDocument()
     expect(screen.getByText('+62')).toBeInTheDocument()
     expect(screen.getAllByRole('progressbar')).toHaveLength(3)

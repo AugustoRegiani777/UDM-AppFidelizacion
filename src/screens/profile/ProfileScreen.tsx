@@ -10,6 +10,7 @@ import { deleteAccount, updateProfile } from '@/features/profile/profileApi'
 import { useInvalidateProfile, useProfile } from '@/features/profile/useProfile'
 import { setSoundEnabled, useSoundEnabled } from '@/motion/preferences'
 import { Sheet } from '@/motion/Sheet'
+import { useIsAdmin } from '@/features/admin/adminApi'
 import { copy } from '@/copy'
 
 export function ProfileScreen() {
@@ -67,12 +68,23 @@ function ProfileForm({ name: initialName, promo }: { name: string; promo: boolea
           </p>
         )}
       </form>
+      <AdminLink />
       <SoundToggle />
       <Button variant="ghost" onClick={() => signOut()}>
         {copy.profile.signOut}
       </Button>
       <DeleteAccount />
     </Screen>
+  )
+}
+
+function AdminLink() {
+  const isAdmin = useIsAdmin()
+  if (!isAdmin.data) return null
+  return (
+    <Link to="/admin" className="font-bold underline">
+      {copy.admin.link}
+    </Link>
   )
 }
 

@@ -7,6 +7,7 @@ import { copy } from '@/copy'
 import { BalanceHero } from './BalanceHero'
 import { EmptyState } from './EmptyState'
 import { GamesSection } from './GamesSection'
+import { MissionsLink } from './MissionsLink'
 import { PanelSkeleton } from './PanelSkeleton'
 import { RecentPurchases } from './RecentPurchases'
 import { RewardCard } from './RewardCard'
@@ -67,6 +68,7 @@ function PanelContent({ data }: { data: Dashboard }) {
       </section>
 
       <GamesSection />
+      <MissionsLink />
 
       {!isNew && <RecentPurchases claims={data.recent_claims} />}
     </Screen>

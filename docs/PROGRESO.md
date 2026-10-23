@@ -85,9 +85,9 @@
 - [x] 10.5 Tests de integración y e2e del flujo completo.
 
 ### Fase 11 · Misiones de puntos extra + administración
-- [ ] 11.1 Misiones únicas: seguir en Instagram (sin verificar, puntos chicos) y reseña en Google Maps (pendiente de aprobación manual).
-- [ ] 11.2 Panel de administración (`/admin`, solo admins) para aprobar misiones.
-- [ ] 11.3 Tests (RLS, un solo cobro por misión, admin).
+- [x] 11.1 Misiones únicas: seguir en Instagram (sin verificar, puntos chicos) y reseña en Google Maps (pendiente de aprobación manual).
+- [x] 11.2 Panel de administración (`/admin`, solo admins) para aprobar misiones.
+- [x] 11.3 Tests (RLS, un solo cobro por misión, admin).
 
 ### Fase 12 · Comunidad de recomendaciones
 - [ ] 12.1 Lugares (pizzerías argentinas, medialunas, cafés, helados…), alta con nombre o link de Google Maps, aprobación del admin.
@@ -155,6 +155,9 @@
 - (Fase 10) Balance verificado con un bot: quieto nunca gana, un jugador atento gana ~70 %, el modo relajado (tras 2 derrotas) es más fácil. Configurable por `settings.chest_game.overrides` (ej. duración, vidas).
 - (Fase 10) Dibujo vectorial a la resolución real (DPR hasta 3) con resolución adaptativa si baja de ~48 fps; efectos solo de render (partículas, vibración); sonidos sintetizados; háptica en golpes y subidas de nivel.
 - (Fase 10) El proxy de desarrollo de Supabase pasó de `/supabase` a `/_sb` (chocaba con la carpeta `supabase/` que sirve el motor del juego).
+
+- (Fase 11) Misiones: Instagram (15 puntos, sin verificar, una vez) y reseña de Google Maps (50 puntos, pendiente hasta que el admin la apruebe; se guarda el nombre del cliente en Google para encontrarla). Puntos y links en `settings.missions` (público). Si el admin rechaza, el cliente puede volver a intentar.
+- (Fase 11) Rol `profiles.is_admin` (se asigna por SQL, el cliente no puede modificarlo) y `/admin` con las funciones `admin_pending_missions` / `admin_review_mission`, que vuelven a chequear el rol en el servidor.
 
 ## Ideas para después
 - Más juegos para la misma ceremonia del cofre (tres en línea, reflejos), elegidos al azar por premio.

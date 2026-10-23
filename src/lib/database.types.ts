@@ -59,6 +59,58 @@ export type Database = {
           },
         ]
       }
+      bonus_claims: {
+        Row: {
+          created_at: string
+          customer_id: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          mission: string
+          note: string | null
+          points: number
+          status: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          customer_id: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          mission: string
+          note?: string | null
+          points?: number
+          status: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          mission?: string
+          note?: string | null
+          points?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'bonus_claims_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'bonus_claims_decided_by_fkey'
+            columns: ['decided_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       chest_sessions: {
         Row: {
           customer_id: string
@@ -280,6 +332,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          is_admin: boolean
           program_consent_at: string | null
           promo_consent: boolean
           promo_consent_at: string | null
@@ -290,6 +343,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id: string
+          is_admin?: boolean
           program_consent_at?: string | null
           promo_consent?: boolean
           promo_consent_at?: string | null
@@ -299,6 +353,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          is_admin?: boolean
           program_consent_at?: string | null
           promo_consent?: boolean
           promo_consent_at?: string | null
@@ -452,6 +507,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_pending_missions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          display_name: string
+          id: string
+          mission: string
+          note: string
+        }[]
+      }
+      admin_review_mission: { Args: { p_approve: boolean; p_claim: string }; Returns: undefined }
+      claim_mission: { Args: { p_mission: string; p_note?: string }; Returns: Json }
       claim_sale_apply: {
         Args: { p_customer: string; p_sale: Json; p_sale_uuid: string }
         Returns: Json
@@ -479,6 +546,7 @@ export type Database = {
       games_status: { Args: Record<PropertyKey, never>; Returns: Json }
       generate_redemption_code: { Args: Record<PropertyKey, never>; Returns: string }
       get_chest_session: { Args: { p_customer: string; p_session: string }; Returns: Json }
+      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       issue_redemption: {
         Args: { p_chest: string; p_customer: string; p_reward: string }
         Returns: Json

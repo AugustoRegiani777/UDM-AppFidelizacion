@@ -9,6 +9,7 @@ import { FullScreenLoader } from '@/components/FullScreenLoader'
 import { isSaleUuid, savePendingSale } from '@/features/claims/pendingSale'
 import { env } from '@/lib/env'
 import { LandingScreen } from '@/screens/landing/LandingScreen'
+import { MissionsScreen } from '@/screens/missions/MissionsScreen'
 import { LoginScreen } from '@/screens/login/LoginScreen'
 import { PanelScreen } from '@/screens/panel/PanelScreen'
 import { SaleScreen } from '@/screens/sale/SaleScreen'
@@ -55,6 +56,13 @@ export const router = createBrowserRouter([
             element: <RequireOnboarded />,
             children: [
               { path: '/panel', element: <PanelScreen /> },
+              { path: '/misiones', element: <MissionsScreen /> },
+              {
+                path: '/admin',
+                lazy: async () => ({
+                  Component: (await import('@/screens/admin/AdminScreen')).AdminScreen,
+                }),
+              },
               {
                 path: '/ruleta',
                 lazy: async () => ({

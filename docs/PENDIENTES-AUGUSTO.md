@@ -64,3 +64,8 @@ Llevale a la gestoría el texto de privacidad (está en `src/copy/es.ts`, secci�
 ## 7. Conectar el POS real
 
 Es el último paso antes de lanzar. Abrí el repo del POS en VS Code y pasale a Claude el prompt del final de `docs/03-integracion-pos.md`. Cuando esté probado en staging, cambiá `POS_MODE=real` (paso 3 de arriba).
+
+## 8. Misiones de puntos extra y administración
+- **Links reales:** hoy las misiones apuntan a páginas genéricas. Pasame la dirección de tu Instagram (ej. `https://www.instagram.com/unodemiga`) y el link directo para dejar una reseña en Google Maps (en Google Maps, tu local → "Escribir una reseña" → copiar el enlace). Después se cargan en Supabase → Table editor → `settings` → fila `missions` (campo `url` de cada misión). También ahí se cambian los puntos (`points`).
+- **Política de Google (riesgo asumido):** Google no permite dar incentivos a cambio de reseñas. Puede borrar reseñas o penalizar la ficha del local. La app aclara que los puntos no dependen de la calificación, pero el riesgo es tuyo. Si preferís evitarlo, se apaga la misión borrando `google_review` de la fila `missions`.
+- **Ser administrador:** el panel `/admin` es solo para administradores. Para darte ese rol en producción: Supabase → SQL Editor → `update public.profiles set is_admin = true where id = (select id from auth.users where email = 'TU-EMAIL');`

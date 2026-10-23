@@ -31,12 +31,16 @@ test('compra grande: regalo, cofre con juego, código y validación en caja', as
   await page.getByRole('button', { name: 'Abrir el cofre' }).click()
 
   // Menú inicial del juego y partida.
-  await expect(page.getByRole('dialog', { name: 'Sobreviví a las migas' })).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('dialog', { name: 'Sobreviví a las migas' })).toBeVisible({
+    timeout: 15_000,
+  })
   await expect(page.getByText('Sobreviví 2 segundos')).toBeVisible()
   await page.getByRole('button', { name: '¡Jugar!' }).click()
 
   // El servidor reproduce la partida y recién entonces abre el cofre.
-  await expect(page.getByRole('heading', { name: '¡Cofre abierto!' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('heading', { name: '¡Cofre abierto!' })).toBeVisible({
+    timeout: 30_000,
+  })
   await page.getByRole('button', { name: 'Ver mi código' }).click()
 
   // Código con cuenta regresiva real.

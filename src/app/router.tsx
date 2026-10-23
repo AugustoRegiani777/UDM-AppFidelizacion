@@ -68,6 +68,12 @@ export const router = createBrowserRouter([
                 }),
               },
               {
+                path: '/cofre/:rewardId',
+                lazy: async () => ({
+                  Component: (await import('@/screens/chest/ChestScreen')).ChestScreen,
+                }),
+              },
+              {
                 path: '/canje/:id',
                 lazy: async () => ({
                   Component: (await import('@/screens/redeem/RedeemScreen')).RedeemScreen,

@@ -128,5 +128,37 @@ export async function rewardId(name: string): Promise<string> {
   return data.id
 }
 
-export const createRedemption = (customer: Customer, reward: string) =>
-  callFunction('create-redemption', { reward_id: reward }, { token: customer.token })
+/** Reglas del juego del cofre para las pruebas (ver supabase/functions/_shared/survivors/config.ts). */
+export async function setChestOverrides(overrides: Record<string, unknown>): Promise<void> {
+  const { data, error } = await admin
+    .from('settings')
+    .select('value')
+    .eq('key', 'chest_game')
+    .single()
+  if (error) throw error
+  await admin
+    .from('settings')
+    .update({ value: { ...(data.value as object), overrides } as never })
+    .eq('key', 'chest_game')
+}
+
+/** Partida sin enemigos de 2 segundos: se gana sola, ideal para probar el flujo del cofre. */
+export const QUICK_GAME = { spawnMul: 0, boss: false, durationSeconds: 2 }
+
+export const startChest = (customer: Customer, reward: string) =>
+  callFunction('start-chest', { reward_id: reward }, { token: customer.token })
+
+export const finishChest = (
+  customer: Customer,
+  sessionId: string,
+  log: { moves: [number, number][]; picks: [number, number][] } = { moves: [], picks: [] },
+) => callFunction('finish-chest', { session_id: sessionId, log }, { token: customer.token })
+
+/** Abre el cofre de punta a punta (con QUICK_GAME activo) y devuelve el código de canje. */
+export async function openChest(customer: Customer, reward: string) {
+  const started = await startChest(customer, reward)
+  if (started.status !== 200 || !started.body.session_id) return started
+  await sleep(2000)
+  const finished = await finishChest(customer, started.body.session_id)
+  return { status: finished.status, body: finished.body.redemption ?? finished.body }
+}

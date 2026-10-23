@@ -3,76 +3,67 @@ import {
   balanceOf,
   callFunction,
   createCustomer,
-  createRedemption,
   giveSalePoints,
+  openChest,
+  QUICK_GAME,
   rewardId,
+  setChestOverrides,
   validateAsPos,
 } from './helpers'
 
-describe('canje de premios', () => {
-  it('flujo completo: código con vencimiento, la caja lo valida y recién ahí se descuentan los puntos', async () => {
+describe('canje de premios (caja)', () => {
+  beforeAll(() => setChestOverrides(QUICK_GAME))
+  afterAll(() => setChestOverrides({}))
+
+  it('flujo completo: el código sale al pasar el juego, la caja lo valida y los puntos NO se gastan', async () => {
     const ana = await createCustomer('ana')
     await giveSalePoints(ana, 160)
 
-    const created = await createRedemption(ana, await rewardId('Un café'))
-    expect(created.status).toBe(200)
-    expect(created.body.code).toMatch(/^MIGA-[A-HJ-KM-NP-Z2-9]{4}$/)
-    expect(new Date(created.body.expires_at).getTime() - Date.now()).toBeGreaterThan(14 * 60_000)
-    expect(await balanceOf(ana)).toBe(160)
+    const code = await openChest(ana, await rewardId('Un café'))
+    expect(code.status).toBe(200)
+    expect(code.body.code).toMatch(/^MIGA-[A-HJ-KM-NP-Z2-9]{4}$/)
+    expect(new Date(code.body.expires_at).getTime() - Date.now()).toBeGreaterThan(14 * 60_000)
 
-    const validated = await validateAsPos(created.body.code)
+    const validated = await validateAsPos(code.body.code)
     expect(validated.status).toBe(200)
     expect(validated.body).toMatchObject({
       valid: true,
       reward: { name: 'Un café', kind: 'points' },
     })
-    expect(await balanceOf(ana)).toBe(10)
+    expect(await balanceOf(ana)).toBe(160)
 
-    const again = await validateAsPos(created.body.code)
+    const again = await validateAsPos(code.body.code)
     expect(again.body).toEqual({ valid: false, reason: 'used' })
-    expect(await balanceOf(ana)).toBe(10)
-  })
-
-  it('no entrega código si el premio no está alcanzado', async () => {
-    const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 100)
-    const denied = await createRedemption(ana, await rewardId('Un café'))
-    expect(denied.status).toBe(409)
-    expect(denied.body.error).toBe('reward_not_reached')
   })
 
   it('con dos cajas validando el mismo código a la vez, gana una sola', async () => {
     const ana = await createCustomer('ana')
     await giveSalePoints(ana, 160)
-    const { body } = await createRedemption(ana, await rewardId('Un café'))
+    const { body } = await openChest(ana, await rewardId('Un café'))
 
     const results = await Promise.all(Array.from({ length: 6 }, () => validateAsPos(body.code)))
-    const valid = results.filter((r) => r.body.valid === true)
-    expect(valid).toHaveLength(1)
+    expect(results.filter((r) => r.body.valid === true)).toHaveLength(1)
     expect(results.filter((r) => r.body.reason === 'used')).toHaveLength(5)
-    expect(await balanceOf(ana)).toBe(10)
   })
 
-  it('pedir el código dos veces a la vez devuelve el mismo', async () => {
+  it('un código vencido no canjea y se puede renovar sin volver a jugar', async () => {
     const ana = await createCustomer('ana')
     await giveSalePoints(ana, 160)
-    const reward = await rewardId('Un café')
-    const [a, b] = await Promise.all([createRedemption(ana, reward), createRedemption(ana, reward)])
-    expect(a.body.code).toBe(b.body.code)
-  })
-
-  it('un código vencido no canjea y no hace perder puntos', async () => {
-    const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
-    const { body } = await createRedemption(ana, await rewardId('Un café'))
+    const { body } = await openChest(ana, await rewardId('Un café'))
     await admin
       .from('redemptions')
       .update({ expires_at: new Date(Date.now() - 60_000).toISOString() })
       .eq('code', body.code)
 
     expect((await validateAsPos(body.code)).body).toEqual({ valid: false, reason: 'expired' })
-    expect(await balanceOf(ana)).toBe(160)
-    expect((await createRedemption(ana, await rewardId('Un café'))).status).toBe(200)
+    const renewed = await callFunction(
+      'renew-redemption',
+      { redemption_id: body.id },
+      { token: ana.token },
+    )
+    expect(renewed.status).toBe(200)
+    expect(renewed.body.code).not.toBe(body.code)
+    expect((await validateAsPos(renewed.body.code)).body).toMatchObject({ valid: true })
   })
 
   it('código inexistente', async () => {
@@ -92,7 +83,7 @@ describe('canje de premios', () => {
   it('un cliente no puede validar códigos por su cuenta ni ver los de otro', async () => {
     const [ana, beto] = await Promise.all([createCustomer('ana'), createCustomer('beto')])
     await giveSalePoints(ana, 160)
-    const { body } = await createRedemption(ana, await rewardId('Un café'))
+    const { body } = await openChest(ana, await rewardId('Un café'))
 
     const asClient = await callFunction(
       'validate-redemption',
@@ -100,18 +91,18 @@ describe('canje de premios', () => {
       { token: beto.token },
     )
     expect(asClient.status).toBe(401)
-
-    const spied = await beto.client.from('redemptions').select('code')
-    expect(spied.data).toEqual([])
-    const own = await ana.client.from('redemptions').select('code')
-    expect(own.data).toEqual([{ code: body.code }])
+    expect((await beto.client.from('redemptions').select('code')).data).toEqual([])
+    expect((await ana.client.from('redemptions').select('code')).data).toEqual([
+      { code: body.code },
+    ])
   })
 
   it('el simulador de caja de desarrollo firma y valida como el POS', async () => {
     const ana = await createCustomer('ana')
     await giveSalePoints(ana, 160)
-    const { body } = await createRedemption(ana, await rewardId('Un café'))
-    const viaDev = await callFunction('dev-pos-redeem', { code: body.code })
-    expect(viaDev.body).toMatchObject({ valid: true })
+    const { body } = await openChest(ana, await rewardId('Un café'))
+    expect((await callFunction('dev-pos-redeem', { code: body.code })).body).toMatchObject({
+      valid: true,
+    })
   })
 })

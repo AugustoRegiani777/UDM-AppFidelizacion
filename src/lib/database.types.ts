@@ -59,6 +59,67 @@ export type Database = {
           },
         ]
       }
+      chest_sessions: {
+        Row: {
+          customer_id: string
+          expires_at: string
+          finished_at: string | null
+          id: string
+          overrides: NonNullable<Json>
+          redemption_id: string | null
+          relaxed: boolean
+          reward_id: string
+          seed: number
+          started_at: string
+          status: string
+          summary: Json | null
+        }
+        ComputedFields: never
+        Insert: {
+          customer_id: string
+          expires_at: string
+          finished_at?: string | null
+          id?: string
+          overrides?: NonNullable<Json>
+          redemption_id?: string | null
+          relaxed?: boolean
+          reward_id: string
+          seed: number
+          started_at?: string
+          status?: string
+          summary?: Json | null
+        }
+        Update: {
+          customer_id?: string
+          expires_at?: string
+          finished_at?: string | null
+          id?: string
+          overrides?: NonNullable<Json>
+          redemption_id?: string | null
+          relaxed?: boolean
+          reward_id?: string
+          seed?: number
+          started_at?: string
+          status?: string
+          summary?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'chest_sessions_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'chest_sessions_reward_id_fkey'
+            columns: ['reward_id']
+            isOneToOne: false
+            referencedRelation: 'rewards'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       claims: {
         Row: {
           created_at: string
@@ -276,40 +337,47 @@ export type Database = {
       }
       redemptions: {
         Row: {
+          chest_session_id: string | null
           code: string
           created_at: string
           customer_id: string
           expires_at: string
           id: string
-          points_spent: number
           reward_id: string
           status: string
           used_at: string | null
         }
         ComputedFields: never
         Insert: {
+          chest_session_id?: string | null
           code: string
           created_at?: string
           customer_id: string
           expires_at: string
           id?: string
-          points_spent?: number
           reward_id: string
           status?: string
           used_at?: string | null
         }
         Update: {
+          chest_session_id?: string | null
           code?: string
           created_at?: string
           customer_id?: string
           expires_at?: string
           id?: string
-          points_spent?: number
           reward_id?: string
           status?: string
           used_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: 'redemptions_chest_session_id_fkey'
+            columns: ['chest_session_id']
+            isOneToOne: false
+            referencedRelation: 'chest_sessions'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'redemptions_customer_id_fkey'
             columns: ['customer_id']
@@ -392,15 +460,29 @@ export type Database = {
         Args: { p_display_name: string; p_promo_consent: boolean }
         Returns: undefined
       }
-      create_redemption: { Args: { p_customer: string; p_reward: string }; Returns: Json }
       customer_balance: { Args: { p_customer: string }; Returns: number }
       customer_dashboard: { Args: Record<PropertyKey, never>; Returns: Json }
       customer_purchase_count: { Args: { p_customer: string }; Returns: number }
       customer_streak_weeks: { Args: { p_customer: string }; Returns: number }
       expire_pending_claims: { Args: Record<PropertyKey, never>; Returns: number }
       expire_redemptions: { Args: { p_customer?: string }; Returns: number }
+      finish_chest: {
+        Args: {
+          p_customer: string
+          p_min_seconds: number
+          p_session: string
+          p_summary: Json
+          p_won: boolean
+        }
+        Returns: Json
+      }
       games_status: { Args: Record<PropertyKey, never>; Returns: Json }
       generate_redemption_code: { Args: Record<PropertyKey, never>; Returns: string }
+      get_chest_session: { Args: { p_customer: string; p_session: string }; Returns: Json }
+      issue_redemption: {
+        Args: { p_chest: string; p_customer: string; p_reward: string }
+        Returns: Json
+      }
       local_day_start: { Args: Record<PropertyKey, never>; Returns: string }
       newly_unlocked_rewards: {
         Args: {
@@ -424,9 +506,12 @@ export type Database = {
       }
       reconcile_http_call: { Args: { p_secret: string; p_url: string }; Returns: number }
       reconcile_maintenance: { Args: Record<PropertyKey, never>; Returns: Json }
+      renew_redemption: { Args: { p_customer: string; p_old: string }; Returns: Json }
       reverse_claim: { Args: { p_sale_uuid: string }; Returns: boolean }
+      reward_tickets: { Args: { p_customer: string; p_reward: string }; Returns: number }
       schedule_reconcile: { Args: { p_function_url: string; p_secret: string }; Returns: undefined }
       setting_json: { Args: { p_key: string }; Returns: Json }
+      start_chest: { Args: { p_customer: string; p_reward: string }; Returns: Json }
       update_profile: {
         Args: { p_display_name: string; p_promo_consent: boolean }
         Returns: undefined

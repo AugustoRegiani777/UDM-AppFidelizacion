@@ -77,6 +77,27 @@
 - [x] 9.3 Preparar deploy (netlify.toml, guía) sin ejecutarlo.
 - [x] 9.4 Checklist de lanzamiento + INFORME-FINAL.md.
 
+### Fase 10 · Puntos que no se gastan + cofre con juego (nuevo alcance, oct 2026)
+- [x] 10.1 Los puntos nunca se descuentan: premio por escalón repetible (`floor(total/umbral) - canjes`). *Hecho cuando:* canjear no mueve el saldo y los tests SQL lo prueban.
+- [x] 10.2 Cofre: `start_chest` / `finish_chest` / `renew_redemption`; el código solo se emite al ganar el juego (tiempo mínimo validado en el servidor, intentos ilimitados, modo relajado tras 2 derrotas).
+- [x] 10.3 Juego "Sobreviví a las migas" (canvas, táctil, motor puro testeado).
+- [x] 10.4 Pantallas: cofre, juego, resultado; panel y copy actualizados.
+- [x] 10.5 Tests de integración y e2e del flujo completo.
+
+### Fase 11 · Misiones de puntos extra + administración
+- [ ] 11.1 Misiones únicas: seguir en Instagram (sin verificar, puntos chicos) y reseña en Google Maps (pendiente de aprobación manual).
+- [ ] 11.2 Panel de administración (`/admin`, solo admins) para aprobar misiones.
+- [ ] 11.3 Tests (RLS, un solo cobro por misión, admin).
+
+### Fase 12 · Comunidad de recomendaciones
+- [ ] 12.1 Lugares (pizzerías argentinas, medialunas, cafés, helados…), alta con nombre o link de Google Maps, aprobación del admin.
+- [ ] 12.2 Comentarios y likes anónimos (solo se ve el conteo), con puntos y tope diario.
+- [ ] 12.3 Moderación en `/admin` (lugares, comentarios, reportes).
+- [ ] 12.4 Tests (RLS, anonimato, topes, moderación).
+
+### Pendiente de definir (Augusto)
+- Sistema de puntuación y niveles (se evalúa después de la Fase 12).
+
 ## Decisiones tomadas por defecto
 
 - Marca provisoria: crema + rojo, Poppins Bold / Bebas Neue (no hay brandbook en docs/marca/).
@@ -126,7 +147,18 @@
 - Íconos PNG provisorios generados desde los SVG (iPhone los necesita); reemplazar con los de marca.
 - `Iniciar app.bat` levanta todo el entorno local con doble clic.
 
+- (oct 2026) Puntos que nunca se gastan: el saldo es un total que solo sube; los premios son escalones repetibles. El juego es la ceremonia de desbloqueo: gana el premio quien llega al escalón y pasa el juego; si el cliente hace trampa solo se salta el juego, no gana nada extra.
+- (oct 2026) Reseñas de Google Maps dan puntos con aprobación manual (riesgo asumido por Augusto: la política de Google prohíbe reseñas incentivadas). El texto aclara que el puntaje no depende de que la reseña sea positiva.
+
+- (Fase 10) El juego "Sobreviví a las migas" corre sobre una simulación determinista compartida con el servidor (`supabase/functions/_shared/survivors/`, importada en la web con el alias `@engine`). El celular graba las entradas (semilla del servidor + cambios de dirección + mejoras elegidas) y `finish-chest` **reproduce la partida** para decidir si se ganó; el servidor además exige el tiempo real mínimo (85 % de la duración). Quien programe un bot perfecto solo se salta la ceremonia: el premio ya lo habilitan los puntos.
+- (Fase 10) La simulación evita sin/cos/pow (solo + − × ÷ y sqrt) y usa un RNG entero (mulberry32), para dar resultados idénticos en Chrome, Safari y Deno.
+- (Fase 10) Balance verificado con un bot: quieto nunca gana, un jugador atento gana ~70 %, el modo relajado (tras 2 derrotas) es más fácil. Configurable por `settings.chest_game.overrides` (ej. duración, vidas).
+- (Fase 10) Dibujo vectorial a la resolución real (DPR hasta 3) con resolución adaptativa si baja de ~48 fps; efectos solo de render (partículas, vibración); sonidos sintetizados; háptica en golpes y subidas de nivel.
+- (Fase 10) El proxy de desarrollo de Supabase pasó de `/supabase` a `/_sb` (chocaba con la carpeta `supabase/` que sirve el motor del juego).
+
 ## Ideas para después
+- Más juegos para la misma ceremonia del cofre (tres en línea, reflejos), elegidos al azar por premio.
+- Música de fondo y arte de marca para los íconos de las mejoras (hoy son emojis).
 
 - Cofre de racha (se abre al cumplir X semanas seguidas) y álbum de sabores (docs/04): requieren definir premios y datos de variedades.
 

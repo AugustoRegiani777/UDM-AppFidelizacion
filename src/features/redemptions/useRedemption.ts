@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { createRedemption, fetchRedemption } from './redemptionApi'
+import { fetchRedemption, renewRedemption } from './redemptionApi'
 
 const POLL_MS = 3000
 
@@ -23,10 +23,10 @@ export function useRedemption(id: string) {
   return query
 }
 
-export function useCreateRedemption() {
+export function useRenewRedemption() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: createRedemption,
+    mutationFn: renewRedemption,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
   })
 }

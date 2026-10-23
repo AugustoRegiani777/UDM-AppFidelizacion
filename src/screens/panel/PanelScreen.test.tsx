@@ -17,6 +17,7 @@ const reward = (over: Partial<Dashboard['rewards'][number]>): Dashboard['rewards
   image_url: null,
   current: 0,
   remaining: 150,
+  available: 0,
   unlocked: false,
   active_redemption: null,
   ...over,

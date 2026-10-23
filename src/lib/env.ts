@@ -5,9 +5,9 @@ function required(name: string, value: string | undefined): string {
   return value
 }
 
-/** En desarrollo se pasa por el proxy de Vite (`/supabase`): funciona igual desde el celular y con HTTPS. */
+/** En desarrollo se pasa por el proxy de Vite (`/_sb`): funciona igual desde el celular y con HTTPS. */
 function resolveSupabaseUrl(url: string): string {
-  return import.meta.env.DEV ? `${window.location.origin}/supabase` : url
+  return import.meta.env.DEV ? `${window.location.origin}/_sb` : url
 }
 
 export const env = {

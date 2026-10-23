@@ -1,4 +1,4 @@
-// El cliente pide el código de canje de un premio alcanzado. El servidor decide si corresponde.
+// Renueva un código de canje vencido sin volver a jugar (el cliente ya había pasado el juego).
 import { adminClient, requireUser } from '../_shared/clients.ts'
 import { handlePreflight } from '../_shared/cors.ts'
 import { errorResponse, HttpError, json } from '../_shared/errors.ts'
@@ -12,23 +12,24 @@ Deno.serve(async (req) => {
   try {
     if (req.method !== 'POST') throw new HttpError(405, 'method_not_allowed')
     const user = await requireUser(req)
-    const { reward_id: rewardId } = await req.json().catch(() => ({}))
-    if (typeof rewardId !== 'string' || !UUID_RE.test(rewardId))
-      throw new HttpError(400, 'invalid_reward_id')
+    const { redemption_id: redemptionId } = await req.json().catch(() => ({}))
+    if (typeof redemptionId !== 'string' || !UUID_RE.test(redemptionId)) {
+      throw new HttpError(400, 'invalid_redemption_id')
+    }
 
     const db = adminClient()
     const { data: allowed, error: limitError } = await db.rpc('rate_limit_hit', {
       p_customer: user.id,
-      p_action: 'create_redemption',
+      p_action: 'chest',
     })
     if (limitError) throw limitError
     if (!allowed) throw new HttpError(429, 'rate_limited')
 
-    const { data, error } = await db.rpc('create_redemption', {
+    const { data, error } = await db.rpc('renew_redemption', {
       p_customer: user.id,
-      p_reward: rewardId,
+      p_old: redemptionId,
     })
-    if (error?.message === 'reward_not_found') throw new HttpError(404, 'reward_not_found')
+    if (error?.message === 'not_renewable') throw new HttpError(409, 'not_renewable')
     if (error?.message === 'reward_not_reached') throw new HttpError(409, 'reward_not_reached')
     if (error) throw error
     return json(data)

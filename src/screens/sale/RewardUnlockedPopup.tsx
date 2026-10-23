@@ -2,7 +2,6 @@ import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router'
 import { Button } from '@/components/Button'
 import type { UnlockedReward } from '@/features/claims/claimApi'
-import { useCreateRedemption } from '@/features/redemptions/useRedemption'
 import { spring } from '@/motion/presets'
 import { copy } from '@/copy'
 
@@ -45,7 +44,6 @@ export function RewardUnlockedPopup({
   onClose: () => void
 }) {
   const navigate = useNavigate()
-  const create = useCreateRedemption()
   const calm = useReducedMotion()
 
   return (
@@ -57,17 +55,12 @@ export function RewardUnlockedPopup({
         transition={{ duration: 1.8, repeat: Infinity }}
       >
         <Button
-          disabled={create.isPending}
-          onClick={() =>
-            create.mutate(reward.id, {
-              onSuccess: (created) => {
-                onClose()
-                navigate(`/canje/${created.id}`)
-              },
-            })
-          }
+          onClick={() => {
+            onClose()
+            navigate(`/cofre/${reward.id}`)
+          }}
         >
-          {copy.redeem.cta}
+          {copy.chest.cta}
         </Button>
       </motion.div>
       <Button variant="ghost" onClick={onClose}>

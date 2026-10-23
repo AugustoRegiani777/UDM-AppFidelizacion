@@ -7,7 +7,7 @@ import type { RedemptionDetail } from '@/features/redemptions/redemptionApi'
 import {
   formatCountdown,
   useCountdown,
-  useCreateRedemption,
+  useRenewRedemption,
   useRedemption,
 } from '@/features/redemptions/useRedemption'
 import { copy } from '@/copy'
@@ -31,7 +31,7 @@ function RedemptionView({ redemption }: { redemption: RedemptionDetail }) {
     return <Notice title={copy.redeem.usedTitle(rewardName)} body={copy.redeem.usedBody} />
   }
   if (redemption.status === 'expired' || remaining === 0) {
-    return <ExpiredView rewardId={redemption.reward_id} />
+    return <ExpiredView redemptionId={redemption.id} />
   }
 
   return (
@@ -51,9 +51,9 @@ function RedemptionView({ redemption }: { redemption: RedemptionDetail }) {
   )
 }
 
-function ExpiredView({ rewardId }: { rewardId: string }) {
+function ExpiredView({ redemptionId }: { redemptionId: string }) {
   const navigate = useNavigate()
-  const create = useCreateRedemption()
+  const create = useRenewRedemption()
 
   return (
     <Screen className="justify-center gap-4 text-center">
@@ -67,7 +67,7 @@ function ExpiredView({ rewardId }: { rewardId: string }) {
       <Button
         disabled={create.isPending}
         onClick={() =>
-          create.mutate(rewardId, {
+          create.mutate(redemptionId, {
             onSuccess: (next) => navigate(`/canje/${next.id}`, { replace: true }),
           })
         }

@@ -1,23 +1,17 @@
-import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
-export interface CreatedRedemption {
+export interface RenewedRedemption {
   id: string
   code: string
   expires_at: string
   reward_name: string
 }
 
-export class RewardNotReachedError extends Error {}
-
-/** Pide el código de canje. El servidor decide si el premio está alcanzado. */
-export async function createRedemption(rewardId: string): Promise<CreatedRedemption> {
-  const { data, error } = await supabase.functions.invoke<CreatedRedemption>('create-redemption', {
-    body: { reward_id: rewardId },
+/** Renueva un código vencido sin volver a jugar el cofre. */
+export async function renewRedemption(redemptionId: string): Promise<RenewedRedemption> {
+  const { data, error } = await supabase.functions.invoke<RenewedRedemption>('renew-redemption', {
+    body: { redemption_id: redemptionId },
   })
-  if (error instanceof FunctionsHttpError && error.context.status === 409) {
-    throw new RewardNotReachedError()
-  }
   if (error || !data) throw error ?? new Error('empty_response')
   return data
 }

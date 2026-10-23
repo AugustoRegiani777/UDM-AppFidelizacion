@@ -109,3 +109,11 @@ Los premios por **compras** cuentan compras confirmadas y no consumen puntos.
 - Consentimiento del programa y de promos por separado, con fecha guardada.
 - Texto legal corto y claro (lo revisa la gestoría antes del lanzamiento).
 - El cliente puede borrar su cuenta y todos sus datos desde el perfil.
+
+## Nuevo alcance (octubre 2026)
+
+- **Puntos que no se gastan.** El saldo es un total acumulado que solo sube. Cada premio es un escalón repetible: el café se desbloquea cada 150 puntos acumulados, el sanguche cada 300 (reemplaza la regla anterior de "descontar al validar"). Canjear no mueve el saldo.
+- **Cofre con juego.** Para canjear un premio desbloqueado hay que pasar un juego corto ("Sobreviví a las migas"). Intentos ilimitados; tras 2 derrotas se ofrece un modo relajado. El juego es la ceremonia: el premio lo habilitan los puntos.
+- **Misiones de puntos extra:** seguir a Uno de Miga en Instagram (una vez, sin verificar) y reseña en Google Maps (una vez, aprobación manual).
+- **Comunidad:** recomendaciones de lugares de Valencia (pizzerías argentinas, medialunas, cafés, helados). Se suman puntos por proponer un lugar, comentar y dar like; los likes son anónimos; todo se modera desde un panel de administración.
+- Pendiente de definir: sistema de puntuación y niveles.

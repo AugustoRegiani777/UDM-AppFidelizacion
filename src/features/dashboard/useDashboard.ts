@@ -14,6 +14,8 @@ export interface DashboardReward {
   current: number
   /** Lo que falta (puntos o compras). */
   remaining: number
+  /** Cuántas veces se puede canjear ahora (escalones repetibles). */
+  available: number
   unlocked: boolean
   active_redemption: { id: string; code: string; expires_at: string } | null
 }

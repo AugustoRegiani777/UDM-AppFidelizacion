@@ -58,6 +58,18 @@ export const router = createBrowserRouter([
               { path: '/panel', element: <PanelScreen /> },
               { path: '/misiones', element: <MissionsScreen /> },
               {
+                path: '/comunidad',
+                lazy: async () => ({
+                  Component: (await import('@/screens/community/CommunityScreen')).CommunityScreen,
+                }),
+              },
+              {
+                path: '/comunidad/:id',
+                lazy: async () => ({
+                  Component: (await import('@/screens/community/PlaceScreen')).PlaceScreen,
+                }),
+              },
+              {
                 path: '/admin',
                 lazy: async () => ({
                   Component: (await import('@/screens/admin/AdminScreen')).AdminScreen,

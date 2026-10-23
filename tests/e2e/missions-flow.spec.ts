@@ -1,30 +1,12 @@
-import { devices, expect, test, type Page } from '@playwright/test'
-import { admin } from '../integration/helpers'
-
-async function signUp(page: Page, email: string) {
-  await page.goto('/')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Contraseña').fill('secret-123456')
-  await page.getByRole('button', { name: 'Entrar con email' }).click()
-  await page.getByRole('checkbox', { name: /reglas del programa/i }).check()
-  await page.getByRole('button', { name: 'Empezar a sumar' }).click()
-  await page.getByText('Tu primera compra suma puntos').waitFor({ timeout: 20_000 })
-}
-
-async function makeAdmin(email: string) {
-  const { data } = await admin.auth.admin.listUsers({ perPage: 200 })
-  const user = data.users.find((u) => u.email === email)
-  if (!user) throw new Error('usuario no encontrado')
-  await admin.from('profiles').update({ is_admin: true }).eq('id', user.id)
-}
+import { expect, test } from '@playwright/test'
+import { openAdminSession, signUp } from './support/session'
 
 test('misiones: Instagram suma al instante, la reseña la aprueba el admin', async ({
   page,
   browser,
 }) => {
-  const customerEmail = `cliente-${crypto.randomUUID()}@test.local`
   const googleName = `Lu ${crypto.randomUUID().slice(0, 8)}`
-  await signUp(page, customerEmail)
+  await signUp(page)
 
   await page.getByRole('link', { name: /Puntos extra/ }).click()
   await expect(page.getByRole('heading', { name: 'Ganá más puntos' })).toBeVisible()
@@ -40,14 +22,7 @@ test('misiones: Instagram suma al instante, la reseña la aprueba el admin', asy
   await expect(page.getByText(/en revisión/i)).toBeVisible()
 
   // El admin la ve con el nombre y la aprueba.
-  const adminContext = await browser.newContext({
-    ...devices['Pixel 5'],
-    baseURL: 'http://localhost:5173',
-  })
-  const adminPage = await adminContext.newPage()
-  const adminEmail = `admin-${crypto.randomUUID()}@test.local`
-  await signUp(adminPage, adminEmail)
-  await makeAdmin(adminEmail)
+  const { page: adminPage, context: adminContext } = await openAdminSession(browser)
   await adminPage.goto('/admin')
   await expect(adminPage.getByRole('heading', { name: 'Administración' })).toBeVisible()
   const card = adminPage.locator('.rounded-card', { hasText: googleName })

@@ -9,14 +9,20 @@ La app de fidelización de Uno de Miga está construida de punta a punta y proba
 - Casos raros resueltos: venta duplicada, anulada, de Glovo / Too Good To Go, vieja, que el POS todavía no conoce (queda pendiente y se acredita sola) y anulada después de sumada (se descuentan los puntos).
 - Panel con saldo grande, premios con barra y "te faltan X", racha de semanas, últimas compras e historial completo.
 - Canje: código `MIGA-XXXX` con cuenta regresiva real, validación desde la caja con firma HMAC, descuento de puntos al validar y protección contra doble uso simultáneo.
-- Juegos: raspadita después de cada compra y ruleta diaria, con el resultado decidido en el servidor, límites, tope diario y las probabilidades visibles en "¿Cómo funciona?".
+- **Puntos que no se gastan:** el saldo es un total que solo sube. Cada premio es un escalón repetible (café cada 150 puntos acumulados, sanguche cada 300…). Canjear no baja nada.
+- **Cofre con juego:** para canjear un premio hay que pasar "Sobreviví a las migas" (arcade de 50 segundos: movés tu sanguche con el dedo, tira migas solo, juntás gemas, subís de nivel y elegís mejoras, hay oleadas y una Reina hormiga). El servidor **reproduce la partida** con la misma simulación para confirmar que se ganó. Intentos ilimitados y modo relajado tras 2 derrotas.
+- **Misiones de puntos extra:** seguir en Instagram (suma al instante) y reseña de Google Maps (la aprobás vos desde `/admin`).
+- **Comunidad de recomendaciones:** lugares argentos de Valencia por categoría, con likes anónimos, comentarios, alias y puntos por participar; todo moderable desde `/admin`.
+- Juegos de azar livianos: raspadita después de cada compra y ruleta diaria, con el resultado decidido en el servidor, límites, tope diario y las probabilidades visibles en "¿Cómo funciona?".
 - Animaciones y celebraciones (check que se dibuja, confetti, regalo que se abre, código que se imprime), con respeto por "Reducir movimiento"; sonido apagado por defecto.
 - Reconciliación automática cada 5 minutos, borrado de cuenta y datos, y todo preparado para publicar (`docs/DEPLOY.md`).
 - Preparado para el Wallet de Apple/Google: cada cambio de saldo deja un evento (`balance_events`).
 
-**Pruebas automáticas:** 112 de base de datos (incluye seguridad de RLS), 47 unitarias, 29 de integración con las funciones reales y 7 de navegador de punta a punta.
+**Pruebas automáticas:** 172 de base de datos (incluye seguridad entre clientes), 57 unitarias (incluye el motor del juego y un bot que prueba el balance), 34 de integración con las funciones reales y 10 de navegador de punta a punta.
 
 ## 2. Cómo probarlo en tu celular (paso a paso)
+
+**Usuario de prueba permanente (administrador):** `augusto@unodemiga.test` / `miga1234`. Ya pasó la bienvenida y se puede usar en el login por email.
 
 **Preparación (una vez por sesión)**
 
@@ -65,12 +71,16 @@ Ver `docs/PENDIENTES-AUGUSTO.md` (con instrucciones paso a paso): brandbook y lo
 - **No se probó en un celular real.** Todo se probó con navegador de escritorio emulando un Pixel 5. La raspadita con el dedo en celular real y el rendimiento en Android de gama media hay que verlos en mano (el test de raspado usa eventos de puntero sintéticos porque el mouse emulado no entregaba el "apretar").
 - **Quien escanea primero se queda con la venta.** Si alguien le saca foto al QR de la tablet y lo escanea antes, se lleva los puntos. La ventana de 2 horas y el QR de 60 segundos limitan el riesgo; se puede endurecer (por ejemplo, QR de un solo uso con vencimiento corto del lado del POS).
 - **Firma HMAC sin "nonce":** una llamada firmada podría repetirse dentro de los 5 minutos de validez. `validate-redemption` es idempotente (un código usado no se vuelve a usar), así que el impacto es bajo.
+- **Juego:** un bot perfecto (programado con el mismo motor) podría ganar el cofre; solo se saltearía la ceremonia, porque el premio ya lo habilitan los puntos. La dificultad se calibró con un bot, no con personas: conviene probarla con clientes reales y ajustar `settings.chest_game.overrides`. Los íconos de las mejoras son emojis (se ven distinto según el celular).
+- **Comunidad:** al haber contenido de usuarios, hace falta moderar con regularidad y sumar reglas de convivencia a los textos legales (ver PENDIENTES, sección 9). Los comentarios se publican al instante y se ocultan solo al ser reportados.
+- **Reseñas de Google con puntos:** riesgo asumido (política de Google).
 - **Las Edge Functions (Deno) no pasan por el typecheck de TypeScript;** se validan al correrlas y con los tests de integración.
 - **Animaciones con SVG en vez de Lottie:** pesan menos, pero si la marca quiere animaciones de diseño propias, hay que sumar archivos `.lottie`.
 - **Bundle:** ~268 KB la pantalla inicial (80 KB comprimida); se podría bajar usando `LazyMotion`.
+- **Sin mediciones aún del rendimiento del juego en celulares reales** (hay resolución adaptativa y se probó en navegador de escritorio).
 - **Solo español.** Los textos están centralizados en `src/copy/es.ts`, listos para sumar inglés.
 - **Texto de privacidad provisorio.**
-- **Cofre de racha y álbum de sabores** (docs/04) no se hicieron: faltan decisiones de premios y datos de variedades.
+- **Cofre de racha y álbum de sabores** (docs/04) no se hicieron. Sistema de puntuación y niveles: pendiente de definir (se evalúa a futuro).
 - El saldo puede quedar negativo si se anula una venta cuyos puntos ya se gastaron.
 
 ## 6. Próximos pasos

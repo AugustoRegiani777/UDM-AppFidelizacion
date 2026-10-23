@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "db:reset": "supabase db reset",
-    "db:test": "supabase test db",
+    "db:test": "supabase db reset && supabase test db",
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "functions": "supabase functions serve",

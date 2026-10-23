@@ -20,6 +20,14 @@ Tildá cada punto antes de abrir la app a clientes. Lo que ya está resuelto en 
 - [ ] Secretos de producción generados (distintos de los de desarrollo) y guardados en un gestor de contraseñas.
 - [ ] Copias de seguridad de la base activas en Supabase.
 
+## Comunidad y misiones
+
+- [ ] Links reales de Instagram y de reseña de Google cargados en `settings.missions`.
+- [ ] Reglas de convivencia de la comunidad revisadas por la gestoría.
+- [ ] Al menos 8-10 lugares cargados desde `/admin` antes de abrir la comunidad.
+- [ ] Alguien sabe revisar `/admin` (lugares propuestos, reseñas por verificar, comentarios reportados).
+- [ ] Administradores asignados por SQL (ver PENDIENTES, sección 8).
+
 ## Integración con el POS
 
 - [ ] Funciones del POS listas en staging (`loyalty-sale`, `loyalty-redeem`, QR en la tablet): ver `docs/03-integracion-pos.md`.

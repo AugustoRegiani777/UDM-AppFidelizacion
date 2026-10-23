@@ -78,24 +78,28 @@
 - [x] 9.4 Checklist de lanzamiento + INFORME-FINAL.md.
 
 ### Fase 10 · Puntos que no se gastan + cofre con juego (nuevo alcance, oct 2026)
-- [x] 10.1 Los puntos nunca se descuentan: premio por escalón repetible (`floor(total/umbral) - canjes`). *Hecho cuando:* canjear no mueve el saldo y los tests SQL lo prueban.
+
+- [x] 10.1 Los puntos nunca se descuentan: premio por escalón repetible (`floor(total/umbral) - canjes`). _Hecho cuando:_ canjear no mueve el saldo y los tests SQL lo prueban.
 - [x] 10.2 Cofre: `start_chest` / `finish_chest` / `renew_redemption`; el código solo se emite al ganar el juego (tiempo mínimo validado en el servidor, intentos ilimitados, modo relajado tras 2 derrotas).
 - [x] 10.3 Juego "Sobreviví a las migas" (canvas, táctil, motor puro testeado).
 - [x] 10.4 Pantallas: cofre, juego, resultado; panel y copy actualizados.
 - [x] 10.5 Tests de integración y e2e del flujo completo.
 
 ### Fase 11 · Misiones de puntos extra + administración
+
 - [x] 11.1 Misiones únicas: seguir en Instagram (sin verificar, puntos chicos) y reseña en Google Maps (pendiente de aprobación manual).
 - [x] 11.2 Panel de administración (`/admin`, solo admins) para aprobar misiones.
 - [x] 11.3 Tests (RLS, un solo cobro por misión, admin).
 
 ### Fase 12 · Comunidad de recomendaciones
-- [ ] 12.1 Lugares (pizzerías argentinas, medialunas, cafés, helados…), alta con nombre o link de Google Maps, aprobación del admin.
-- [ ] 12.2 Comentarios y likes anónimos (solo se ve el conteo), con puntos y tope diario.
-- [ ] 12.3 Moderación en `/admin` (lugares, comentarios, reportes).
-- [ ] 12.4 Tests (RLS, anonimato, topes, moderación).
+
+- [x] 12.1 Lugares (pizzerías argentinas, medialunas, cafés, helados…), alta con nombre o link de Google Maps, aprobación del admin.
+- [x] 12.2 Comentarios y likes anónimos (solo se ve el conteo), con puntos y tope diario.
+- [x] 12.3 Moderación en `/admin` (lugares, comentarios, reportes).
+- [x] 12.4 Tests (RLS, anonimato, topes, moderación).
 
 ### Pendiente de definir (Augusto)
+
 - Sistema de puntuación y niveles (se evalúa después de la Fase 12).
 
 ## Decisiones tomadas por defecto
@@ -159,7 +163,12 @@
 - (Fase 11) Misiones: Instagram (15 puntos, sin verificar, una vez) y reseña de Google Maps (50 puntos, pendiente hasta que el admin la apruebe; se guarda el nombre del cliente en Google para encontrarla). Puntos y links en `settings.missions` (público). Si el admin rechaza, el cliente puede volver a intentar.
 - (Fase 11) Rol `profiles.is_admin` (se asigna por SQL, el cliente no puede modificarlo) y `/admin` con las funciones `admin_pending_missions` / `admin_review_mission`, que vuelven a chequear el rol en el servidor.
 
+- (Fase 12) Comunidad: lugares moderados (los aprueba el admin y el autor suma 30 puntos), comentarios que se publican al instante (con botón "Reportar", que los oculta hasta que el admin decida) y likes anónimos (solo se ve el conteo; los comentarios muestran un alias tipo "Miguero 3F9A"). Puntos: +1 por like, +3 por comentario, tope diario de 12 puntos por cliente, máximo 5 comentarios y 3 lugares por día. Dar like por primera vez a un contenido suma una sola vez (quitar y poner no vuelve a sumar). No se puede dar like a lo propio.
+- (Fase 12) Todo el acceso a la comunidad es por funciones del servidor: las tablas no tienen permisos para el cliente (RLS sin políticas), así el anonimato de los likes no depende del frontend. Los links de lugares solo aceptan Google Maps.
+- (Fase 12) `seed.sql` crea un usuario de prueba permanente (augusto@unodemiga.test / miga1234, administrador). `npm run db:test` reinicia la base antes de correr los tests SQL (asumen base limpia).
+
 ## Ideas para después
+
 - Más juegos para la misma ceremonia del cofre (tres en línea, reflejos), elegidos al azar por premio.
 - Música de fondo y arte de marca para los íconos de las mejoras (hoy son emojis).
 

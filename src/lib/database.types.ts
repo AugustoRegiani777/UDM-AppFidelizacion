@@ -220,6 +220,80 @@ export type Database = {
           },
         ]
       }
+      comment_likes: {
+        Row: {
+          active: boolean
+          comment_id: string
+          created_at: string
+          customer_id: string
+          id: string
+        }
+        ComputedFields: never
+        Insert: {
+          active?: boolean
+          comment_id: string
+          created_at?: string
+          customer_id: string
+          id?: string
+        }
+        Update: {
+          active?: boolean
+          comment_id?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'comment_likes_comment_id_fkey'
+            columns: ['comment_id']
+            isOneToOne: false
+            referencedRelation: 'place_comments'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comment_likes_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      comment_reports: {
+        Row: {
+          comment_id: string
+          created_at: string
+          customer_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          comment_id: string
+          created_at?: string
+          customer_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          customer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'comment_reports_comment_id_fkey'
+            columns: ['comment_id']
+            isOneToOne: false
+            referencedRelation: 'place_comments'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comment_reports_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       dev_mock_sales: {
         Row: {
           channel: string
@@ -281,6 +355,150 @@ export type Database = {
           {
             foreignKeyName: 'game_plays_customer_id_fkey'
             columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      place_comments: {
+        Row: {
+          body: string
+          created_at: string
+          customer_id: string
+          hidden: boolean
+          id: string
+          place_id: string
+          status: string
+        }
+        ComputedFields: never
+        Insert: {
+          body: string
+          created_at?: string
+          customer_id: string
+          hidden?: boolean
+          id?: string
+          place_id: string
+          status?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          customer_id?: string
+          hidden?: boolean
+          id?: string
+          place_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'place_comments_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'place_comments_place_id_fkey'
+            columns: ['place_id']
+            isOneToOne: false
+            referencedRelation: 'places'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      place_likes: {
+        Row: {
+          active: boolean
+          created_at: string
+          customer_id: string
+          id: string
+          place_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          active?: boolean
+          created_at?: string
+          customer_id: string
+          id?: string
+          place_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          customer_id?: string
+          id?: string
+          place_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'place_likes_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'place_likes_place_id_fkey'
+            columns: ['place_id']
+            isOneToOne: false
+            referencedRelation: 'places'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      places: {
+        Row: {
+          address: string | null
+          category: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          maps_url: string | null
+          name: string
+          note: string
+          status: string
+          submitted_by: string
+        }
+        ComputedFields: never
+        Insert: {
+          address?: string | null
+          category: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          maps_url?: string | null
+          name: string
+          note?: string
+          status?: string
+          submitted_by: string
+        }
+        Update: {
+          address?: string | null
+          category?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          maps_url?: string | null
+          name?: string
+          note?: string
+          status?: string
+          submitted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'places_decided_by_fkey'
+            columns: ['decided_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'places_submitted_by_fkey'
+            columns: ['submitted_by']
             isOneToOne: false
             referencedRelation: 'profiles'
             referencedColumns: ['id']
@@ -507,6 +725,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_comment: { Args: { p_body: string; p_place: string }; Returns: Json }
+      admin_create_place: {
+        Args: {
+          p_address: string
+          p_category: string
+          p_maps_url: string
+          p_name: string
+          p_note: string
+        }
+        Returns: string
+      }
       admin_pending_missions: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -517,12 +746,22 @@ export type Database = {
           note: string
         }[]
       }
+      admin_pending_places: { Args: Record<PropertyKey, never>; Returns: Json }
+      admin_reported_comments: { Args: Record<PropertyKey, never>; Returns: Json }
+      admin_review_comment: { Args: { p_comment: string; p_keep: boolean }; Returns: undefined }
       admin_review_mission: { Args: { p_approve: boolean; p_claim: string }; Returns: undefined }
+      admin_review_place: { Args: { p_approve: boolean; p_place: string }; Returns: undefined }
+      award_community: {
+        Args: { p_customer: string; p_points: number; p_ref: string; p_table: string }
+        Returns: number
+      }
       claim_mission: { Args: { p_mission: string; p_note?: string }; Returns: Json }
       claim_sale_apply: {
         Args: { p_customer: string; p_sale: Json; p_sale_uuid: string }
         Returns: Json
       }
+      community_alias: { Args: { p_customer: string }; Returns: string }
+      community_places: { Args: { p_category?: string }; Returns: Json }
       complete_onboarding: {
         Args: { p_display_name: string; p_promo_consent: boolean }
         Returns: undefined
@@ -562,6 +801,7 @@ export type Database = {
         Returns: Json
       }
       pick_prize: { Args: { p_prizes: Json }; Returns: Json }
+      place_comments_list: { Args: { p_place: string }; Returns: Json }
       play_game: { Args: { p_customer: string; p_game: string; p_ref?: string }; Returns: Json }
       rate_limit_hit: { Args: { p_action: string; p_customer: string }; Returns: boolean }
       reconcile_candidates: {
@@ -575,11 +815,26 @@ export type Database = {
       reconcile_http_call: { Args: { p_secret: string; p_url: string }; Returns: number }
       reconcile_maintenance: { Args: Record<PropertyKey, never>; Returns: Json }
       renew_redemption: { Args: { p_customer: string; p_old: string }; Returns: Json }
+      report_comment: { Args: { p_comment: string }; Returns: undefined }
+      require_admin: { Args: Record<PropertyKey, never>; Returns: undefined }
+      require_user: { Args: Record<PropertyKey, never>; Returns: string }
       reverse_claim: { Args: { p_sale_uuid: string }; Returns: boolean }
       reward_tickets: { Args: { p_customer: string; p_reward: string }; Returns: number }
       schedule_reconcile: { Args: { p_function_url: string; p_secret: string }; Returns: undefined }
       setting_json: { Args: { p_key: string }; Returns: Json }
       start_chest: { Args: { p_customer: string; p_reward: string }; Returns: Json }
+      submit_place: {
+        Args: {
+          p_address: string
+          p_category: string
+          p_maps_url: string
+          p_name: string
+          p_note: string
+        }
+        Returns: string
+      }
+      toggle_comment_like: { Args: { p_comment: string }; Returns: Json }
+      toggle_place_like: { Args: { p_place: string }; Returns: Json }
       update_profile: {
         Args: { p_display_name: string; p_promo_consent: boolean }
         Returns: undefined

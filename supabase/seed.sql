@@ -24,3 +24,27 @@ on conflict do nothing;
 
 -- Reconciliación local: pg_cron llama a la Edge Function por la red interna de Docker.
 select public.schedule_reconcile('http://kong:8000/functions/v1/reconcile', 'dev-secret-reconcile');
+
+-- Usuario de prueba para desarrollo (login por email): augusto@unodemiga.test / miga1234.
+-- Ya pasó la bienvenida y es administrador, así se puede probar todo sin registrarse.
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change
+) values (
+  '00000000-0000-0000-0000-000000000000', 'dddddddd-0000-4000-8000-000000000001',
+  'authenticated', 'authenticated', 'augusto@unodemiga.test',
+  extensions.crypt('miga1234', extensions.gen_salt('bf')), now(),
+  '{"provider": "email", "providers": ["email"]}', '{"full_name": "Augusto"}', now(), now(),
+  '', '', '', ''
+) on conflict (id) do nothing;
+
+insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+values (
+  gen_random_uuid(), 'dddddddd-0000-4000-8000-000000000001', 'dddddddd-0000-4000-8000-000000000001',
+  jsonb_build_object('sub', 'dddddddd-0000-4000-8000-000000000001', 'email', 'augusto@unodemiga.test'),
+  'email', now(), now(), now()
+) on conflict do nothing;
+
+update public.profiles set program_consent_at = now(), is_admin = true
+ where id = 'dddddddd-0000-4000-8000-000000000001';

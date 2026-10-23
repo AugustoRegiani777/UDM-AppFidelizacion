@@ -414,7 +414,18 @@ export type Database = {
       pick_prize: { Args: { p_prizes: Json }; Returns: Json }
       play_game: { Args: { p_customer: string; p_game: string; p_ref?: string }; Returns: Json }
       rate_limit_hit: { Args: { p_action: string; p_customer: string }; Returns: boolean }
+      reconcile_candidates: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          customer_id: string
+          sale_uuid: string
+          status: string
+        }[]
+      }
+      reconcile_http_call: { Args: { p_secret: string; p_url: string }; Returns: number }
+      reconcile_maintenance: { Args: Record<PropertyKey, never>; Returns: Json }
       reverse_claim: { Args: { p_sale_uuid: string }; Returns: boolean }
+      schedule_reconcile: { Args: { p_function_url: string; p_secret: string }; Returns: undefined }
       setting_json: { Args: { p_key: string }; Returns: Json }
       update_profile: {
         Args: { p_display_name: string; p_promo_consent: boolean }

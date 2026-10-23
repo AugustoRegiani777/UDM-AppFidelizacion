@@ -72,10 +72,10 @@
 
 ### Fase 9 · Reconciliación y producción
 
-- [ ] 9.1 `reconcile` + pg_cron.
-- [ ] 9.2 Tests e2e Playwright.
-- [ ] 9.3 Preparar deploy (netlify.toml, guía) sin ejecutarlo.
-- [ ] 9.4 Checklist de lanzamiento + INFORME-FINAL.md.
+- [x] 9.1 `reconcile` + pg_cron.
+- [x] 9.2 Tests e2e Playwright.
+- [x] 9.3 Preparar deploy (netlify.toml, guía) sin ejecutarlo.
+- [x] 9.4 Checklist de lanzamiento + INFORME-FINAL.md.
 
 ## Decisiones tomadas por defecto
 
@@ -121,7 +121,13 @@
 - Cofre de racha y álbum de sabores quedan para después (ver Ideas).
 - La raspadita se acredita al abrirla (el servidor ya decidió); si el cliente sale sin raspar, el premio igual queda en su saldo.
 
+- Reconciliación: `reconcile_maintenance()` (SQL) y la función `reconcile` corren cada 5 min con pg_cron; `schedule_reconcile()` se ejecuta una vez por entorno (local: en seed.sql).
+- Deploy preparado, no ejecutado: `netlify.toml`, `docs/DEPLOY.md`, `docs/CHECKLIST-LANZAMIENTO.md`, pasos para Augusto en PENDIENTES (sección 5).
+- Íconos PNG provisorios generados desde los SVG (iPhone los necesita); reemplazar con los de marca.
+- `Iniciar app.bat` levanta todo el entorno local con doble clic.
+
 ## Ideas para después
+
 - Cofre de racha (se abre al cumplir X semanas seguidas) y álbum de sabores (docs/04): requieren definir premios y datos de variedades.
 
 - (vacío)

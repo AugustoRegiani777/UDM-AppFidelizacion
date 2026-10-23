@@ -45,3 +45,7 @@ React + TypeScript + Vite · Tailwind CSS · Motion (`motion/react`) · React Ro
 - `npm run lint` / `npm run typecheck` / `npm test` — chequeos (los tres deben quedar en verde antes de cada commit)
 - `npm run format` — Prettier
 - `npx supabase start` — Supabase local (requiere Docker Desktop encendido)
+- `npm run check` — lint + typecheck + tests unitarios
+- `npm run test:integration` / `npm run test:e2e` — requieren Supabase local y `npm run functions` corriendo
+- `npm run db:test` / `npm run db:reset` / `npm run db:types` — base de datos local
+- `npm run dev:https` — web con HTTPS local (necesario para la cámara en el celular)

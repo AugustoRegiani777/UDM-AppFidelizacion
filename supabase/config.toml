@@ -424,3 +424,7 @@ enabled = true
 # validate-redemption la llama el servidor del POS con firma HMAC, no con el JWT de un cliente.
 [functions.validate-redemption]
 verify_jwt = false
+
+# reconcile la dispara pg_cron con un secreto propio (header x-reconcile-secret), no con un JWT.
+[functions.reconcile]
+verify_jwt = false

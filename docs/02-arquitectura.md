@@ -111,3 +111,11 @@ Todo en `supabase/functions/_shared/`: `pos-adapter.ts` (mock y real), `hmac.ts`
 
 Frontend: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_APP_URL`.
 Edge Functions: `POS_MODE` (`mock` | `real`), `POS_BASE_URL`, `POS_HMAC_SECRET`, `POS_INBOUND_HMAC_SECRET`.
+
+## Anexo (implementación)
+
+- **Reglas en SQL:** `claim_sale_apply`, `reverse_claim`, `create_redemption`, `validate_redemption` y `play_game` son funciones `security definer` que solo puede llamar el service role; las Edge Functions son finas (autenticar, limitar ritmo, consultar al POS, llamar a la función).
+- **Reconciliación:** `reconcile_maintenance()` (solo SQL) y la función `reconcile` (habla con el POS) corren cada 5 minutos con pg_cron (`schedule_reconcile`).
+- **Wallet (preparado, fuera de alcance):** cada movimiento del libro inserta una fila en `balance_events` (outbox con `delta`, `balance` y `processed_at`). Un futuro proceso de Apple/Google Wallet lee las filas sin procesar, actualiza el pase y marca `processed_at`.
+- **Juegos:** premios y probabilidades en `settings.games` (público, se muestra en "¿Cómo funciona?"); resultado decidido en `play_game` antes de la animación.
+- **Funciones de desarrollo:** `dev-mock-sale` y `dev-pos-redeem` solo responden con `DEV_ENDPOINTS=true` y `POS_MODE=mock`; no se publican.

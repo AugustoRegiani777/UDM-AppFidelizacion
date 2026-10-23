@@ -47,7 +47,7 @@ select is(
   public.play_game('aaaaaaaa-0000-4000-8000-000000000001', 'scratch', 'c1000000-0000-4000-8000-000000000001') ->> 'prize_id',
   (select r ->> 'prize_id' from scratch1), 'raspar de nuevo muestra el MISMO resultado');
 select is(
-  (select count(*)::int from public.game_plays where game = 'scratch'), 1, 'y no se juega dos veces');
+  (select count(*)::int from public.game_plays where game = 'scratch' and customer_id = 'aaaaaaaa-0000-4000-8000-000000000001'), 1, 'y no se juega dos veces');
 
 -- La app muestra qué hay para jugar.
 set local role authenticated;

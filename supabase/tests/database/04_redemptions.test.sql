@@ -26,7 +26,7 @@ select is(public.customer_balance('aaaaaaaa-0000-4000-8000-000000000001'), 160, 
 select is(
   (public.create_redemption('aaaaaaaa-0000-4000-8000-000000000001', (select id from reward_ids where name = 'Un café')) ->> 'code'),
   (select r ->> 'code' from c1), 'pedir de nuevo devuelve el mismo código vigente');
-select is((select count(*)::int from public.redemptions), 1, 'no se acumulan códigos');
+select is((select count(*)::int from public.redemptions where customer_id = 'aaaaaaaa-0000-4000-8000-000000000001'), 1, 'no se acumulan códigos');
 
 -- Los puntos del código vigente quedan reservados.
 select throws_ok(
@@ -39,8 +39,8 @@ select is((select (r ->> 'valid')::boolean from v1), true, 'código válido (sin
 select is((select r -> 'reward' ->> 'name' from v1), 'Un café', 'devuelve el premio');
 select is((select r ->> 'customer_name' from v1), 'Ana', 'devuelve solo el primer nombre');
 select is(public.customer_balance('aaaaaaaa-0000-4000-8000-000000000001'), 10, 'recién ahora se descuentan los 150 puntos');
-select is((select status from public.redemptions), 'used', 'el código queda usado');
-select is((select kind from public.point_movements where ref_table = 'redemptions'), 'redeem', 'el descuento es un movimiento del libro');
+select is((select status from public.redemptions where customer_id = 'aaaaaaaa-0000-4000-8000-000000000001'), 'used', 'el código queda usado');
+select is((select kind from public.point_movements where ref_table = 'redemptions' and customer_id = 'aaaaaaaa-0000-4000-8000-000000000001'), 'redeem', 'el descuento es un movimiento del libro');
 
 -- Usado, inexistente
 select is(public.validate_redemption((select r ->> 'code' from c1)) ->> 'reason', 'used', 'no se puede usar dos veces');
@@ -71,7 +71,7 @@ values ('aaaaaaaa-0000-4000-8000-000000000001', gen_random_uuid(), 'confirmed', 
 create temp table c3 as select public.create_redemption(
   'aaaaaaaa-0000-4000-8000-000000000001', (select id from reward_ids where name = 'Media docena de migas')) as r;
 select is(public.validate_redemption((select r ->> 'code' from c3)) -> 'reward' ->> 'kind', 'purchases', 'con 50 compras se canjea la media docena');
-select is((select count(*)::int from public.point_movements where ref_table = 'redemptions' and points = 0), 0, 'canjear por compras no mueve puntos');
+select is((select count(*)::int from public.point_movements where ref_table = 'redemptions' and points = 0 and customer_id = 'aaaaaaaa-0000-4000-8000-000000000001'), 0, 'canjear por compras no mueve puntos');
 select throws_ok(
   $$ select public.create_redemption('aaaaaaaa-0000-4000-8000-000000000001', (select id from reward_ids where name = 'Media docena de migas')) $$,
   'P0001', 'reward_not_reached', 'el siguiente recién a las 100 compras');

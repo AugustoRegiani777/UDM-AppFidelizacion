@@ -21,3 +21,6 @@ insert into public.dev_mock_sales (uuid, total_cents, sold_at, voided, channel, 
   ('00000000-0000-4000-8000-000000000005', 5000, now() - interval '3 days', false, 'local', now() - interval '3 days'),
   ('00000000-0000-4000-8000-000000000006', 1240, now(), false, 'local', now() + interval '10 years')
 on conflict do nothing;
+
+-- Reconciliación local: pg_cron llama a la Edge Function por la red interna de Docker.
+select public.schedule_reconcile('http://kong:8000/functions/v1/reconcile', 'dev-secret-reconcile');

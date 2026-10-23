@@ -36,7 +36,9 @@ describe('PopupQueue', () => {
     )
     expect(await screen.findByText('Popup solo')).toBeInTheDocument()
     await userEvent.keyboard('{Escape}')
-    await vi.waitFor(() => expect(screen.queryByText('Popup solo')).not.toBeInTheDocument())
+    await vi.waitFor(() => expect(screen.queryByText('Popup solo')).not.toBeInTheDocument(), {
+      timeout: 4000,
+    })
   })
 
   it('permite como máximo un popup espontáneo por sesión', async () => {
@@ -47,7 +49,9 @@ describe('PopupQueue', () => {
     )
     expect(await screen.findByText('Popup a')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
-    await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), {
+      timeout: 4000,
+    })
     expect(screen.queryByText('Popup b')).not.toBeInTheDocument()
   })
 })

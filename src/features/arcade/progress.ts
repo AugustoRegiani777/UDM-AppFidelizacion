@@ -27,3 +27,29 @@ export function unlockAfterWin(stage: number): number {
   }
   return next
 }
+
+const RACING_KEY = 'arcade_racing_unlocked'
+const RACING_TRACKS = 3
+
+/** Pista más alta que se puede correr (empieza en 1). */
+export function unlockedTrack(): number {
+  try {
+    const value = Number(localStorage.getItem(RACING_KEY))
+    return Number.isFinite(value) && value >= 1 ? Math.min(RACING_TRACKS, Math.floor(value)) : 1
+  } catch {
+    return 1
+  }
+}
+
+/** Subir al podio abre la pista siguiente. Devuelve la pista más alta abierta. */
+export function unlockRacing(track: number): number {
+  const next = Math.min(RACING_TRACKS, Math.max(1, Math.floor(track)) + 1)
+  const current = unlockedTrack()
+  if (next <= current) return current
+  try {
+    localStorage.setItem(RACING_KEY, String(next))
+  } catch {
+    // sin almacenamiento: el avance no se guarda, pero el juego sigue andando
+  }
+  return next
+}

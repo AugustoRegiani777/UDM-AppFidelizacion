@@ -76,13 +76,47 @@ export const es = {
     error: 'Uy, no pudimos generar tu código. Probá de nuevo.',
     backToPanel: 'Volver al panel',
   },
+  racing: {
+    title: 'Miga Racers',
+    subtitle: 'Autitos sobre la mesa de la sandwichería. Tres vueltas contra tres rivales.',
+    trackLabel: (n: number) => `Pista ${n}`,
+    trackName: (n: number) =>
+      ['La mesa de la cocina', 'El mostrador', 'La noche de Valencia'][n - 1] ?? `Pista ${n}`,
+    locked: 'Terminá 1º o 2º en la pista anterior para abrirla',
+    howTo: [
+      { icon: '👈', text: 'Tocá la mitad izquierda o derecha de la pantalla para doblar' },
+      { icon: '🚗', text: 'El auto acelera solo: dos dedos a la vez van derecho' },
+      { icon: '🌀', text: 'Mantené "Derrapar" en las curvas cerradas' },
+      { icon: '⚡', text: 'Los parches amarillos te dan turbo' },
+    ],
+    play: '¡A correr!',
+    go: '¡YA!',
+    drift: 'Derrapar',
+    place: (n: number) => `${n}º`,
+    lap: (n: number, total: number) => `Vuelta ${n}/${total}`,
+    finishBanner: (n: number) => (n === 1 ? '¡Ganaste!' : `Llegaste ${n}º`),
+    resultBody: (position: number, seconds: number) =>
+      `${position}º puesto en ${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}.`,
+    nextTrack: 'Siguiente pista',
+    backToTracks: 'Elegir pista',
+  },
   arcade: {
     section: 'Sala de juegos',
     sectionCta: 'Entrar',
     back: 'Volver al panel',
     title: 'Sala de juegos',
     subtitle:
-      'Acá practicás sin premio y sin apuro. Los premios del cofre se juegan desde el premio que desbloqueás con tus puntos.',
+      'Elegí un juego y jugalo todo lo que quieras, sin premio y sin apuro. Los premios del cofre se juegan desde el premio que desbloqueás con tus puntos.',
+    backToGames: 'Volver a los juegos',
+    skateWon: '¡Completaste el circuito!',
+    games: {
+      survivors: {
+        name: 'Sobreviví a las migas',
+        body: 'Seis niveles, poderes y una Reina hormiga.',
+      },
+      skate: { name: 'Skate de Miga', body: 'Rampas, trucos y turbo. Mejor en horizontal.' },
+      racing: { name: 'Miga Racers', body: 'Carreras de autitos sobre la mesa. Tres pistas.' },
+    },
     survivorsTitle: 'Sobreviví a las migas',
     survivorsBody:
       'Seis niveles, cada uno más largo y más picante. Ganá uno para abrir el siguiente.',

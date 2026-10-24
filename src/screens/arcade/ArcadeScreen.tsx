@@ -1,69 +1,28 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { resolveConfig, STAGE_COUNT, type GameConfig } from '@engine/config.ts'
-import { Button } from '@/components/Button'
 import { Card } from '@/components/Card'
 import { Screen } from '@/components/Screen'
-import { unlockAfterWin, unlockedStage } from '@/features/arcade/progress'
-import type { GameOutcome, GameSession } from '@/games/outcome'
-import { SurvivorsGame } from '@/games/survivors/SurvivorsGame'
 import { Cascade, CascadeItem } from '@/motion/Cascade'
 import { copy } from '@/copy'
+import { RacingArcade } from './RacingArcade'
+import { SkateArcade } from './SkateArcade'
+import { SurvivorsArcade } from './SurvivorsArcade'
 
-type View =
-  | { name: 'menu' }
-  | { name: 'playing'; stage: number; session: GameSession<GameConfig> }
-  | { name: 'result'; stage: number; won: boolean }
+type GameId = 'survivors' | 'skate' | 'racing'
 
-function practiceSession(stage: number): GameSession<GameConfig> {
-  // La semilla no decide ningún premio (es práctica): alcanza con una al azar del navegador.
-  const seed = (crypto.getRandomValues(new Uint32Array(1))[0] ?? 1) >>> 0
-  return { seed, config: resolveConfig({ stage }), relaxed: false }
-}
+const GAMES: { id: GameId; icon: string }[] = [
+  { id: 'survivors', icon: '🥪' },
+  { id: 'skate', icon: '🛹' },
+  { id: 'racing', icon: '🏎️' },
+]
 
-/** Sala de juegos: práctica libre por niveles, sin puntos ni premios. */
+/** Sala de juegos: elegís el juego y jugás todo lo que quieras, sin puntos ni premios. */
 export function ArcadeScreen() {
-  const [view, setView] = useState<View>({ name: 'menu' })
-  const [unlocked, setUnlocked] = useState(unlockedStage)
+  const [game, setGame] = useState<GameId | null>(null)
 
-  const play = (stage: number) =>
-    setView({ name: 'playing', stage, session: practiceSession(stage) })
-
-  if (view.name === 'playing') {
-    const { stage } = view
-    return (
-      <SurvivorsGame
-        session={view.session}
-        stageLabel={`${copy.arcade.stageLabel(stage)} · ${copy.arcade.stageName(stage)}`}
-        onEnd={(outcome: GameOutcome) => {
-          if (outcome.won) setUnlocked(unlockAfterWin(stage))
-          setView({ name: 'result', stage, won: outcome.won })
-        }}
-        onExit={() => setView({ name: 'menu' })}
-      />
-    )
-  }
-
-  if (view.name === 'result') {
-    const { stage, won } = view
-    const last = stage >= STAGE_COUNT
-    return (
-      <Screen className="items-center justify-center gap-4 text-center">
-        <h1 className="font-display text-5xl leading-none">
-          {won ? copy.arcade.wonTitle(copy.arcade.stageName(stage)) : copy.arcade.lostTitle}
-        </h1>
-        {won && last && <p className="text-muted">{copy.arcade.allDone}</p>}
-        {won && !last ? (
-          <Button onClick={() => play(stage + 1)}>{copy.arcade.nextStage}</Button>
-        ) : (
-          <Button onClick={() => play(stage)}>{copy.arcade.again}</Button>
-        )}
-        <Button variant="ghost" onClick={() => setView({ name: 'menu' })}>
-          {copy.arcade.backToLevels}
-        </Button>
-      </Screen>
-    )
-  }
+  if (game === 'survivors') return <SurvivorsArcade onBack={() => setGame(null)} />
+  if (game === 'skate') return <SkateArcade onBack={() => setGame(null)} />
+  if (game === 'racing') return <RacingArcade onBack={() => setGame(null)} />
 
   return (
     <Screen className="gap-4">
@@ -72,37 +31,24 @@ export function ArcadeScreen() {
       </Link>
       <h1 className="font-display text-5xl leading-none">{copy.arcade.title}</h1>
       <p className="text-muted">{copy.arcade.subtitle}</p>
-      <h2 className="font-display text-3xl">{copy.arcade.survivorsTitle}</h2>
-      <p className="text-muted">{copy.arcade.survivorsBody}</p>
       <Cascade className="flex flex-col gap-3">
-        {Array.from({ length: STAGE_COUNT }, (_, i) => i + 1).map((stage) => {
-          const open = stage <= unlocked
-          return (
-            <CascadeItem key={stage}>
-              <button
-                type="button"
-                disabled={!open}
-                onClick={() => play(stage)}
-                className="w-full text-left disabled:opacity-60"
-              >
-                <Card className="flex items-center justify-between gap-3">
-                  <span>
-                    <span className="text-muted block text-sm">
-                      {copy.arcade.stageLabel(stage)}
-                    </span>
-                    <span className="block font-bold">{copy.arcade.stageName(stage)}</span>
-                    {!open && <span className="text-muted text-sm">{copy.arcade.locked}</span>}
-                  </span>
-                  <span className={open ? 'text-brand-ink font-semibold' : 'text-2xl'}>
-                    {open ? copy.arcade.play : '🔒'}
-                  </span>
-                </Card>
-              </button>
-            </CascadeItem>
-          )
-        })}
+        {GAMES.map(({ id, icon }) => (
+          <CascadeItem key={id}>
+            <button type="button" onClick={() => setGame(id)} className="w-full text-left">
+              <Card className="flex items-center gap-4">
+                <span className="text-4xl" aria-hidden>
+                  {icon}
+                </span>
+                <span className="flex-1">
+                  <span className="block font-bold">{copy.arcade.games[id].name}</span>
+                  <span className="text-muted block text-sm">{copy.arcade.games[id].body}</span>
+                </span>
+                <span className="text-brand-ink font-semibold">{copy.arcade.play}</span>
+              </Card>
+            </button>
+          </CascadeItem>
+        ))}
       </Cascade>
-      <p className="text-muted text-sm">{copy.arcade.practiceNotice}</p>
     </Screen>
   )
 }

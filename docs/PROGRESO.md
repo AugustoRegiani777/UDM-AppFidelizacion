@@ -110,6 +110,8 @@
 - [x] 3 poderes automáticos nuevos (se activan solos con cooldown, no cambian las entradas del jugador ni el replay): Soldados miga (5 s tirando condimentos), Lluvia de chipás, Medialuna de cebo (atrae y explota).
 - [x] Dibujo y sonido de los poderes; tests de cada poder y de los niveles; bot calibrado (nivel 1 ganable, nivel 6 modo experto).
 - [x] Sala de juegos `/juegos`: práctica sin premio, niveles que se abren al ganar el anterior (avance local en el dispositivo).
+- [x] Sala de juegos con selector: Sobreviví a las migas (6 niveles), Skate de Miga y Miga Racers, todos ilimitados y sin premio.
+- [x] Miga Racers (estilo Micro Machines): 3 pistas sobre la mesa de la sandwichería, 3 vueltas contra 3 rivales con IA, derrape, turbo, choques; sube al podio (1º o 2º) para abrir la pista siguiente. Es práctica local, sin validación del servidor (no da premios). Controles: mitad izquierda/derecha de la pantalla para doblar, botón Derrapar; teclado con flechas/AD/espacio.
 - [ ] Skate de trucos (rediseño), Truco con mate, Básquet tipo NBA Jam: ver "Ideas para después".
 
 ### Pendiente de definir (Augusto)
@@ -191,6 +193,8 @@
 - (Fase 14) Los poderes nuevos son automáticos (cooldown) para no sumar botones y mantener el replay del servidor igual. El cofre usa el nivel 1 salvo que se configure `stage` en `settings.chest_game.overrides.survivors`; los demás niveles se juegan en la Sala de juegos (práctica, sin premio).
 - (Fase 14) Apuestas de puntos entre clientes: Augusto pidió poder apostar puntos; NO está construido. Los puntos se canjean por productos, así que podría ser un juego de azar regulado. Queda en PENDIENTES-AUGUSTO (consulta legal) y, cuando exista lo online, entra apagado por defecto en `settings`.
 
+- (Fase 14) Miga Racers se juega solo en la sala de juegos (sin premio): por eso no hay replay en el servidor. Si algún día da premios, hay que portar la simulación a `_shared` (ya es pura y con semilla) y validar con un registro de entradas como en las migas y el skate.
+
 ## Ideas para después
 
 - Más juegos para la misma ceremonia del cofre (tres en línea, reflejos), elegidos al azar por premio.
@@ -202,3 +206,4 @@
 - Skate de trucos: flicks con el pulgar, manuals, grinds sobre barandas, combos con multiplicador, niveles tipo parque con puntaje objetivo (2D/2.5D; 3D real descartado por costo y rendimiento).
 - Truco (con IA rival) y mate: animación de cebar y tomar; el mate da "suerte +1" visible (parámetro del servidor); un chipá suma segundos al reloj de turno. Se compran con monedas del juego, nunca con puntos de fidelidad.
 - Básquet 2 vs 2 tipo NBA Jam: avatar a medida, estrella compañera con IA simple por estados (tirador, pasador, defensor). Online después: primero partidas grabadas (retos asincrónicos, "El Dueño" como bot), luego tiempo real con Supabase Realtime y revalidación en el servidor.
+- Miga Racers: objetos para tirar (chorro de ketchup, aceite), más pistas, contrarreloj con fantasma, elegir el autito y retar a otro cliente en partidas grabadas.

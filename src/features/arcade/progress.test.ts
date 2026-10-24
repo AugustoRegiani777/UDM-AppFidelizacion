@@ -1,5 +1,13 @@
 import { STAGE_COUNT } from '@engine/config.ts'
-import { unlockAfterWin, unlockedStage, unlockedTrack, unlockRacing } from './progress'
+import {
+  addCoins,
+  getCoins,
+  spendCoins,
+  unlockAfterWin,
+  unlockedStage,
+  unlockedTrack,
+  unlockRacing,
+} from './progress'
 
 describe('avance de la sala de juegos', () => {
   beforeEach(() => localStorage.clear())
@@ -32,5 +40,19 @@ describe('avance de las carreras', () => {
     expect(unlockRacing(2)).toBe(3)
     expect(unlockRacing(3)).toBe(3)
     expect(unlockedTrack()).toBe(3)
+  })
+})
+
+describe('monedas de la sala de juegos', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('suman, se gastan si alcanzan y nunca quedan negativas', () => {
+    expect(getCoins()).toBe(0)
+    expect(addCoins(5)).toBe(5)
+    expect(spendCoins(3)).toBe(true)
+    expect(getCoins()).toBe(2)
+    expect(spendCoins(3)).toBe(false)
+    expect(getCoins()).toBe(2)
+    expect(addCoins(-4)).toBe(2)
   })
 })

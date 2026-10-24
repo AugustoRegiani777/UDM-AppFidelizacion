@@ -42,3 +42,30 @@ test('Miga Racers: cuenta regresiva, la carrera arranca y se puede pausar', asyn
   await pause.getByRole('button', { name: 'Salir' }).click()
   await expect(page.getByRole('heading', { name: 'Miga Racers' })).toBeVisible()
 })
+
+test('Truco: se juega una carta, el mate suma suerte y el chipá pide monedas', async ({ page }) => {
+  await signUp(page)
+  await page.goto('/juegos')
+  await page.getByRole('button', { name: /Truco/ }).click()
+  await page.getByRole('button', { name: /El Pibe/ }).click()
+  await page.getByRole('button', { name: '¡A jugar!' }).click()
+
+  // Arranca el jugador (es mano): tiene tres cartas y el reloj corriendo.
+  await expect(page.getByRole('timer', { name: 'Tiempo para jugar' })).toBeVisible()
+  const hand = page.locator('button:has(svg[aria-label$=" de oro"], svg[aria-label$=" de copa"], svg[aria-label$=" de espada"], svg[aria-label$=" de basto"])')
+  await expect(hand).toHaveCount(3)
+
+  // Sin monedas, el chipá avisa.
+  await page.getByRole('button', { name: /Comer chipá/ }).click()
+  await expect(page.getByText('Te faltan monedas')).toBeVisible()
+
+  // El mate: se levanta, baja el agua y suma un trébol de suerte.
+  await page.getByRole('button', { name: 'Tomar mate' }).click()
+  await expect(page.getByRole('img', { name: 'Suerte 1 de 3' })).toBeVisible({ timeout: 6000 })
+  await expect(page.getByRole('img', { name: '3 sorbos' })).toBeVisible()
+
+  // Se juega una carta y el rival responde.
+  await hand.first().click()
+  await expect(hand).toHaveCount(2)
+  await page.screenshot({ path: 'C:/Users/NOTRUL~1/AppData/Local/Temp/truco1.png' })
+})

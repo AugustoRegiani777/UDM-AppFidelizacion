@@ -53,3 +53,37 @@ export function unlockRacing(track: number): number {
   }
   return next
 }
+
+const COINS_KEY = 'arcade_coins'
+
+/** Monedas de la sala de juegos (no valen nada fuera de ella; sirven para comprar chipás en el truco). */
+export function getCoins(): number {
+  try {
+    const value = Number(localStorage.getItem(COINS_KEY))
+    return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0
+  } catch {
+    return 0
+  }
+}
+
+function setCoins(value: number) {
+  try {
+    localStorage.setItem(COINS_KEY, String(value))
+  } catch {
+    // sin almacenamiento: las monedas no se guardan, pero el juego sigue andando
+  }
+}
+
+export function addCoins(amount: number): number {
+  const total = getCoins() + Math.max(0, Math.floor(amount))
+  setCoins(total)
+  return total
+}
+
+/** Gasta monedas si alcanzan. Devuelve false si no. */
+export function spendCoins(amount: number): boolean {
+  const current = getCoins()
+  if (current < amount) return false
+  setCoins(current - amount)
+  return true
+}

@@ -7,13 +7,15 @@ import { copy } from '@/copy'
 import { RacingArcade } from './RacingArcade'
 import { SkateArcade } from './SkateArcade'
 import { SurvivorsArcade } from './SurvivorsArcade'
+import { TrucoArcade } from './TrucoArcade'
 
-type GameId = 'survivors' | 'skate' | 'racing'
+type GameId = 'survivors' | 'skate' | 'racing' | 'truco'
 
 const GAMES: { id: GameId; icon: string }[] = [
   { id: 'survivors', icon: '🥪' },
   { id: 'skate', icon: '🛹' },
   { id: 'racing', icon: '🏎️' },
+  { id: 'truco', icon: '🃏' },
 ]
 
 /** Sala de juegos: elegís el juego y jugás todo lo que quieras, sin puntos ni premios. */
@@ -23,6 +25,7 @@ export function ArcadeScreen() {
   if (game === 'survivors') return <SurvivorsArcade onBack={() => setGame(null)} />
   if (game === 'skate') return <SkateArcade onBack={() => setGame(null)} />
   if (game === 'racing') return <RacingArcade onBack={() => setGame(null)} />
+  if (game === 'truco') return <TrucoArcade onBack={() => setGame(null)} />
 
   return (
     <Screen className="gap-4">

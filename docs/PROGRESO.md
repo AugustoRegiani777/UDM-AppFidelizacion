@@ -112,7 +112,8 @@
 - [x] Sala de juegos `/juegos`: práctica sin premio, niveles que se abren al ganar el anterior (avance local en el dispositivo).
 - [x] Sala de juegos con selector: Sobreviví a las migas (6 niveles), Skate de Miga y Miga Racers, todos ilimitados y sin premio.
 - [x] Miga Racers (estilo Micro Machines): 3 pistas sobre la mesa de la sandwichería, 3 vueltas contra 3 rivales con IA, derrape, turbo, choques; sube al podio (1º o 2º) para abrir la pista siguiente. Es práctica local, sin validación del servidor (no da premios). Controles: mitad izquierda/derecha de la pantalla para doblar, botón Derrapar; teclado con flechas/AD/espacio.
-- [ ] Skate de trucos (rediseño), Truco con mate, Básquet tipo NBA Jam: ver "Ideas para después".
+- [x] Truco argentino (1 contra 1, a 15, sin flor) con envido/real/falta, retruco y vale cuatro; 3 rivales con IA (El Pibe, Doña Rosa, El Maestro). Mate en la mesa: cada sorbo suma suerte para el próximo reparto (mejora visible: se reparten 1 + suerte manos y te toca la mejor); reloj de turno de 25 s y chipá (3 monedas, +15 s). Monedas locales de la sala de juegos.
+- [ ] Skate de trucos (rediseño). Básquet tipo NBA Jam y retos online: quedan para después (pedido de Augusto).
 
 ### Pendiente de definir (Augusto)
 

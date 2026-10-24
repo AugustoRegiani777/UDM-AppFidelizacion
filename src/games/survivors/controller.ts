@@ -77,6 +77,19 @@ function react(events: readonly GameEvent[]) {
       case 'wave':
         sfx.wave()
         break
+      case 'soldier':
+        sfx.soldier()
+        break
+      case 'chipa':
+        sfx.chipa()
+        break
+      case 'bait':
+        sfx.bait()
+        break
+      case 'boom':
+        sfx.boom()
+        vibrate(15)
+        break
       default:
     }
   }

@@ -29,15 +29,24 @@ function Backdrop({ children, label }: { children: React.ReactNode; label: strin
 interface ReadyOverlayProps {
   durationSeconds: number
   relaxed: boolean
+  /** Etiqueta del nivel (solo en la sala de juegos). */
+  stageLabel?: string
   onPlay: () => void
   onExit: () => void
 }
 
-export function ReadyOverlay({ durationSeconds, relaxed, onPlay, onExit }: ReadyOverlayProps) {
+export function ReadyOverlay({
+  durationSeconds,
+  relaxed,
+  stageLabel,
+  onPlay,
+  onExit,
+}: ReadyOverlayProps) {
   const sound = useSoundEnabled()
   return (
     <Backdrop label={copy.survivors.title}>
       <h2 className="font-display text-5xl leading-none">{copy.survivors.title}</h2>
+      {stageLabel && <p className="text-brand-ink text-xl font-bold">{stageLabel}</p>}
       <p className="text-lg font-semibold">{copy.survivors.goal(durationSeconds)}</p>
       <ul className="text-muted flex flex-col gap-2 text-left">
         {copy.survivors.howTo.map((line) => (

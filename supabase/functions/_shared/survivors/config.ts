@@ -14,6 +14,8 @@ export interface GameConfig {
   spawnMul: number
   /** La Reina hormiga aparece al 60 % de la partida. */
   boss: boolean
+  /** Nivel del juego (1..STAGE_COUNT): más duro y con enemigos nuevos antes. */
+  stage: number
 }
 
 export const NORMAL_CONFIG: GameConfig = {
@@ -23,6 +25,23 @@ export const NORMAL_CONFIG: GameConfig = {
   enemyHpMul: 1,
   spawnMul: 1,
   boss: true,
+  stage: 1,
+}
+
+export const STAGE_COUNT = 6
+
+/** Ajustes por nivel sobre la configuración base. El nivel 1 es el juego original. */
+export const STAGES: readonly Partial<GameConfig>[] = [
+  {},
+  { durationSeconds: 52, spawnMul: 1.04, enemySpeedMul: 1.01 },
+  { durationSeconds: 54, spawnMul: 1.08, enemySpeedMul: 1.03, enemyHpMul: 1.04 },
+  { durationSeconds: 56, spawnMul: 1.12, enemySpeedMul: 1.05, enemyHpMul: 1.08 },
+  { durationSeconds: 58, spawnMul: 1.17, enemySpeedMul: 1.07, enemyHpMul: 1.12 },
+  { durationSeconds: 60, spawnMul: 1.22, enemySpeedMul: 1.09, enemyHpMul: 1.18 },
+]
+
+export function clampStage(stage: number): number {
+  return Math.min(STAGE_COUNT, Math.max(1, Math.floor(stage) || 1))
 }
 
 /** Modo relajado: se ofrece tras dos derrotas seguidas. Mismas reglas, enemigos más mansos. */
@@ -35,7 +54,17 @@ export const RELAXED_CONFIG: GameConfig = {
 }
 
 export function resolveConfig(overrides: Partial<GameConfig> = {}, relaxed = false): GameConfig {
-  return { ...(relaxed ? RELAXED_CONFIG : NORMAL_CONFIG), ...overrides }
+  const base = relaxed ? RELAXED_CONFIG : NORMAL_CONFIG
+  const stage = clampStage(overrides.stage ?? 1)
+  const staged = STAGES[stage - 1] ?? {}
+  // El modo relajado suaviza el nivel (mismas multiplicaciones sobre su base más mansa).
+  const scaled: Partial<GameConfig> = {
+    durationSeconds: staged.durationSeconds ?? base.durationSeconds,
+    spawnMul: base.spawnMul * (staged.spawnMul ?? 1),
+    enemySpeedMul: base.enemySpeedMul * (staged.enemySpeedMul ?? 1),
+    enemyHpMul: base.enemyHpMul * (staged.enemyHpMul ?? 1),
+  }
+  return { ...base, ...scaled, ...overrides, stage }
 }
 
 /** 16 direcciones (22,5° cada una; 0 = derecha, sentido horario en pantalla). Literales: nada de sin/cos en la simulación. */
@@ -81,7 +110,17 @@ export const FAN: Record<number, readonly (readonly [number, number])[]> = {
 }
 
 export type UpgradeId =
-  'fireRate' | 'damage' | 'multishot' | 'magnet' | 'speed' | 'heart' | 'orbit' | 'pierce'
+  | 'fireRate'
+  | 'damage'
+  | 'multishot'
+  | 'magnet'
+  | 'speed'
+  | 'heart'
+  | 'orbit'
+  | 'pierce'
+  | 'soldiers'
+  | 'chipas'
+  | 'bait'
 
 export interface UpgradeDef {
   id: UpgradeId
@@ -97,6 +136,9 @@ export const UPGRADES: readonly UpgradeDef[] = [
   { id: 'heart', maxLevel: 3 },
   { id: 'orbit', maxLevel: 3 },
   { id: 'pierce', maxLevel: 2 },
+  { id: 'soldiers', maxLevel: 3 },
+  { id: 'chipas', maxLevel: 3 },
+  { id: 'bait', maxLevel: 3 },
 ]
 
 export type EnemyKind = 0 | 1 | 2 | 3

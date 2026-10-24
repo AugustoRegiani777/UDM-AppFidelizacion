@@ -105,6 +105,13 @@
 - [x] 13.3 Cliente: dibujo vectorial en horizontal, controles de dos pulgares (y teclado), HUD, guía, pantalla completa y aviso de "girá el celular".
 - [x] 13.4 Tests: motor + bot, integración del cofre con skate y e2e en horizontal.
 
+### Fase 14 · Migas con niveles y poderes + Sala de juegos
+- [x] 6 niveles (`STAGES` en el motor): más largos, más enemigos y más rápidos; el nivel 1 es el juego original.
+- [x] 3 poderes automáticos nuevos (se activan solos con cooldown, no cambian las entradas del jugador ni el replay): Soldados miga (5 s tirando condimentos), Lluvia de chipás, Medialuna de cebo (atrae y explota).
+- [x] Dibujo y sonido de los poderes; tests de cada poder y de los niveles; bot calibrado (nivel 1 ganable, nivel 6 modo experto).
+- [x] Sala de juegos `/juegos`: práctica sin premio, niveles que se abren al ganar el anterior (avance local en el dispositivo).
+- [ ] Skate de trucos (rediseño), Truco con mate, Básquet tipo NBA Jam: ver "Ideas para después".
+
 ### Pendiente de definir (Augusto)
 
 - Sistema de puntuación y niveles (se evalúa después de la Fase 12).
@@ -181,6 +188,9 @@
 
 - (Google) Verificación de reseñas: `sync-google-reviews` (pg_cron cada 30 min o botón en `/admin`) trae las reseñas con la API v4 de Google Business Profile y `match_google_reviews()` las cruza con las misiones pendientes. Aprobación automática solo si el nombre de la reseña coincide con el nombre de la cuenta de Google del cliente (`profiles.google_name`, no editable); si solo coincide el nombre escrito, se sugiere al admin. Cada reseña cuenta una vez. Funciona sin credenciales (queda manual). Requiere perfil verificado 60+ días con sitio web y aprobación de Google (PENDIENTES, sección 10).
 
+- (Fase 14) Los poderes nuevos son automáticos (cooldown) para no sumar botones y mantener el replay del servidor igual. El cofre usa el nivel 1 salvo que se configure `stage` en `settings.chest_game.overrides.survivors`; los demás niveles se juegan en la Sala de juegos (práctica, sin premio).
+- (Fase 14) Apuestas de puntos entre clientes: Augusto pidió poder apostar puntos; NO está construido. Los puntos se canjean por productos, así que podría ser un juego de azar regulado. Queda en PENDIENTES-AUGUSTO (consulta legal) y, cuando exista lo online, entra apagado por defecto en `settings`.
+
 ## Ideas para después
 
 - Más juegos para la misma ceremonia del cofre (tres en línea, reflejos), elegidos al azar por premio.
@@ -189,3 +199,6 @@
 - Cofre de racha (se abre al cumplir X semanas seguidas) y álbum de sabores (docs/04): requieren definir premios y datos de variedades.
 
 - (vacío)
+- Skate de trucos: flicks con el pulgar, manuals, grinds sobre barandas, combos con multiplicador, niveles tipo parque con puntaje objetivo (2D/2.5D; 3D real descartado por costo y rendimiento).
+- Truco (con IA rival) y mate: animación de cebar y tomar; el mate da "suerte +1" visible (parámetro del servidor); un chipá suma segundos al reloj de turno. Se compran con monedas del juego, nunca con puntos de fidelidad.
+- Básquet 2 vs 2 tipo NBA Jam: avatar a medida, estrella compañera con IA simple por estados (tirador, pasador, defensor). Online después: primero partidas grabadas (retos asincrónicos, "El Dueño" como bot), luego tiempo real con Supabase Realtime y revalidación en el servidor.

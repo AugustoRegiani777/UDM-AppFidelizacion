@@ -8,8 +8,11 @@ import { createGame, pick, step, type GameState } from './sim.ts'
 const PICK_ORDER: UpgradeId[] = [
   'multishot',
   'fireRate',
+  'soldiers',
   'damage',
+  'chipas',
   'orbit',
+  'bait',
   'heart',
   'magnet',
   'pierce',

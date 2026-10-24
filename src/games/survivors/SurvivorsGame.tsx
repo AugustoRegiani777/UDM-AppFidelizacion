@@ -10,6 +10,8 @@ import { LevelUpOverlay } from './LevelUpOverlay.tsx'
 
 interface SurvivorsGameProps {
   session: GameSession<GameConfig>
+  /** Etiqueta del nivel que se muestra antes de empezar (sala de juegos). */
+  stageLabel?: string
   onEnd: (outcome: GameOutcome) => void
   onExit: () => void
 }
@@ -20,7 +22,7 @@ interface LevelUpState {
 }
 
 /** Pantalla del juego: el canvas lo maneja el controlador; acá solo hay HUD y menús. */
-export function SurvivorsGame({ session, onEnd, onExit }: SurvivorsGameProps) {
+export function SurvivorsGame({ session, stageLabel, onEnd, onExit }: SurvivorsGameProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const controllerRef = useRef<GameController | null>(null)
@@ -64,6 +66,7 @@ export function SurvivorsGame({ session, onEnd, onExit }: SurvivorsGameProps) {
         <ReadyOverlay
           durationSeconds={session.config.durationSeconds}
           relaxed={session.relaxed}
+          stageLabel={stageLabel}
           onPlay={() => controllerRef.current?.start()}
           onExit={onExit}
         />

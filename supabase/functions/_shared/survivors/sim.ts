@@ -59,6 +59,28 @@ const PICKUP_RADIUS = PLAYER_RADIUS + 6
 const BOSS_AT = 0.6
 const WAVE_SECONDS = [18, 34]
 
+// Poderes automáticos (se activan solos con cooldown, así que no cambian las entradas del jugador).
+export const MAX_SOLDIERS = 4
+export const MAX_CHIPAS = 8
+const SOLDIER_COOLDOWN = [0, 900, 780, 660]
+const SOLDIER_LIFE = 300 // 5 segundos
+const SOLDIER_FIRE = 20
+const SOLDIER_RANGE = 210
+const SOLDIER_SLOTS: readonly (readonly [number, number])[] = [
+  [-34, -10],
+  [34, -10],
+  [-18, 30],
+  [18, 30],
+]
+const CHIPA_COOLDOWN = [0, 720, 600, 480]
+const CHIPA_RAIN_TICKS = 120
+const CHIPA_EVERY = 8
+const CHIPA_FALL = 18
+const CHIPA_RADIUS = 38
+const BAIT_COOLDOWN = [0, 840, 720, 600]
+const BAIT_LIFE = 240
+const BAIT_PULL = 270
+
 export interface Enemy {
   alive: boolean
   kind: EnemyKind
@@ -91,6 +113,8 @@ export interface Projectile {
   hits: number
   life: number
   lastHit: number
+  /** 0 = miga del jugador, 1 = condimento de un soldado (solo cambia el dibujo). */
+  tag: number
 }
 
 export interface Gem {
@@ -104,9 +128,40 @@ export interface Gem {
   vel: number
 }
 
+export interface Soldier {
+  alive: boolean
+  x: number
+  y: number
+  px: number
+  py: number
+  life: number
+  cd: number
+  slot: number
+}
+
+export interface Chipa {
+  alive: boolean
+  x: number
+  y: number
+  /** Ticks que faltan para que caiga. */
+  t: number
+}
+
+export interface Bait {
+  alive: boolean
+  x: number
+  y: number
+  life: number
+}
+
 export type GameEvent =
   | { t: 'shoot' | 'hurt' | 'levelup' | 'boss' | 'wave' | 'win' | 'lose' }
-  | { t: 'hit' | 'kill' | 'gem' | 'charge' | 'spawn'; x: number; y: number; kind?: number }
+  | {
+      t: 'hit' | 'kill' | 'gem' | 'charge' | 'spawn' | 'soldier' | 'chipa' | 'bait' | 'boom'
+      x: number
+      y: number
+      kind?: number
+    }
 
 export type GameStatus = 'playing' | 'won' | 'lost'
 
@@ -141,6 +196,13 @@ export interface GameState {
   kills: number
   orbitX: number
   orbitY: number
+  soldiers: Soldier[]
+  chipas: Chipa[]
+  bait: Bait
+  soldierCd: number
+  rainCd: number
+  rainLeft: number
+  baitCd: number
   /** Eventos del último paso (sonidos, partículas). Se vacía en cada `step`. */
   events: GameEvent[]
   grid: Int32Array
@@ -206,6 +268,7 @@ export function createGame(config: GameConfig, seed: number): GameState {
       hits: 0,
       life: 0,
       lastHit: -1,
+      tag: 0,
     })),
     gems: Array.from({ length: MAX_GEMS }, () => ({
       alive: false,
@@ -227,6 +290,22 @@ export function createGame(config: GameConfig, seed: number): GameState {
     kills: 0,
     orbitX: 1,
     orbitY: 0,
+    soldiers: Array.from({ length: MAX_SOLDIERS }, () => ({
+      alive: false,
+      x: 0,
+      y: 0,
+      px: 0,
+      py: 0,
+      life: 0,
+      cd: 0,
+      slot: 0,
+    })),
+    chipas: Array.from({ length: MAX_CHIPAS }, () => ({ alive: false, x: 0, y: 0, t: 0 })),
+    bait: { alive: false, x: 0, y: 0, life: 0 },
+    soldierCd: 60,
+    rainCd: 90,
+    rainLeft: 0,
+    baitCd: 120,
     events: [],
     grid: new Int32Array(GRID_COLS * GRID_ROWS),
     gridNext: new Int32Array(MAX_ENEMIES),
@@ -310,7 +389,11 @@ function pickKind(state: GameState, seconds: number): EnemyKind {
   const roll = nextFloat(state.rng)
   if (seconds < 10) return ANT
   const pigeons = state.enemies.filter((e) => e.alive && e.kind === PIGEON).length
-  if (seconds >= 24 && pigeons < 6 && roll > 0.86) return PIGEON
+  const stage = state.config.stage
+  const pigeonFrom = Math.max(12, 24 - 3 * (stage - 1))
+  const pigeonCap = 6 + 2 * (stage - 1)
+  if (seconds >= pigeonFrom && pigeons < pigeonCap && roll > 0.86 - 0.01 * (stage - 1))
+    return PIGEON
   if (roll > 0.72) return FLY
   return ANT
 }
@@ -366,8 +449,16 @@ function moveEnemies(state: GameState) {
     if (e.orbCd > 0) e.orbCd--
     e.phase++
 
-    const dx = p.x - e.x
-    const dy = p.y - e.y
+    // La medialuna de cebo distrae a todos menos a la Reina.
+    let tx = p.x
+    let ty = p.y
+    const bait = state.bait
+    if (bait.alive && e.kind !== QUEEN && dist2(e.x, e.y, bait.x, bait.y) < BAIT_PULL * BAIT_PULL) {
+      tx = bait.x
+      ty = bait.y
+    }
+    const dx = tx - e.x
+    const dy = ty - e.y
     const d = Math.sqrt(dx * dx + dy * dy) || 1
     const ux = dx / d
     const uy = dy / d
@@ -546,6 +637,7 @@ function fireWeapon(state: GameState) {
     slot.hits = stats.hits
     slot.life = PROJECTILE_LIFE
     slot.lastHit = -1
+    slot.tag = 0
   }
   state.events.push({ t: 'shoot' })
 }
@@ -695,6 +787,153 @@ function checkLevelUp(state: GameState) {
   offerUpgrades(state)
 }
 
+// --- Poderes automáticos ------------------------------------------------------------------------
+
+function nearestEnemy(state: GameState, x: number, y: number, range: number): Enemy | null {
+  let best: Enemy | null = null
+  let bestD = range * range
+  for (const e of state.enemies) {
+    if (!e.alive) continue
+    const d = dist2(x, y, e.x, e.y)
+    if (d < bestD) {
+      bestD = d
+      best = e
+    }
+  }
+  return best
+}
+
+/** Soldados miga: durante 5 segundos acompañan al jugador y tiran condimentos al enemigo más cercano. */
+function runSoldiers(state: GameState) {
+  const level = state.upgrades.soldiers
+  const p = state.player
+  if (level > 0) {
+    state.soldierCd--
+    if (state.soldierCd <= 0) {
+      state.soldierCd = SOLDIER_COOLDOWN[Math.min(level, 3)] ?? 660
+      const count = Math.min(level + 1, MAX_SOLDIERS)
+      for (let i = 0; i < count; i++) {
+        const soldier = state.soldiers.find((q) => !q.alive)
+        if (!soldier) break
+        const slot = SOLDIER_SLOTS[i] ?? SOLDIER_SLOTS[0]!
+        soldier.alive = true
+        soldier.x = soldier.px = p.x + slot[0]
+        soldier.y = soldier.py = p.y + slot[1] - 24
+        soldier.life = SOLDIER_LIFE
+        soldier.cd = 8 + i * 5
+        soldier.slot = i
+        state.events.push({ t: 'soldier', x: soldier.x, y: soldier.y })
+      }
+    }
+  }
+  for (const soldier of state.soldiers) {
+    if (!soldier.alive) continue
+    soldier.px = soldier.x
+    soldier.py = soldier.y
+    soldier.life--
+    if (soldier.life <= 0) {
+      soldier.alive = false
+      continue
+    }
+    const slot = SOLDIER_SLOTS[soldier.slot] ?? SOLDIER_SLOTS[0]!
+    soldier.x += (p.x + slot[0] - soldier.x) * 0.12
+    soldier.y += (p.y + slot[1] - soldier.y) * 0.12
+    soldier.cd--
+    if (soldier.cd > 0) continue
+    const target = nearestEnemy(state, soldier.x, soldier.y, SOLDIER_RANGE)
+    if (!target) {
+      soldier.cd = 4
+      continue
+    }
+    const slotQ = state.projectiles.find((q) => !q.alive)
+    if (!slotQ) {
+      soldier.cd = 4
+      continue
+    }
+    soldier.cd = SOLDIER_FIRE
+    const dx = target.x - soldier.x
+    const dy = target.y - soldier.y
+    const d = Math.sqrt(dx * dx + dy * dy) || 1
+    slotQ.alive = true
+    slotQ.x = slotQ.px = soldier.x
+    slotQ.y = slotQ.py = soldier.y
+    slotQ.vx = ((dx / d) * 250) / TICKS_PER_SECOND
+    slotQ.vy = ((dy / d) * 250) / TICKS_PER_SECOND
+    slotQ.dmg = 2 + Math.floor(level / 2)
+    slotQ.hits = 1
+    slotQ.life = 60
+    slotQ.lastHit = -1
+    slotQ.tag = 1
+  }
+}
+
+function hurtArea(state: GameState, x: number, y: number, radius: number, amount: number) {
+  for (const e of state.enemies) {
+    if (!e.alive) continue
+    const reach = radius + e.r
+    if (dist2(x, y, e.x, e.y) <= reach * reach) damageEnemy(state, e, amount, x, y)
+  }
+}
+
+/** Lluvia de chipás: caen del cielo durante 2 segundos y rompen a los enemigos de la zona. */
+function runChipas(state: GameState) {
+  const level = state.upgrades.chipas
+  const p = state.player
+  if (level > 0) {
+    if (state.rainLeft > 0) {
+      state.rainLeft--
+      if (state.rainLeft % CHIPA_EVERY === 0) {
+        const chipa = state.chipas.find((c) => !c.alive)
+        if (chipa) {
+          chipa.alive = true
+          chipa.x = Math.min(ARENA_W - 10, Math.max(10, p.x + (nextFloat(state.rng) - 0.5) * 300))
+          chipa.y = Math.min(ARENA_H - 10, Math.max(10, p.y + (nextFloat(state.rng) - 0.5) * 300))
+          chipa.t = CHIPA_FALL
+          state.events.push({ t: 'chipa', x: chipa.x, y: chipa.y })
+        }
+      }
+    } else {
+      state.rainCd--
+      if (state.rainCd <= 0) {
+        state.rainCd = CHIPA_COOLDOWN[Math.min(level, 3)] ?? 480
+        state.rainLeft = CHIPA_RAIN_TICKS
+      }
+    }
+  }
+  for (const chipa of state.chipas) {
+    if (!chipa.alive) continue
+    chipa.t--
+    if (chipa.t > 0) continue
+    chipa.alive = false
+    hurtArea(state, chipa.x, chipa.y, CHIPA_RADIUS, 5 + level)
+    state.events.push({ t: 'boom', x: chipa.x, y: chipa.y, kind: 1 })
+  }
+}
+
+/** Medialuna de cebo: atrae a los bichos y, al terminar, explota con daño en área. */
+function runBait(state: GameState) {
+  const level = state.upgrades.bait
+  const p = state.player
+  const bait = state.bait
+  if (level > 0 && !bait.alive) {
+    state.baitCd--
+    if (state.baitCd <= 0) {
+      state.baitCd = BAIT_COOLDOWN[Math.min(level, 3)] ?? 600
+      bait.alive = true
+      bait.x = Math.min(ARENA_W - 20, Math.max(20, p.x + p.faceX * 70))
+      bait.y = Math.min(ARENA_H - 20, Math.max(20, p.y + p.faceY * 70))
+      bait.life = BAIT_LIFE
+      state.events.push({ t: 'bait', x: bait.x, y: bait.y })
+    }
+  }
+  if (!bait.alive) return
+  bait.life--
+  if (bait.life > 0) return
+  bait.alive = false
+  hurtArea(state, bait.x, bait.y, 54 + 10 * level, 8 + 3 * level)
+  state.events.push({ t: 'boom', x: bait.x, y: bait.y, kind: 2 })
+}
+
 // --- API pública --------------------------------------------------------------------------------
 
 /** Avanza un tick con la dirección pedida (0..15, o 16 = quieto). No hace nada en pausa o al terminar. */
@@ -712,6 +951,9 @@ export function step(state: GameState, dir: number): void {
   fireWeapon(state)
   moveProjectiles(state)
   runOrbiters(state)
+  runSoldiers(state)
+  runChipas(state)
+  runBait(state)
   contactDamage(state)
   collectGems(state)
   checkLevelUp(state)
@@ -757,5 +999,8 @@ export function checksum(state: GameState): number {
   for (const e of state.enemies) if (e.alive) (mix(e.x), mix(e.y), mix(e.hp))
   for (const q of state.projectiles) if (q.alive) (mix(q.x), mix(q.y))
   for (const g of state.gems) if (g.alive) (mix(g.x), mix(g.y))
+  for (const q of state.soldiers) if (q.alive) (mix(q.x), mix(q.y), mix(q.life))
+  for (const c of state.chipas) if (c.alive) (mix(c.x), mix(c.y))
+  if (state.bait.alive) (mix(state.bait.x), mix(state.bait.y))
   return h >>> 0
 }

@@ -103,3 +103,11 @@ Es el último paso antes de lanzar. Abrí el repo del POS en VS Code y pasale a 
 **Para apagar la aprobación automática** (que solo sugiera): Supabase → Table editor → `settings` → fila `google_reviews` → `auto_approve` en `false`.
 
 **Límites que conviene saber:** la coincidencia es por nombre, así que dos personas con el mismo nombre podrían confundirse (cada reseña suma una sola vez y la revisión manual sigue disponible). Los puntos no dependen de la calificación de la reseña.
+
+## 11. Consulta legal antes de apostar puntos entre clientes
+
+Pediste poder apostar puntos entre clientes (por ejemplo en partidas online). Todavía **no está construido** y no lo voy a prender sin tu OK después de esta consulta. El motivo: los puntos se canjean por productos reales, así que apostarlos puede considerarse un juego de azar o apuesta regulada en España, y hay reglas especiales si juegan menores.
+
+1. Preguntale a tu gestoría o a un abogado: "Tengo una app de fidelización cuyos puntos se canjean por productos. ¿Puedo dejar que los clientes apuesten puntos entre ellos en un juego de habilidad? ¿Necesito alguna licencia?"
+2. Mientras tanto, la alternativa segura es: rankings y torneos con premios que pone el local, sin arriesgar puntos.
+3. Cuando tengas la respuesta, contámela y lo configuro (queda apagado por defecto en `settings`).

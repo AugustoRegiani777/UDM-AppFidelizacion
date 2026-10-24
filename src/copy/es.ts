@@ -76,6 +76,31 @@ export const es = {
     error: 'Uy, no pudimos generar tu código. Probá de nuevo.',
     backToPanel: 'Volver al panel',
   },
+  arcade: {
+    section: 'Sala de juegos',
+    sectionCta: 'Entrar',
+    back: 'Volver al panel',
+    title: 'Sala de juegos',
+    subtitle:
+      'Acá practicás sin premio y sin apuro. Los premios del cofre se juegan desde el premio que desbloqueás con tus puntos.',
+    survivorsTitle: 'Sobreviví a las migas',
+    survivorsBody:
+      'Seis niveles, cada uno más largo y más picante. Ganá uno para abrir el siguiente.',
+    stageName: (n: number) =>
+      ['La cocina', 'El mostrador', 'La vereda', 'La plaza', 'El mercado', 'La noche de Valencia'][
+        n - 1
+      ] ?? `Nivel ${n}`,
+    stageLabel: (n: number) => `Nivel ${n}`,
+    locked: 'Ganá el nivel anterior para abrirlo',
+    play: 'Jugar',
+    nextStage: 'Siguiente nivel',
+    again: 'Jugar de nuevo',
+    backToLevels: 'Elegir nivel',
+    wonTitle: (name: string) => `¡Pasaste ${name}!`,
+    lostTitle: 'Casi. ¡Probá de nuevo!',
+    allDone: 'Pasaste todos los niveles. ¡Sos una leyenda de la miga!',
+    practiceNotice: 'Práctica: este nivel no da puntos ni premios.',
+  },
   games: {
     sectionTitle: 'Juegos',
     play: 'Jugar',
@@ -169,6 +194,21 @@ export const es = {
         icon: '🎯',
         name: 'Miga perforante',
         description: 'Cada miga atraviesa un bicho más.',
+      },
+      soldiers: {
+        icon: '💂',
+        name: 'Soldados miga',
+        description: 'Cada tanto llegan soldaditos que tiran condimentos durante 5 segundos.',
+      },
+      chipas: {
+        icon: '🧀',
+        name: 'Lluvia de chipás',
+        description: 'Cada tanto llueven chipás que revientan a los bichos de la zona.',
+      },
+      bait: {
+        icon: '🥐',
+        name: 'Medialuna de cebo',
+        description: 'Dejás una medialuna que atrae a los bichos y explota al final.',
       },
     },
   },

@@ -43,7 +43,10 @@ export interface JoystickView {
 }
 
 const MAX_PARTICLES = 220
+const CONDIMENTS = ['#d6281c', '#f2b705', '#5aa02c']
 const COLORS = {
+  chipa: ['#f3c677', '#ffe9b0', '#d99a3a'],
+  bait: ['#f7c948', '#ffe9b0', '#fff'],
   kill: ['#2a1a14', '#5b3b2e', '#fff2cf'],
   fly: ['#2d4b3d', '#9fe6c8', '#ffffff'],
   pigeon: ['#8d97a6', '#c9d0da', '#ffffff'],
@@ -168,6 +171,30 @@ export class SurvivorsRenderer {
         case 'charge':
           this.burst(event.x, event.y, COLORS.pigeon, 4, 50)
           break
+        case 'soldier':
+          this.burst(event.x, event.y, CONDIMENTS, 8, 70)
+          this.rings.push({ x: event.x, y: event.y, age: 0.25, color: '#d6281c' })
+          break
+        case 'bait':
+          this.burst(event.x, event.y, COLORS.bait, 10, 80)
+          break
+        case 'boom':
+          this.burst(
+            event.x,
+            event.y,
+            event.kind === 1 ? COLORS.chipa : COLORS.bait,
+            event.kind === 1 ? 10 : 36,
+            event.kind === 1 ? 90 : 170,
+            true,
+          )
+          this.rings.push({
+            x: event.x,
+            y: event.y,
+            age: event.kind === 1 ? 0.3 : 0.1,
+            color: event.kind === 1 ? '#d99a3a' : '#f7c948',
+          })
+          this.addShake(event.kind === 1 ? 2 : 6)
+          break
         default:
       }
     }
@@ -224,6 +251,84 @@ export class SurvivorsRenderer {
       default:
         return flash ? sp.antFlash : sp.ant[Math.floor(tick / 5) % 2 === 0 ? 0 : 1]
     }
+  }
+
+  /** Soldados miga: cuerpito de pan con gorrito y un frasco de condimento. */
+  private drawSoldiers(state: GameState, lerp: (a: number, b: number) => number, now: number) {
+    const ctx = this.ctx
+    const s = this.scale
+    for (const soldier of state.soldiers) {
+      if (!soldier.alive) continue
+      const x = lerp(soldier.px, soldier.x)
+      const y = lerp(soldier.py, soldier.y) - Math.abs(Math.sin(now / 130 + soldier.slot)) * 2
+      const fade = soldier.life < 60 ? soldier.life / 60 : 1
+      ctx.globalAlpha = fade
+      this.drawShadow(x, y, 8)
+      ctx.fillStyle = '#e8c27a'
+      ctx.beginPath()
+      ctx.ellipse(x * s, y * s, 8 * s, 9 * s, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#c8102e'
+      ctx.fillRect((x - 7) * s, (y - 12) * s, 14 * s, 5 * s)
+      ctx.fillStyle = INK
+      for (const dx of [-3, 3]) {
+        ctx.beginPath()
+        ctx.arc((x + dx) * s, (y - 1) * s, 1.4 * s, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.fillStyle = CONDIMENTS[soldier.slot % CONDIMENTS.length] ?? '#d6281c'
+      ctx.fillRect((x + 6) * s, (y - 2) * s, 4 * s, 8 * s)
+      ctx.globalAlpha = 1
+    }
+  }
+
+  /** Chipás que caen: sombra que crece en el piso y bolita de queso que baja. */
+  private drawChipas(state: GameState) {
+    const ctx = this.ctx
+    const s = this.scale
+    for (const chipa of state.chipas) {
+      if (!chipa.alive) continue
+      const k = 1 - chipa.t / 18
+      ctx.fillStyle = `rgba(42,26,20,${0.1 + 0.15 * k})`
+      ctx.beginPath()
+      ctx.ellipse(chipa.x * s, chipa.y * s, (10 + 28 * k) * s, (4 + 11 * k) * s, 0, 0, Math.PI * 2)
+      ctx.fill()
+      const y = chipa.y - (1 - k) * (1 - k) * 140
+      ctx.fillStyle = '#e9b765'
+      ctx.beginPath()
+      ctx.arc(chipa.x * s, y * s, 8 * s, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#fff2cf'
+      ctx.beginPath()
+      ctx.arc((chipa.x - 2.5) * s, (y - 2.5) * s, 2.5 * s, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+
+  /** Medialuna de cebo con aro pulsante que marca hasta dónde atrae. */
+  private drawBait(state: GameState, now: number) {
+    const bait = state.bait
+    if (!bait.alive) return
+    const ctx = this.ctx
+    const s = this.scale
+    const pulse = 0.5 + 0.5 * Math.sin(now / 120)
+    const urgent = bait.life < 60
+    ctx.strokeStyle = urgent ? '#c8102e' : '#f7c948'
+    ctx.globalAlpha = 0.25 + 0.25 * pulse
+    ctx.lineWidth = 2 * s
+    ctx.beginPath()
+    ctx.arc(bait.x * s, bait.y * s, (30 + pulse * 6) * s, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.globalAlpha = 1
+    this.drawShadow(bait.x, bait.y, 11)
+    // Medialuna: arco grueso de puntas redondas.
+    ctx.strokeStyle = urgent && Math.floor(bait.life / 6) % 2 === 0 ? '#fff2cf' : '#e9a948'
+    ctx.lineWidth = 7 * s
+    ctx.lineCap = 'round'
+    ctx.beginPath()
+    ctx.arc(bait.x * s, (bait.y + 3) * s, 8 * s, Math.PI * 1.1, Math.PI * 1.9)
+    ctx.stroke()
+    ctx.lineCap = 'butt'
   }
 
   render(state: GameState, alpha: number, joystick: JoystickView, now: number) {
@@ -286,6 +391,8 @@ export class SurvivorsRenderer {
       }
     }
 
+    this.drawBait(state, now)
+
     // Tostadas giratorias.
     for (const [ox, oy] of orbiterPositions(state)) {
       this.drawShadow(ox, oy, ORBITER_RADIUS)
@@ -315,11 +422,22 @@ export class SurvivorsRenderer {
       }
     }
 
-    // Migas.
+    this.drawSoldiers(state, lerp, now)
+
+    // Migas y condimentos.
     for (const q of state.projectiles) {
       if (!q.alive) continue
-      this.drawSprite(this.sprites.crumb, lerp(q.px, q.x), lerp(q.py, q.y))
+      if (q.tag === 1) {
+        ctx.fillStyle = CONDIMENTS[(q.life >> 2) % CONDIMENTS.length] ?? '#d6281c'
+        ctx.beginPath()
+        ctx.arc(lerp(q.px, q.x) * s, lerp(q.py, q.y) * s, 3.2 * s, 0, Math.PI * 2)
+        ctx.fill()
+      } else {
+        this.drawSprite(this.sprites.crumb, lerp(q.px, q.x), lerp(q.py, q.y))
+      }
     }
+
+    this.drawChipas(state)
 
     // Partículas y anillos.
     for (const part of this.particles) {

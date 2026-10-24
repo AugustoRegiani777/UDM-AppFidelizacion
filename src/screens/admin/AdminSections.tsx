@@ -5,9 +5,13 @@ import { Card } from '@/components/Card'
 import { TextField } from '@/components/TextField'
 import {
   createPlace,
+  discoverGoogleLocations,
+  type GoogleLocations,
   reviewComment,
   reviewMission,
   reviewPlace,
+  syncGoogleReviews,
+  type GoogleSyncResult,
   usePendingMissions,
   usePendingPlaces,
   useReportedComments,
@@ -63,12 +67,42 @@ function DecisionButtons({
   )
 }
 
+/** Resumen de la última búsqueda de reseñas en Google. */
+function syncMessage(result: GoogleSyncResult): string {
+  if (!result.configured) return copy.admin.syncNotConfigured
+  return copy.admin.syncDone(result.approved, result.suggested, result.new_reviews)
+}
+
 export function MissionsReview() {
   const queryClient = useQueryClient()
   const pending = usePendingMissions(true)
+  const [syncing, setSyncing] = useState(false)
+  const [syncText, setSyncText] = useState<string | null>(null)
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['admin-pending-missions'] })
+
+  async function sync() {
+    setSyncing(true)
+    try {
+      setSyncText(syncMessage(await syncGoogleReviews()))
+      await refresh()
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    } catch {
+      setSyncText(copy.admin.syncError)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   return (
     <Section title={copy.admin.missionsTitle} empty={pending.data?.length === 0}>
+      <Button variant="ghost" disabled={syncing} onClick={() => void sync()}>
+        {syncing ? copy.admin.syncing : copy.admin.syncGoogle}
+      </Button>
+      {syncText && (
+        <p role="status" className="text-muted text-sm">
+          {syncText}
+        </p>
+      )}
       {pending.data?.map((item) => {
         const text = copy.missions.items[item.mission as keyof typeof copy.missions.items]
         return (
@@ -78,6 +112,11 @@ export function MissionsReview() {
             {item.note && (
               <p className="text-sm">
                 {copy.admin.noteLabel}: <strong>{item.note}</strong>
+              </p>
+            )}
+            {item.suggested && (
+              <p className="bg-green-soft text-green-ink w-fit rounded-full px-3 py-1 text-xs font-bold">
+                {copy.admin.suggested}
               </p>
             )}
             <DecisionButtons
@@ -248,6 +287,48 @@ export function CreatePlace() {
           </p>
         )}
       </form>
+    </section>
+  )
+}
+
+/** Ayuda para configurar la verificación automática: muestra el código del local en Google. */
+export function GoogleSetup() {
+  const [found, setFound] = useState<GoogleLocations | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  async function discover() {
+    setBusy(true)
+    setFailed(false)
+    try {
+      setFound(await discoverGoogleLocations())
+    } catch {
+      setFailed(true)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const locations = found?.accounts.flatMap((account) => account.locations) ?? []
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="font-display text-3xl">{copy.admin.discoverTitle}</h2>
+      <p className="text-muted text-sm">{copy.admin.discoverHelp}</p>
+      <Button variant="ghost" disabled={busy} onClick={() => void discover()}>
+        {copy.admin.discoverButton}
+      </Button>
+      {failed && (
+        <p role="alert" className="text-brand-ink text-sm">
+          {copy.admin.discoverError}
+        </p>
+      )}
+      {found && locations.length === 0 && <p className="text-muted">{copy.admin.discoverEmpty}</p>}
+      {locations.map((location) => (
+        <Card key={location.name} className="flex flex-col gap-1">
+          <p className="font-bold">{location.title}</p>
+          <code className="text-sm break-all select-all">{location.name}</code>
+        </Card>
+      ))}
     </section>
   )
 }

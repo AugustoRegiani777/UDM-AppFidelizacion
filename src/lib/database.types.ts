@@ -70,6 +70,7 @@ export type Database = {
           note: string | null
           points: number
           status: string
+          suggested_review: string | null
         }
         ComputedFields: never
         Insert: {
@@ -82,6 +83,7 @@ export type Database = {
           note?: string | null
           points?: number
           status: string
+          suggested_review?: string | null
         }
         Update: {
           created_at?: string
@@ -93,6 +95,7 @@ export type Database = {
           note?: string | null
           points?: number
           status?: string
+          suggested_review?: string | null
         }
         Relationships: [
           {
@@ -364,6 +367,39 @@ export type Database = {
           },
         ]
       }
+      google_reviews: {
+        Row: {
+          claimed_by: string | null
+          fetched_at: string
+          review_id: string
+          review_time: string
+          reviewer_name: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          claimed_by?: string | null
+          fetched_at?: string
+          review_id: string
+          review_time: string
+          reviewer_name?: string | null
+        }
+        Update: {
+          claimed_by?: string | null
+          fetched_at?: string
+          review_id?: string
+          review_time?: string
+          reviewer_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'google_reviews_claimed_by_fkey'
+            columns: ['claimed_by']
+            isOneToOne: false
+            referencedRelation: 'bonus_claims'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       place_comments: {
         Row: {
           body: string
@@ -552,6 +588,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string
+          google_name: string | null
           id: string
           is_admin: boolean
           program_consent_at: string | null
@@ -563,6 +600,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name: string
+          google_name?: string | null
           id: string
           is_admin?: boolean
           program_consent_at?: string | null
@@ -573,6 +611,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string
+          google_name?: string | null
           id?: string
           is_admin?: boolean
           program_consent_at?: string | null
@@ -747,6 +786,7 @@ export type Database = {
           id: string
           mission: string
           note: string
+          suggested: boolean
         }[]
       }
       admin_pending_places: { Args: Record<PropertyKey, never>; Returns: Json }
@@ -794,6 +834,7 @@ export type Database = {
         Returns: Json
       }
       local_day_start: { Args: Record<PropertyKey, never>; Returns: string }
+      match_google_reviews: { Args: Record<PropertyKey, never>; Returns: Json }
       newly_unlocked_rewards: {
         Args: {
           p_balance_after: number
@@ -803,6 +844,7 @@ export type Database = {
         }
         Returns: Json
       }
+      normalize_name: { Args: { p_name: string }; Returns: string }
       pick_prize: { Args: { p_prizes: Json }; Returns: Json }
       place_comments_list: { Args: { p_place: string }; Returns: Json }
       play_game: { Args: { p_customer: string; p_game: string; p_ref?: string }; Returns: Json }
@@ -823,6 +865,10 @@ export type Database = {
       require_user: { Args: Record<PropertyKey, never>; Returns: string }
       reverse_claim: { Args: { p_sale_uuid: string }; Returns: boolean }
       reward_tickets: { Args: { p_customer: string; p_reward: string }; Returns: number }
+      schedule_google_sync: {
+        Args: { p_function_url: string; p_secret: string }
+        Returns: undefined
+      }
       schedule_reconcile: { Args: { p_function_url: string; p_secret: string }; Returns: undefined }
       setting_json: { Args: { p_key: string }; Returns: Json }
       start_chest: { Args: { p_customer: string; p_reward: string }; Returns: Json }
@@ -842,6 +888,7 @@ export type Database = {
         Args: { p_display_name: string; p_promo_consent: boolean }
         Returns: undefined
       }
+      upsert_google_reviews: { Args: { p_reviews: Json }; Returns: number }
       validate_redemption: { Args: { p_code: string }; Returns: Json }
     }
     Enums: {

@@ -24,10 +24,15 @@ export interface Customer {
 }
 
 /** Crea un cliente real (con perfil y sesión) para probar como si fuera la app. */
-export async function createCustomer(label = 'cliente'): Promise<Customer> {
+export async function createCustomer(label = 'cliente', fullName?: string): Promise<Customer> {
   const email = `${label}-${randomUUID()}@test.local`
   const password = 'secret-123456'
-  const created = await admin.auth.admin.createUser({ email, password, email_confirm: true })
+  const created = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: fullName ? { full_name: fullName } : undefined,
+  })
   if (created.error) throw created.error
 
   const client = createClient<Database>(URL, ANON_KEY, { auth: { persistSession: false } })

@@ -24,6 +24,8 @@ export interface PendingMission {
   note: string | null
   display_name: string
   created_at: string
+  /** Hay una reseña de Google que parece ser la de este cliente. */
+  suggested: boolean
 }
 
 export function usePendingMissions(enabled: boolean) {
@@ -118,4 +120,34 @@ export async function createPlace(place: {
     p_note: place.note,
   })
   if (error) throw error
+}
+
+export interface GoogleSyncResult {
+  configured: boolean
+  new_reviews: number
+  approved: number
+  suggested: number
+  error?: string
+}
+
+/** Pide a la función del servidor que busque reseñas nuevas en Google y verifique las pendientes. */
+export async function syncGoogleReviews(): Promise<GoogleSyncResult> {
+  const { data, error } = await supabase.functions.invoke<GoogleSyncResult>('sync-google-reviews', {
+    body: {},
+  })
+  if (error || !data) throw error ?? new Error('empty_response')
+  return data
+}
+
+export interface GoogleLocations {
+  accounts: { account: string; accountName: string; locations: { name: string; title: string }[] }[]
+}
+
+/** Lista las cuentas y locales de Google a los que tiene acceso la conexión (para configurar `GOOGLE_BP_LOCATION`). */
+export async function discoverGoogleLocations(): Promise<GoogleLocations> {
+  const { data, error } = await supabase.functions.invoke<GoogleLocations>('sync-google-reviews', {
+    body: { discover: true },
+  })
+  if (error || !data) throw error ?? new Error('empty_response')
+  return data
 }

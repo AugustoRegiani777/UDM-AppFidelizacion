@@ -3,7 +3,13 @@ import { FullScreenLoader } from '@/components/FullScreenLoader'
 import { Screen } from '@/components/Screen'
 import { useIsAdmin } from '@/features/admin/adminApi'
 import { copy } from '@/copy'
-import { CreatePlace, MissionsReview, PlacesReview, ReportedComments } from './AdminSections'
+import {
+  CreatePlace,
+  GoogleSetup,
+  MissionsReview,
+  PlacesReview,
+  ReportedComments,
+} from './AdminSections'
 
 /** Panel de administración (solo admins). El servidor vuelve a chequear el rol en cada acción. */
 export function AdminScreen() {
@@ -22,6 +28,7 @@ export function AdminScreen() {
       <PlacesReview />
       <ReportedComments />
       <CreatePlace />
+      <GoogleSetup />
     </Screen>
   )
 }

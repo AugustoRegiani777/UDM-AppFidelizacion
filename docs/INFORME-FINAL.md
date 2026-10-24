@@ -12,7 +12,7 @@ La app de fidelización de Uno de Miga está construida de punta a punta y proba
 - **Puntos que no se gastan:** el saldo es un total que solo sube. Cada premio es un escalón repetible (café cada 150 puntos acumulados, sanguche cada 300…). Canjear no baja nada.
 - **Cofre con juego:** para canjear un premio hay que pasar "Sobreviví a las migas" (arcade de 50 segundos: movés tu sanguche con el dedo, tira migas solo, juntás gemas, subís de nivel y elegís mejoras, hay oleadas y una Reina hormiga). El servidor **reproduce la partida** con la misma simulación para confirmar que se ganó. Intentos ilimitados y modo relajado tras 2 derrotas.
 - **Segundo juego, Skate de Miga:** en horizontal, con los dos pulgares. Bajás rampas, saltás gaps, hacés trucos que cargan el turbo y llegás a la meta sin quedarte sin vidas. El cofre elige uno de los dos juegos.
-- **Misiones de puntos extra:** seguir en Instagram (suma al instante) y reseña de Google Maps (la aprobás vos desde `/admin`).
+- **Misiones de puntos extra:** seguir en Instagram (suma al instante) y reseña de Google Maps (la aprobás vos desde `/admin`, o se aprueba sola si conectás la cuenta de Google del local: guía en `docs/PENDIENTES-AUGUSTO.md`, sección 10).
 - **Comunidad de recomendaciones:** lugares argentos de Valencia por categoría, con likes anónimos, comentarios, alias y puntos por participar; todo moderable desde `/admin`.
 - Juegos de azar livianos: raspadita después de cada compra y ruleta diaria, con el resultado decidido en el servidor, límites, tope diario y las probabilidades visibles en "¿Cómo funciona?".
 - Animaciones y celebraciones (check que se dibuja, confetti, regalo que se abre, código que se imprime), con respeto por "Reducir movimiento"; sonido apagado por defecto.

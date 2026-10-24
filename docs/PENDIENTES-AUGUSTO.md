@@ -76,3 +76,30 @@ Es el último paso antes de lanzar. Abrí el repo del POS en VS Code y pasale a 
 - **Cargar los primeros lugares:** entrá a `/admin` con tu usuario administrador y usá "Cargar un lugar directo" para dejar la comunidad con contenido el día del lanzamiento (pizzerías argentinas, medialunas, cafés y helados que vos recomendás).
 - **Revisar cada tanto `/admin`:** ahí aparecen los lugares propuestos por clientes (para aprobar o rechazar), las reseñas de Google por verificar y los comentarios reportados.
 - **Contenido de usuarios (con la gestoría):** como los clientes publican lugares y comentarios, conviene sumar a los textos legales: reglas de convivencia (qué no se puede publicar), que los comentarios son anónimos hacia otros clientes pero el local puede ver quién los escribió, y cómo pedir que se borre algo. Pedile a la gestoría que lo revise junto con la privacidad.
+
+## 10. Verificación automática de reseñas de Google (opcional)
+
+**Qué hace:** cada 30 minutos la app trae las reseñas de tu local desde Google y las compara con las misiones de reseña pendientes. Si el **nombre de la reseña coincide con el nombre de la cuenta de Google con la que entró el cliente**, le suma los puntos sola. Si solo coincide el nombre que el cliente escribió, te la marca en `/admin` como "Posible coincidencia" para aprobar de un toque. Las reseñas anónimas no se pueden verificar: quedan para revisión manual. **Mientras no hagas esto, todo sigue funcionando con aprobación manual.**
+
+**Lo que Google exige (verificado en su documentación):**
+
+- Un perfil de empresa **verificado y activo hace más de 60 días**, con un **sitio web** cargado. Como el local abrió hace poco, puede que todavía no cumpla.
+- Pedirle acceso a la API a Google. Google no publica cuánto tarda la respuesta.
+
+**Pasos:**
+
+1. Entrá a https://business.google.com con la cuenta dueña del local y confirmá que figura como "Verificado" y que tiene el sitio web cargado.
+2. En https://console.cloud.google.com (el mismo proyecto "Uno de Miga" del login con Google) anotá el **número de proyecto**: en "Panel" → tarjeta "Información del proyecto".
+3. Pedí el acceso: abrí el formulario de contacto de la API de Google Business Profile (https://developers.google.com/my-business/content/prereqs → botón "GBP API contact form"), elegí **"Application for Basic API Access"**, usá el email que figura como dueño del perfil y pegá el número de proyecto. Google responde por email. Para ver el estado: Cloud Console → APIs y servicios → cuotas de "Google My Business API": **0 = todavía no aprobado**, **300 = aprobado**.
+4. Cuando esté aprobado, en "APIs y servicios" → "Biblioteca" habilitá: **My Business Account Management API**, **My Business Business Information API** y **Google My Business API**.
+5. "APIs y servicios" → "Credenciales" → "Crear credenciales" → "ID de cliente de OAuth" → tipo "Aplicación web". En "URI de redirección autorizados" agregá `https://developers.google.com/oauthplayground`. Anotá el ID y el secreto.
+6. Conseguí el "refresh token": entrá a https://developers.google.com/oauthplayground → engranaje ⚙ (arriba a la derecha) → tildá "Use your own OAuth credentials" y pegá el ID y el secreto → en el paso 1 escribí el permiso `https://www.googleapis.com/auth/business.manage` → "Authorize APIs" (con la cuenta dueña del local) → "Exchange authorization code for tokens" → copiá el **Refresh token**.
+7. Cargá los secretos. En tu compu: en `supabase/functions/.env` completá `GOOGLE_BP_CLIENT_ID`, `GOOGLE_BP_CLIENT_SECRET` y `GOOGLE_BP_REFRESH_TOKEN`. En producción: `npx supabase secrets set GOOGLE_BP_CLIENT_ID=... GOOGLE_BP_CLIENT_SECRET=... GOOGLE_BP_REFRESH_TOKEN=...`
+8. Encontrá el código de tu local: entrá a `/admin` y tocá **"Buscar mi local en Google"**. Aparece una lista con el código de cada local (empieza con `accounts/`). Copiá el de Uno de Miga.
+9. Cargalo como secreto `GOOGLE_BP_LOCATION` (mismo lugar que el paso 7).
+10. En producción, programá la búsqueda automática: Supabase → SQL Editor → `select public.schedule_google_sync('https://REF.supabase.co/functions/v1/sync-google-reviews', 'CLAVE3');` (CLAVE3 es el mismo secreto de la reconciliación) y publicá la función: `npx supabase functions deploy sync-google-reviews`.
+11. Probalo: en `/admin` tocá **"Buscar reseñas de Google ahora"**. Te cuenta cuántas reseñas nuevas encontró y cuántas aprobó.
+
+**Para apagar la aprobación automática** (que solo sugiera): Supabase → Table editor → `settings` → fila `google_reviews` → `auto_approve` en `false`.
+
+**Límites que conviene saber:** la coincidencia es por nombre, así que dos personas con el mismo nombre podrían confundirse (cada reseña suma una sola vez y la revisión manual sigue disponible). Los puntos no dependen de la calificación de la reseña.

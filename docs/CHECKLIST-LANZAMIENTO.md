@@ -25,6 +25,7 @@ Tildá cada punto antes de abrir la app a clientes. Lo que ya está resuelto en 
 - [ ] Links reales de Instagram y de reseña de Google cargados en `settings.missions`.
 - [ ] Reglas de convivencia de la comunidad revisadas por la gestoría.
 - [ ] Al menos 8-10 lugares cargados desde `/admin` antes de abrir la comunidad.
+- [ ] (Opcional) Verificación automática de reseñas conectada y probada con el botón de `/admin` (PENDIENTES, sección 10).
 - [ ] Alguien sabe revisar `/admin` (lugares propuestos, reseñas por verificar, comentarios reportados).
 - [ ] Administradores asignados por SQL (ver PENDIENTES, sección 8).
 

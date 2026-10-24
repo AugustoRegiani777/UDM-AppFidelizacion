@@ -14,7 +14,7 @@ Todo está preparado, pero **no se publicó nada**. Esta guía es para cuando qu
 
 - Se publican las migraciones de `supabase/migrations/` (incluye premios y reglas iniciales).
 - **No** se aplica `supabase/seed.sql` (es solo de desarrollo: ventas falsas y cron local).
-- Funciones a publicar: `claim-sale`, `create-redemption`, `validate-redemption`, `play-game`, `delete-account`, `reconcile`.
+- Funciones a publicar: `claim-sale`, `create-redemption`, `validate-redemption`, `play-game`, `delete-account`, `reconcile`, `sync-google-reviews`.
 - Funciones que **nunca** se publican: `dev-mock-sale` y `dev-pos-redeem` (simulan la tablet y la caja). Además responden 404 sin `DEV_ENDPOINTS=true`, variable que no se carga en producción.
 - La pantalla `/dev` y el login por email no existen en el build de producción.
 
@@ -22,7 +22,7 @@ Todo está preparado, pero **no se publicó nada**. Esta guía es para cuando qu
 
 Web (Netlify): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_APP_URL`. No cargar `VITE_DEV_TOOLS`.
 
-Funciones (Supabase secrets): `POS_MODE`, `POS_BASE_URL`, `POS_HMAC_SECRET`, `POS_INBOUND_HMAC_SECRET`, `RECONCILE_SECRET`.
+Funciones (Supabase secrets): `POS_MODE`, `POS_BASE_URL`, `POS_HMAC_SECRET`, `POS_INBOUND_HMAC_SECRET`, `RECONCILE_SECRET` y, para verificar reseñas de Google (opcional), `GOOGLE_BP_CLIENT_ID`, `GOOGLE_BP_CLIENT_SECRET`, `GOOGLE_BP_REFRESH_TOKEN`, `GOOGLE_BP_LOCATION` (guía en PENDIENTES, sección 10).
 
 - Mientras el POS real no esté conectado: `POS_MODE=mock`. Ojo: en producción la tabla `dev_mock_sales` no existe, así que ninguna compra se podrá acreditar hasta pasar a `real`. Eso es lo esperado: **no lanzar a clientes antes de conectar el POS** (ver `INFORME-FINAL.md`, próximos pasos).
 - Cuando el POS tenga sus funciones: `POS_MODE=real`, `POS_BASE_URL=https://unodemigapos.netlify.app` y los dos secretos HMAC (los mismos del lado del POS).
@@ -34,7 +34,7 @@ npx supabase login
 npx supabase link --project-ref <REF-DEL-PROYECTO>
 npx supabase db push
 npx supabase secrets set POS_MODE=mock POS_HMAC_SECRET=<secreto> POS_INBOUND_HMAC_SECRET=<secreto> RECONCILE_SECRET=<secreto>
-npx supabase functions deploy claim-sale create-redemption validate-redemption play-game delete-account reconcile
+npx supabase functions deploy claim-sale create-redemption validate-redemption play-game delete-account reconcile sync-google-reviews
 ```
 
 Después, en el editor SQL de Supabase, programar la reconciliación (usar el mismo `RECONCILE_SECRET`):

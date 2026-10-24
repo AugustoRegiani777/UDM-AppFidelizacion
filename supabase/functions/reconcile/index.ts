@@ -6,14 +6,7 @@ import { adminClient } from '../_shared/clients.ts'
 import { handlePreflight } from '../_shared/cors.ts'
 import { errorResponse, HttpError, json } from '../_shared/errors.ts'
 import { createPosAdapter, type PosSale } from '../_shared/pos-adapter.ts'
-
-/** Comparación en tiempo constante del secreto de la tarea programada. */
-function sameSecret(a: string, b: string): boolean {
-  if (!a || a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  return diff === 0
-}
+import { sameSecret } from '../_shared/secret.ts'
 
 Deno.serve(async (req) => {
   const preflight = handlePreflight(req)

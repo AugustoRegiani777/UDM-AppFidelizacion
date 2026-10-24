@@ -428,3 +428,7 @@ verify_jwt = false
 # reconcile la dispara pg_cron con un secreto propio (header x-reconcile-secret), no con un JWT.
 [functions.reconcile]
 verify_jwt = false
+
+# sync-google-reviews: la dispara pg_cron con secreto o un admin con su sesión (se verifica adentro).
+[functions.sync-google-reviews]
+verify_jwt = false

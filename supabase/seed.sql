@@ -48,3 +48,5 @@ values (
 
 update public.profiles set program_consent_at = now(), is_admin = true
  where id = 'dddddddd-0000-4000-8000-000000000001';
+
+select public.schedule_google_sync('http://kong:8000/functions/v1/sync-google-reviews', 'dev-secret-reconcile');

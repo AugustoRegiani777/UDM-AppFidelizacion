@@ -179,6 +179,8 @@
 - (Fase 13) Si el patinador se queda trabado rodando (menos de 35 u/s durante 2,5 s), vuelve al último punto de control sin perder vida.
 - (Fase 13) Pantalla completa y bloqueo horizontal se piden al tocar "¡A rodar!" (no todos los navegadores lo permiten; si no, aparece "Girá el celular").
 
+- (Google) Verificación de reseñas: `sync-google-reviews` (pg_cron cada 30 min o botón en `/admin`) trae las reseñas con la API v4 de Google Business Profile y `match_google_reviews()` las cruza con las misiones pendientes. Aprobación automática solo si el nombre de la reseña coincide con el nombre de la cuenta de Google del cliente (`profiles.google_name`, no editable); si solo coincide el nombre escrito, se sugiere al admin. Cada reseña cuenta una vez. Funciona sin credenciales (queda manual). Requiere perfil verificado 60+ días con sitio web y aprobación de Google (PENDIENTES, sección 10).
+
 ## Ideas para después
 
 - Más juegos para la misma ceremonia del cofre (tres en línea, reflejos), elegidos al azar por premio.

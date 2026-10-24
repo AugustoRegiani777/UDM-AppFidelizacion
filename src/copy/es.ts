@@ -180,7 +180,8 @@ export const es = {
     sectionCta: 'Ver misiones',
     points: (n: number) => `+${n} puntos`,
     approved: '¡Puntos sumados!',
-    pending: 'En revisión: apenas la verifiquemos, te sumamos los puntos.',
+    pending:
+      'En revisión: la buscamos en Google (suele tardar unos minutos) y te sumamos los puntos. Si no la encontramos sola, la revisamos a mano.',
     rejected: 'No pudimos encontrarla. Revisá el nombre y probá de nuevo.',
     nameLabel: 'Tu nombre en Google (para encontrar tu reseña)',
     error: 'Uy, no pudimos registrar la misión. Probá de nuevo.',
@@ -215,6 +216,20 @@ export const es = {
     createTitle: 'Cargar un lugar directo',
     create: 'Cargar lugar',
     created: 'Lugar cargado.',
+    suggested: 'Posible coincidencia con una reseña de Google',
+    syncGoogle: 'Buscar reseñas de Google ahora',
+    syncing: 'Buscando…',
+    syncNotConfigured:
+      'La verificación automática todavía no está configurada. Mientras tanto aprobás a mano.',
+    syncDone: (approved: number, suggested: number, fresh: number) =>
+      `Listo: ${fresh} reseñas nuevas, ${approved} aprobadas solas y ${suggested} para que confirmes.`,
+    discoverTitle: 'Conectar Google Maps',
+    discoverButton: 'Buscar mi local en Google',
+    discoverHelp:
+      'Muestra los locales a los que tiene acceso la conexión. Copiá el código del tuyo (empieza con "accounts/") y cargalo como GOOGLE_BP_LOCATION.',
+    discoverEmpty: 'No encontramos locales con esta conexión.',
+    discoverError: 'Todavía no está conectada la cuenta de Google (ver PENDIENTES, sección 10).',
+    syncError: 'No pudimos consultar Google. Revisá la configuración (ver PENDIENTES, sección 10).',
     reports: (n: number) => `${n} ${n === 1 ? 'reporte' : 'reportes'}`,
   },
   community: {

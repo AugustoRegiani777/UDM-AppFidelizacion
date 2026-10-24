@@ -128,8 +128,11 @@ export async function rewardId(name: string): Promise<string> {
   return data.id
 }
 
-/** Reglas del juego del cofre para las pruebas (ver supabase/functions/_shared/survivors/config.ts). */
-export async function setChestOverrides(overrides: Record<string, unknown>): Promise<void> {
+/** Deja una sola opción de juego en el cofre, con sus reglas (para que las pruebas sean predecibles). */
+export async function configureChest(
+  game: 'survivors' | 'skate',
+  overrides: Record<string, unknown> = {},
+): Promise<void> {
   const { data, error } = await admin
     .from('settings')
     .select('value')
@@ -138,12 +141,41 @@ export async function setChestOverrides(overrides: Record<string, unknown>): Pro
   if (error) throw error
   await admin
     .from('settings')
-    .update({ value: { ...(data.value as object), overrides } as never })
+    .update({
+      value: {
+        ...(data.value as object),
+        games: [game],
+        overrides: { [game]: overrides },
+      } as never,
+    })
+    .eq('key', 'chest_game')
+}
+
+/** Reglas de "Sobreviví a las migas" para las pruebas (ver supabase/functions/_shared/survivors/config.ts). */
+export const setChestOverrides = (overrides: Record<string, unknown>) =>
+  configureChest('survivors', overrides)
+
+/** Vuelve a la configuración normal: todos los juegos, reglas por defecto. */
+export async function resetChestConfig(): Promise<void> {
+  const { data, error } = await admin
+    .from('settings')
+    .select('value')
+    .eq('key', 'chest_game')
+    .single()
+  if (error) throw error
+  await admin
+    .from('settings')
+    .update({
+      value: { ...(data.value as object), games: ['survivors', 'skate'], overrides: {} } as never,
+    })
     .eq('key', 'chest_game')
 }
 
 /** Partida sin enemigos de 2 segundos: se gana sola, ideal para probar el flujo del cofre. */
 export const QUICK_GAME = { spawnMul: 0, boss: false, durationSeconds: 2 }
+
+/** Circuito de skate recortado a 600 unidades: se completa rodando en pocos segundos. */
+export const QUICK_SKATE = { courseLimit: 600 }
 
 export const startChest = (customer: Customer, reward: string) =>
   callFunction('start-chest', { reward_id: reward }, { token: customer.token })
@@ -151,7 +183,7 @@ export const startChest = (customer: Customer, reward: string) =>
 export const finishChest = (
   customer: Customer,
   sessionId: string,
-  log: { moves: [number, number][]; picks: [number, number][] } = { moves: [], picks: [] },
+  log: unknown = { moves: [], picks: [] },
 ) => callFunction('finish-chest', { session_id: sessionId, log }, { token: customer.token })
 
 /** Abre el cofre de punta a punta (con QUICK_GAME activo) y devuelve el código de canje. */

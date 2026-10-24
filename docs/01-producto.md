@@ -117,3 +117,5 @@ Los premios por **compras** cuentan compras confirmadas y no consumen puntos.
 - **Misiones de puntos extra:** seguir a Uno de Miga en Instagram (una vez, sin verificar) y reseña en Google Maps (una vez, aprobación manual).
 - **Comunidad:** recomendaciones de lugares de Valencia (pizzerías argentinas, medialunas, cafés, helados). Se suman puntos por proponer un lugar, comentar y dar like; los likes son anónimos; todo se modera desde un panel de administración.
 - Pendiente de definir: sistema de puntuación y niveles.
+
+- **Juegos del cofre (octubre 2026):** además de "Sobreviví a las migas", hay "Skate de Miga" (2D en horizontal, dos pulgares, trucos que cargan turbo). El servidor elige uno al azar al abrir el cofre y lo mantiene mientras el cliente siga perdiendo.

@@ -10,17 +10,25 @@ import {
   type FinishChestResult,
 } from '@/features/chest/chestApi'
 import { useDashboard } from '@/features/dashboard/useDashboard'
-import { SurvivorsGame, type GameOutcome, type GameSession } from '@/games/survivors/SurvivorsGame'
+import type { GameConfig } from '@engine/config.ts'
+import type { SkateConfig } from '@skate/config.ts'
+import type { GameOutcome, GameSession } from '@/games/outcome'
+import { SkateGame } from '@/games/skate/SkateGame'
+import { SurvivorsGame } from '@/games/survivors/SurvivorsGame'
 import { Celebration } from '@/motion/Celebration'
 import { copy } from '@/copy'
 import { ChestIllustration } from './ChestIllustration'
 
+type Playing =
+  | { game: 'survivors'; session: GameSession<GameConfig> }
+  | { game: 'skate'; session: GameSession<SkateConfig> }
+
 type Phase =
   | { name: 'intro' }
   | { name: 'starting' }
-  | { name: 'playing'; session: GameSession; sessionId: string }
+  | { name: 'playing'; sessionId: string; play: Playing }
   | { name: 'verifying'; sessionId: string; outcome: GameOutcome }
-  | { name: 'opened'; result: FinishChestResult }
+  | { name: 'opened'; result: FinishChestResult; statsText: string }
   | { name: 'lost'; outcome: GameOutcome; relaxedNext: boolean }
   | { name: 'error'; message: string; retry?: { sessionId: string; outcome: GameOutcome } }
 
@@ -42,10 +50,14 @@ export function ChestScreen() {
         navigate(`/canje/${started.redemption_id}`, { replace: true })
         return
       }
+      const base = { seed: started.seed, relaxed: started.relaxed }
       setPhase({
         name: 'playing',
         sessionId: started.session_id,
-        session: { seed: started.seed, config: started.config, relaxed: started.relaxed },
+        play:
+          started.game === 'skate'
+            ? { game: 'skate', session: { ...base, config: started.config } }
+            : { game: 'survivors', session: { ...base, config: started.config } },
       })
     } catch (error) {
       setPhase({
@@ -62,7 +74,7 @@ export function ChestScreen() {
       const result = await finishChest(sessionId, outcome.log)
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       if (result.won && result.redemption) {
-        setPhase({ name: 'opened', result })
+        setPhase({ name: 'opened', result, statsText: outcome.statsText })
       } else {
         setPhase({ name: 'lost', outcome, relaxedNext: false })
       }
@@ -72,12 +84,12 @@ export function ChestScreen() {
   }
 
   if (phase.name === 'playing') {
-    return (
-      <SurvivorsGame
-        session={phase.session}
-        onEnd={(outcome) => void verify(phase.sessionId, outcome)}
-        onExit={() => setPhase({ name: 'intro' })}
-      />
+    const onEnd = (outcome: GameOutcome) => void verify(phase.sessionId, outcome)
+    const onExit = () => setPhase({ name: 'intro' })
+    return phase.play.game === 'skate' ? (
+      <SkateGame session={phase.play.session} onEnd={onEnd} onExit={onExit} />
+    ) : (
+      <SurvivorsGame session={phase.play.session} onEnd={onEnd} onExit={onExit} />
     )
   }
 
@@ -101,6 +113,7 @@ export function ChestScreen() {
       {phase.name === 'opened' && phase.result.redemption && (
         <Opened
           result={phase.result}
+          statsText={phase.statsText}
           onContinue={(id) => navigate(`/canje/${id}`, { replace: true })}
         />
       )}
@@ -109,12 +122,8 @@ export function ChestScreen() {
         <>
           <ChestIllustration open={false} />
           <h1 className="font-display text-5xl leading-none">{copy.chest.lostTitle}</h1>
-          <p className="text-muted text-lg">
-            {copy.chest.lostBody(phase.outcome.secondsSurvived, phase.outcome.totalSeconds)}
-          </p>
-          <p className="text-muted text-sm">
-            {copy.chest.stats(phase.outcome.kills, phase.outcome.level)}
-          </p>
+          <p className="text-muted text-lg">{phase.outcome.lostText}</p>
+          <p className="text-muted text-sm">{phase.outcome.statsText}</p>
           <Button onClick={() => void start()}>{copy.chest.retry}</Button>
           <BackLink />
         </>
@@ -140,9 +149,11 @@ export function ChestScreen() {
 
 function Opened({
   result,
+  statsText,
   onContinue,
 }: {
   result: FinishChestResult
+  statsText: string
   onContinue: (redemptionId: string) => void
 }) {
   const redemption = result.redemption!
@@ -152,7 +163,7 @@ function Opened({
       <Celebration className="text-green size-14" />
       <h1 className="font-display text-5xl leading-none">{copy.chest.opened}</h1>
       <p className="text-muted text-lg">{copy.chest.openedBody}</p>
-      <p className="text-muted text-sm">{copy.chest.stats(result.kills, result.level)}</p>
+      <p className="text-muted text-sm">{statsText}</p>
       <Button onClick={() => onContinue(redemption.id)}>{copy.chest.seeCode}</Button>
     </>
   )

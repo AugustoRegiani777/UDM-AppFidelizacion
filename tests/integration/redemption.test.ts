@@ -7,13 +7,14 @@ import {
   openChest,
   QUICK_GAME,
   rewardId,
+  resetChestConfig,
   setChestOverrides,
   validateAsPos,
 } from './helpers'
 
 describe('canje de premios (caja)', () => {
   beforeAll(() => setChestOverrides(QUICK_GAME))
-  afterAll(() => setChestOverrides({}))
+  afterAll(() => resetChestConfig())
 
   it('flujo completo: el código sale al pasar el juego, la caja lo valida y los puntos NO se gastan', async () => {
     const ana = await createCustomer('ana')

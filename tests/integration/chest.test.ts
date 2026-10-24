@@ -6,13 +6,14 @@ import {
   giveSalePoints,
   QUICK_GAME,
   rewardId,
+  resetChestConfig,
   setChestOverrides,
   sleep,
   startChest,
 } from './helpers'
 
 describe('cofre con juego', () => {
-  afterAll(() => setChestOverrides({}))
+  afterAll(() => resetChestConfig())
 
   it('no abre el cofre si el premio no está alcanzado', async () => {
     const ana = await createCustomer('ana')

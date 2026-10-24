@@ -23,7 +23,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "paths": { "@/*": ["./src/*"], "@engine/*": ["./supabase/functions/_shared/survivors/*"] }
+    "paths": { "@/*": ["./src/*"], "@engine/*": ["./supabase/functions/_shared/survivors/*"],
+      "@skate/*": ["./supabase/functions/_shared/skate/*"] }
   },
   "include": ["src"]
 }

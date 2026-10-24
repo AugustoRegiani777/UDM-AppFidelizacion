@@ -40,6 +40,7 @@ Tildá cada punto antes de abrir la app a clientes. Lo que ya está resuelto en 
 - [ ] Android (Chrome): lo mismo, más "Instalar app".
 - [ ] Android de gama media: animaciones fluidas (ver `docs/RENDIMIENTO.md`) y con "Quitar animaciones" activado.
 - [ ] Sticker NFC del mostrador abre la portada.
+- [ ] Skate en iPhone y Android: se gira a horizontal, los dos pulgares responden, la pantalla completa y el bloqueo de orientación funcionan (o aparece "Girá el celular") y se puede completar el circuito.
 - [ ] Cámara denegada: se ve cómo habilitarla y se puede pegar el link a mano.
 
 ## Operación

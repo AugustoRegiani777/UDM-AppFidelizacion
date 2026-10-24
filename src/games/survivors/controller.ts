@@ -8,28 +8,15 @@ import {
   type GameConfig,
   type UpgradeId,
 } from '@engine/config.ts'
-import { InputRecorder, type InputLog } from '@engine/replay.ts'
+import { InputRecorder } from '@engine/replay.ts'
 import { createGame, pick, step, xpNeeded, type GameEvent, type GameState } from '@engine/sim.ts'
+import { copy } from '@/copy'
 import { vibrate } from '@/motion/feedback'
 import { sfx, unlockAudio } from './audio.ts'
+import type { GameOutcome, GameSession } from '../outcome.ts'
 import type { HudData } from './HudOverlay.tsx'
 import { InputController } from './input.ts'
 import { SurvivorsRenderer } from './renderer.ts'
-
-export interface GameSession {
-  seed: number
-  config: GameConfig
-  relaxed: boolean
-}
-
-export interface GameOutcome {
-  won: boolean
-  log: InputLog
-  kills: number
-  level: number
-  secondsSurvived: number
-  totalSeconds: number
-}
 
 export type Phase = 'ready' | 'playing' | 'paused' | 'levelup' | 'ended'
 
@@ -46,6 +33,8 @@ const END_DELAY_MS = 1200
 const MAX_DPR = 3
 const SLOW_FRAME_MS = 21
 const FRAME_SAMPLES = 90
+
+export type { GameOutcome, GameSession }
 
 export function hudOf(state: GameState): HudData {
   return {
@@ -113,7 +102,7 @@ export class GameController {
   constructor(
     canvas: HTMLCanvasElement,
     private readonly container: HTMLElement,
-    session: GameSession,
+    session: GameSession<GameConfig>,
     private readonly callbacks: ControllerCallbacks,
   ) {
     this.state = createGame(session.config, session.seed)
@@ -250,10 +239,11 @@ export class GameController {
       this.callbacks.onEnd({
         won,
         log: this.recorder.log,
-        kills: state.kills,
-        level: state.level,
-        secondsSurvived: Math.floor(state.tick / TICKS_PER_SECOND),
-        totalSeconds: state.config.durationSeconds,
+        lostText: copy.chest.lostBody(
+          Math.floor(state.tick / TICKS_PER_SECOND),
+          state.config.durationSeconds,
+        ),
+        statsText: copy.chest.stats(state.kills, state.level),
       })
     }, END_DELAY_MS)
   }

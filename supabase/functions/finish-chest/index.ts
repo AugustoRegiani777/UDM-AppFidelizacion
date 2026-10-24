@@ -3,8 +3,7 @@
 import { adminClient, requireUser } from '../_shared/clients.ts'
 import { handlePreflight } from '../_shared/cors.ts'
 import { errorResponse, HttpError, json } from '../_shared/errors.ts'
-import { resolveConfig } from '../_shared/survivors/config.ts'
-import { isValidLog, replay } from '../_shared/survivors/replay.ts'
+import { isChestGame, isValidGameLog, replayGame } from '../_shared/chest-games.ts'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const BUSINESS_ERRORS: Record<string, HttpError> = {
@@ -26,7 +25,6 @@ Deno.serve(async (req) => {
     if (typeof sessionId !== 'string' || !UUID_RE.test(sessionId)) {
       throw new HttpError(400, 'invalid_session_id')
     }
-    if (!isValidLog(log)) throw new HttpError(400, 'invalid_log')
 
     const db = adminClient()
     const { data: session, error: sessionError } = await db.rpc('get_chest_session', {
@@ -36,29 +34,29 @@ Deno.serve(async (req) => {
     if (sessionError) throw sessionError
     if (!session) throw new HttpError(404, 'session_not_found')
 
-    // Se reproduce con la configuración y la semilla que el servidor guardó al abrir la sesión.
-    const config = resolveConfig(session.overrides, session.relaxed)
-    const result = replay(config, Number(session.seed), log)
-    const won = result.valid && result.status === 'won'
+    if (!isChestGame(session.game)) throw new HttpError(500, 'invalid_game')
+    if (!isValidGameLog(session.game, log)) throw new HttpError(400, 'invalid_log')
+
+    // Se reproduce con las reglas y la semilla que el servidor guardó al abrir la sesión.
+    const outcome = replayGame(
+      session.game,
+      session.overrides,
+      session.relaxed,
+      Number(session.seed),
+      log,
+    )
 
     const { data, error } = await db.rpc('finish_chest', {
       p_customer: user.id,
       p_session: sessionId,
-      p_won: won,
-      p_min_seconds: config.durationSeconds * 0.85,
-      p_summary: {
-        valid: result.valid,
-        status: result.status,
-        ticks: result.ticks,
-        kills: result.kills,
-        level: result.level,
-        hp: result.hp,
-      },
+      p_won: outcome.won,
+      p_min_seconds: outcome.minSeconds,
+      p_summary: outcome.summary,
     })
     const known = error && BUSINESS_ERRORS[error.message]
     if (known) throw known
     if (error) throw error
-    return json({ ...data, kills: result.kills, level: result.level, hp: result.hp })
+    return json({ ...data, game: session.game, summary: outcome.summary })
   } catch (error) {
     return errorResponse(error)
   }

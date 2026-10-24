@@ -1,9 +1,15 @@
 import { expect, test } from '@playwright/test'
-import { callFunction, createMockSale, QUICK_GAME, setChestOverrides } from '../integration/helpers'
+import {
+  callFunction,
+  createMockSale,
+  QUICK_GAME,
+  resetChestConfig,
+  setChestOverrides,
+} from '../integration/helpers'
 
 // El juego real dura 50 s; para el e2e se usa una partida de 2 s sin enemigos (reglas en settings).
 test.beforeAll(() => setChestOverrides(QUICK_GAME))
-test.afterAll(() => setChestOverrides({}))
+test.afterAll(() => resetChestConfig())
 
 test('compra grande: regalo, cofre con juego, código y validación en caja', async ({ page }) => {
   const sale = await createMockSale({ total_cents: 16000 })

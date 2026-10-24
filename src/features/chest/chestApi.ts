@@ -1,26 +1,22 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import type { GameConfig } from '@engine/config.ts'
-import type { InputLog } from '@engine/replay.ts'
+import type { SkateConfig } from '@skate/config.ts'
 import { supabase } from '@/lib/supabase'
 
 export class RewardNotReachedError extends Error {}
 
+export type ChestGameName = 'survivors' | 'skate'
+
 export type StartChestResult =
   | { already_unlocked: true; redemption_id: string }
-  | {
-      already_unlocked: false
-      session_id: string
-      seed: number
-      relaxed: boolean
-      config: GameConfig
-    }
+  | ({ already_unlocked: false; session_id: string; seed: number; relaxed: boolean } & (
+      { game: 'survivors'; config: GameConfig } | { game: 'skate'; config: SkateConfig }
+    ))
 
 export interface FinishChestResult {
   won: boolean
   redemption?: { id: string; code: string; expires_at: string; reward_name: string }
-  kills: number
-  level: number
-  hp: number
+  game: ChestGameName
 }
 
 async function call<T>(name: string, body: unknown): Promise<T> {
@@ -40,5 +36,5 @@ export const startChest = (rewardId: string) =>
   call<StartChestResult>('start-chest', { reward_id: rewardId })
 
 /** Manda las entradas grabadas; el servidor reproduce la partida y decide si se ganó. */
-export const finishChest = (sessionId: string, log: InputLog) =>
+export const finishChest = (sessionId: string, log: unknown) =>
   call<FinishChestResult>('finish-chest', { session_id: sessionId, log })

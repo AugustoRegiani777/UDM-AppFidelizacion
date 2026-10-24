@@ -11,6 +11,7 @@ La app de fidelización de Uno de Miga está construida de punta a punta y proba
 - Canje: código `MIGA-XXXX` con cuenta regresiva real, validación desde la caja con firma HMAC, descuento de puntos al validar y protección contra doble uso simultáneo.
 - **Puntos que no se gastan:** el saldo es un total que solo sube. Cada premio es un escalón repetible (café cada 150 puntos acumulados, sanguche cada 300…). Canjear no baja nada.
 - **Cofre con juego:** para canjear un premio hay que pasar "Sobreviví a las migas" (arcade de 50 segundos: movés tu sanguche con el dedo, tira migas solo, juntás gemas, subís de nivel y elegís mejoras, hay oleadas y una Reina hormiga). El servidor **reproduce la partida** con la misma simulación para confirmar que se ganó. Intentos ilimitados y modo relajado tras 2 derrotas.
+- **Segundo juego, Skate de Miga:** en horizontal, con los dos pulgares. Bajás rampas, saltás gaps, hacés trucos que cargan el turbo y llegás a la meta sin quedarte sin vidas. El cofre elige uno de los dos juegos.
 - **Misiones de puntos extra:** seguir en Instagram (suma al instante) y reseña de Google Maps (la aprobás vos desde `/admin`).
 - **Comunidad de recomendaciones:** lugares argentos de Valencia por categoría, con likes anónimos, comentarios, alias y puntos por participar; todo moderable desde `/admin`.
 - Juegos de azar livianos: raspadita después de cada compra y ruleta diaria, con el resultado decidido en el servidor, límites, tope diario y las probabilidades visibles en "¿Cómo funciona?".
@@ -18,7 +19,7 @@ La app de fidelización de Uno de Miga está construida de punta a punta y proba
 - Reconciliación automática cada 5 minutos, borrado de cuenta y datos, y todo preparado para publicar (`docs/DEPLOY.md`).
 - Preparado para el Wallet de Apple/Google: cada cambio de saldo deja un evento (`balance_events`).
 
-**Pruebas automáticas:** 172 de base de datos (incluye seguridad entre clientes), 57 unitarias (incluye el motor del juego y un bot que prueba el balance), 34 de integración con las funciones reales y 10 de navegador de punta a punta.
+**Pruebas automáticas:** 172 de base de datos (incluye seguridad entre clientes), 67 unitarias (incluye los motores de los dos juegos y bots que prueban el balance), 39 de integración con las funciones reales y 11 de navegador de punta a punta. Las pruebas pueden fallar de forma intermitente justo después de reiniciar los servicios (las funciones tardan en arrancar); se repiten y pasan.
 
 ## 2. Cómo probarlo en tu celular (paso a paso)
 
@@ -72,6 +73,7 @@ Ver `docs/PENDIENTES-AUGUSTO.md` (con instrucciones paso a paso): brandbook y lo
 - **Quien escanea primero se queda con la venta.** Si alguien le saca foto al QR de la tablet y lo escanea antes, se lleva los puntos. La ventana de 2 horas y el QR de 60 segundos limitan el riesgo; se puede endurecer (por ejemplo, QR de un solo uso con vencimiento corto del lado del POS).
 - **Firma HMAC sin "nonce":** una llamada firmada podría repetirse dentro de los 5 minutos de validez. `validate-redemption` es idempotente (un código usado no se vuelve a usar), así que el impacto es bajo.
 - **Juego:** un bot perfecto (programado con el mismo motor) podría ganar el cofre; solo se saltearía la ceremonia, porque el premio ya lo habilitan los puntos. La dificultad se calibró con un bot, no con personas: conviene probarla con clientes reales y ajustar `settings.chest_game.overrides`. Los íconos de las mejoras son emojis (se ven distinto según el celular).
+- **Skate sin probar en un celular real:** los dos pulgares, la pantalla completa y el bloqueo de horizontal solo se probaron con teclado y navegador de escritorio. Hay que verificar que el joystick y el botón se sientan bien con los pulgares, y calibrar la dificultad con personas (el bot gana en ~26 s).
 - **Comunidad:** al haber contenido de usuarios, hace falta moderar con regularidad y sumar reglas de convivencia a los textos legales (ver PENDIENTES, sección 9). Los comentarios se publican al instante y se ocultan solo al ser reportados.
 - **Reseñas de Google con puntos:** riesgo asumido (política de Google).
 - **Las Edge Functions (Deno) no pasan por el typecheck de TypeScript;** se validan al correrlas y con los tests de integración.

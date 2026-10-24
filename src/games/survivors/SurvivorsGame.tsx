@@ -1,22 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import type { UpgradeId } from '@engine/config.ts'
+import type { GameConfig, UpgradeId } from '@engine/config.ts'
 import { createGame } from '@engine/sim.ts'
 import { copy } from '@/copy'
-import {
-  GameController,
-  hudOf,
-  type GameOutcome,
-  type GameSession,
-  type Phase,
-} from './controller.ts'
+import type { GameOutcome, GameSession } from '../outcome.ts'
+import { GameController, hudOf, type Phase } from './controller.ts'
 import { EndedOverlay, PauseOverlay, ReadyOverlay } from './GameOverlays.tsx'
 import { HudOverlay, type HudData } from './HudOverlay.tsx'
 import { LevelUpOverlay } from './LevelUpOverlay.tsx'
 
-export type { GameOutcome, GameSession } from './controller.ts'
-
 interface SurvivorsGameProps {
-  session: GameSession
+  session: GameSession<GameConfig>
   onEnd: (outcome: GameOutcome) => void
   onExit: () => void
 }

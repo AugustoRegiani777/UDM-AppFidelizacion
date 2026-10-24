@@ -116,6 +116,7 @@ export type Database = {
           customer_id: string
           expires_at: string
           finished_at: string | null
+          game: string
           id: string
           overrides: NonNullable<Json>
           redemption_id: string | null
@@ -131,6 +132,7 @@ export type Database = {
           customer_id: string
           expires_at: string
           finished_at?: string | null
+          game?: string
           id?: string
           overrides?: NonNullable<Json>
           redemption_id?: string | null
@@ -145,6 +147,7 @@ export type Database = {
           customer_id?: string
           expires_at?: string
           finished_at?: string | null
+          game?: string
           id?: string
           overrides?: NonNullable<Json>
           redemption_id?: string | null

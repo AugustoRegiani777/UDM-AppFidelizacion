@@ -43,6 +43,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       // La simulación del juego es la misma que usa el servidor para validar cada partida.
       '@engine': fileURLToPath(new URL('./supabase/functions/_shared/survivors', import.meta.url)),
+      '@skate': fileURLToPath(new URL('./supabase/functions/_shared/skate', import.meta.url)),
     },
   },
   server: {

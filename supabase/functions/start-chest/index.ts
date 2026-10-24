@@ -3,7 +3,7 @@
 import { adminClient, requireUser } from '../_shared/clients.ts'
 import { handlePreflight } from '../_shared/cors.ts'
 import { errorResponse, HttpError, json } from '../_shared/errors.ts'
-import { resolveConfig, type GameConfig } from '../_shared/survivors/config.ts'
+import { gameConfig, isChestGame } from '../_shared/chest-games.ts'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -33,13 +33,14 @@ Deno.serve(async (req) => {
     if (error) throw error
     if (data.already_unlocked) return json(data)
 
-    const config: GameConfig = resolveConfig(data.overrides, data.relaxed)
+    if (!isChestGame(data.game)) throw new HttpError(500, 'invalid_game')
     return json({
       already_unlocked: false,
       session_id: data.session_id,
+      game: data.game,
       seed: data.seed,
       relaxed: data.relaxed,
-      config,
+      config: gameConfig(data.game, data.overrides, data.relaxed),
     })
   } catch (error) {
     return errorResponse(error)

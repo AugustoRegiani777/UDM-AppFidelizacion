@@ -98,6 +98,13 @@
 - [x] 12.3 Moderación en `/admin` (lugares, comentarios, reportes).
 - [x] 12.4 Tests (RLS, anonimato, topes, moderación).
 
+### Fase 13 · Segundo juego del cofre: Skate de Miga
+
+- [x] 13.1 Motor determinista de skate compartido con el servidor (física de rampas, trucos con dos pulgares, turbo, caídas, checkpoints) y circuito de ~11 800 unidades en 6 actos.
+- [x] 13.2 Cofre multi-juego: el servidor elige el juego (se mantiene mientras el cliente pierde) y valida cada uno con su propio replay.
+- [x] 13.3 Cliente: dibujo vectorial en horizontal, controles de dos pulgares (y teclado), HUD, guía, pantalla completa y aviso de "girá el celular".
+- [x] 13.4 Tests: motor + bot, integración del cofre con skate y e2e en horizontal.
+
 ### Pendiente de definir (Augusto)
 
 - Sistema de puntuación y niveles (se evalúa después de la Fase 12).
@@ -166,6 +173,11 @@
 - (Fase 12) Comunidad: lugares moderados (los aprueba el admin y el autor suma 30 puntos), comentarios que se publican al instante (con botón "Reportar", que los oculta hasta que el admin decida) y likes anónimos (solo se ve el conteo; los comentarios muestran un alias tipo "Miguero 3F9A"). Puntos: +1 por like, +3 por comentario, tope diario de 12 puntos por cliente, máximo 5 comentarios y 3 lugares por día. Dar like por primera vez a un contenido suma una sola vez (quitar y poner no vuelve a sumar). No se puede dar like a lo propio.
 - (Fase 12) Todo el acceso a la comunidad es por funciones del servidor: las tablas no tienen permisos para el cliente (RLS sin políticas), así el anonimato de los likes no depende del frontend. Los links de lugares solo aceptan Google Maps.
 - (Fase 12) `seed.sql` crea un usuario de prueba permanente (augusto@unodemiga.test / miga1234, administrador). `npm run db:test` reinicia la base antes de correr los tests SQL (asumen base limpia).
+
+- (Fase 13) Skate: meta = completar el circuito sin quedarse sin vidas (3, o 5 en modo relajado). Pulgar izquierdo = 8 direcciones (girar en el aire, turbo ↑ en el suelo, encogerse ↓); pulgar derecho = botón (mantener y soltar = saltar; en el aire, toque = kickflip/heelflip/shove-it según ↑/↓, mantenido = agarre indy/superman/japan; vueltas completas = flips). Los trucos se cobran al aterrizar bien y cargan el turbo, que hace falta para los saltos grandes (diseñado y verificado con un bot: quieto pierde, rodar sin trucos pierde en el final, con trucos y turbo gana en ~26 s; una persona tardará 40-60 s).
+- (Fase 13) El cofre elige el juego al azar entre `settings.chest_game.games` (`survivors`, `skate`) y lo mantiene mientras el cliente siga perdiendo, para que pueda practicar. Reglas por juego en `settings.chest_game.overrides.<juego>`.
+- (Fase 13) Si el patinador se queda trabado rodando (menos de 35 u/s durante 2,5 s), vuelve al último punto de control sin perder vida.
+- (Fase 13) Pantalla completa y bloqueo horizontal se piden al tocar "¡A rodar!" (no todos los navegadores lo permiten; si no, aparece "Girá el celular").
 
 ## Ideas para después
 

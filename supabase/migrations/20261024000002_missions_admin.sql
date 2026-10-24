@@ -24,7 +24,7 @@ insert into public.settings (key, value, is_public) values
   ('missions', $json$
   {
     "instagram_follow": {"points": 15, "auto": true, "url": "https://www.instagram.com/"},
-    "google_review": {"points": 50, "auto": false, "url": "https://www.google.com/maps"}
+    "google_review": {"points": 50, "auto": false, "url": "https://g.page/r/CQAymNidEqlsEBE/review"}
   }
   $json$::jsonb, true)
 on conflict (key) do nothing;

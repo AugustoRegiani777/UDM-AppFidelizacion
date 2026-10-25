@@ -13,6 +13,12 @@ export const es = {
     ],
     footerPrivacy: 'Privacidad',
   },
+  errors: {
+    title: 'Uy, algo no salió bien',
+    body: 'Pasa a veces. Probá recargar; si sigue igual, volvé a empezar (en la versión de prueba entrás de nuevo con un toque).',
+    reload: 'Recargar',
+    restart: 'Volver a empezar',
+  },
   login: {
     title: 'Entrá en un toque',
     subtitle: 'Con tu cuenta de Google. No hay que crear contraseñas.',

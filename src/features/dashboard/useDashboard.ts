@@ -31,7 +31,8 @@ export interface DashboardClaim {
 
 /** Forma del JSON que devuelve `customer_dashboard()` (ver supabase/migrations). */
 export interface Dashboard {
-  profile: { display_name: string; avatar_url: string | null; onboarded: boolean }
+  /** Viene vacío si la sesión es de un usuario que ya no existe. */
+  profile: { display_name: string; avatar_url: string | null; onboarded: boolean } | null
   balance: number
   purchase_count: number
   streak_weeks: number

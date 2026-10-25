@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { Button } from '@/components/Button'
+import { ResetSession } from '@/features/auth/ResetSession'
 import { Screen } from '@/components/Screen'
 import { useDashboard, type Dashboard } from '@/features/dashboard/useDashboard'
 import { Cascade, CascadeItem } from '@/motion/Cascade'
@@ -28,6 +29,7 @@ export function PanelScreen() {
 }
 
 function PanelContent({ data }: { data: Dashboard }) {
+  if (!data.profile) return <ResetSession />
   const isNew = data.recent_claims.length === 0
 
   return (

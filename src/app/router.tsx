@@ -16,6 +16,7 @@ import { SaleScreen } from '@/screens/sale/SaleScreen'
 import { WelcomeScreen } from '@/screens/welcome/WelcomeScreen'
 import { RequireAuth, RequireOnboarded } from './guards'
 import { RootLayout } from './RootLayout'
+import { RouteError } from './RouteError'
 
 /** Se ejecuta antes de los guards: así el uuid queda guardado aunque haya que loguearse primero. */
 function saleLoader({ params }: LoaderFunctionArgs) {
@@ -38,6 +39,7 @@ const devRoutes: RouteObject[] =
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    errorElement: <RouteError />,
     hydrateFallbackElement: <FullScreenLoader />,
     children: [
       { path: '/', element: <LandingScreen /> },

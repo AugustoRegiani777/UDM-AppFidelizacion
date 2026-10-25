@@ -1,4 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
+import { ResetSession } from '@/features/auth/ResetSession'
+import { isDeadSessionError } from '@/features/auth/sessionErrors'
 import { useAuth } from '@/features/auth/useAuth'
 import { useProfile } from '@/features/profile/useProfile'
 import { FullScreenLoader } from '@/components/FullScreenLoader'
@@ -17,7 +19,12 @@ export function RequireOnboarded() {
   const profile = useProfile()
   const location = useLocation()
   if (profile.isPending) return <FullScreenLoader />
-  if (profile.isError) throw profile.error
+  if (profile.isError) {
+    // Sesión de un usuario que ya no existe: se vuelve a la entrada en vez de romper la pantalla.
+    if (isDeadSessionError(profile.error as { status?: number; code?: string }))
+      return <ResetSession />
+    throw profile.error
+  }
   if (!profile.data.program_consent_at) {
     return <Navigate to="/bienvenida" replace state={{ from: location.pathname }} />
   }

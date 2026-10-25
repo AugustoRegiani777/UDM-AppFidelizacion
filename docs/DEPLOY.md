@@ -27,6 +27,11 @@ Funciones (Supabase secrets): `POS_MODE`, `POS_BASE_URL`, `POS_HMAC_SECRET`, `PO
 - Mientras el POS real no esté conectado: `POS_MODE=mock`. Ojo: en producción la tabla `dev_mock_sales` no existe, así que ninguna compra se podrá acreditar hasta pasar a `real`. Eso es lo esperado: **no lanzar a clientes antes de conectar el POS** (ver `INFORME-FINAL.md`, próximos pasos).
 - Cuando el POS tenga sus funciones: `POS_MODE=real`, `POS_BASE_URL=https://unodemigapos.netlify.app` y los dos secretos HMAC (los mismos del lado del POS).
 
+## Si `npx supabase` falla con "could not determine executable to run"
+
+Pasa cuando `npx` apunta a un npm viejo instalado en el usuario (carpeta `AppData\Roaming
+pm`). Se evita llamando al CLI directo con Node: `node node_modules\supabase\dist\supabase.js <comando>` (por ejemplo `... login` o `... db push`). El script `scripts\publicar-backend.ps1` ya lo hace así.
+
 ## Comandos (los ejecuta Augusto una vez)
 
 Atajo: `powershell -ExecutionPolicy Bypass -File scripts\publicar-backend.ps1 -ProjectRef <REF>` hace todo lo de abajo (menos el SQL del cron) y te imprime las variables para Netlify. Los secretos que genera quedan en `supabase\.env.produccion.local` (ignorado por git).

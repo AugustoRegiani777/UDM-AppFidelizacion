@@ -1,6 +1,7 @@
-# Publica el backend de la app en un proyecto de Supabase en la nube.
-# Uso (en la carpeta del proyecto, después de `npx supabase login`):
+﻿# Publica el backend de la app en un proyecto de Supabase en la nube.
+# Uso (en la carpeta del proyecto, después de iniciar sesión en Supabase):
 #   powershell -ExecutionPolicy Bypass -File scripts\publicar-backend.ps1 -ProjectRef abcdefghijklmno
+# (el login: node node_modules\supabase\dist\supabase.js login)
 # El ProjectRef es el código de tu proyecto en Supabase (Project Settings -> General -> Reference ID).
 # No toca nada local ni sube secretos a ningún repo: los secretos nuevos se guardan en
 # supabase\.env.produccion.local (ignorado por git) y se cargan directo en Supabase.
@@ -10,8 +11,18 @@ param(
   [string]$PosMode = 'mock'
 )
 
-$ErrorActionPreference = 'Stop'
+# 'Continue' a propósito: PowerShell 5 toma como error cualquier aviso que el CLI imprime por stderr
+# (por ejemplo "hay una versión nueva"). Los errores de verdad se detectan con el código de salida.
+$ErrorActionPreference = 'Continue'
 Set-Location (Join-Path $PSScriptRoot '..')
+
+# Se llama al CLI de Supabase directo con Node (sin `npx`): en algunas compus `npx` apunta a un npm viejo
+# instalado en el usuario y no logra arrancarlo.
+$cli = Join-Path (Get-Location) 'node_modules\supabase\dist\supabase.js'
+if (-not (Test-Path $cli)) {
+  Write-Host 'Faltan las dependencias. Corré primero: npm install' -ForegroundColor Yellow
+  exit 1
+}
 
 function Step($text) { Write-Host "`n==> $text" -ForegroundColor Cyan }
 function Secret { -join ((1..32) | ForEach-Object { '{0:x2}' -f (Get-Random -Maximum 256) }) }
@@ -23,18 +34,18 @@ $functions = @(
 )
 
 Step 'Comprobando que iniciaste sesión en Supabase'
-& npx supabase projects list *> $null
+& node $cli projects list 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
-  Write-Host 'Primero corré: npx supabase login' -ForegroundColor Yellow
+  Write-Host 'Primero corré: node node_modules\supabase\dist\supabase.js login' -ForegroundColor Yellow
   exit 1
 }
 
 Step "Enlazando con el proyecto $ProjectRef (te va a pedir la contraseña de la base)"
-& npx supabase link --project-ref $ProjectRef
+& node $cli link --project-ref $ProjectRef
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 Step 'Subiendo la estructura de la base (migraciones)'
-& npx supabase db push
+& node $cli db push
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 $envFile = 'supabase\.env.produccion.local'
@@ -53,11 +64,11 @@ if (Test-Path $envFile) {
 }
 
 Step 'Cargando los secretos en Supabase'
-& npx supabase secrets set --env-file $envFile
+& node $cli secrets set --env-file $envFile --project-ref $ProjectRef
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 Step 'Publicando las funciones'
-& npx supabase functions deploy @functions --project-ref $ProjectRef
+& node $cli functions deploy @functions --project-ref $ProjectRef
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 $reconcile = ($lines | Where-Object { $_ -like 'RECONCILE_SECRET=*' }) -replace '^RECONCILE_SECRET=', ''
@@ -66,7 +77,7 @@ $url = "https://$ProjectRef.supabase.co"
 Step 'Buscando la clave pública'
 $anon = ''
 try {
-  $keys = & npx supabase projects api-keys --project-ref $ProjectRef -o json | ConvertFrom-Json
+  $keys = (& node $cli projects api-keys --project-ref $ProjectRef -o json 2>$null) | ConvertFrom-Json
   $anon = ($keys | Where-Object { $_.name -eq 'anon' }).api_key
 } catch {
   # si falla, se ve en Supabase -> Project Settings -> API

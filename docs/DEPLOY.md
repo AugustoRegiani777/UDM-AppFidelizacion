@@ -14,7 +14,7 @@ Todo está preparado, pero **no se publicó nada**. Esta guía es para cuando qu
 
 - Se publican las migraciones de `supabase/migrations/` (incluye premios y reglas iniciales).
 - **No** se aplica `supabase/seed.sql` (es solo de desarrollo: ventas falsas y cron local).
-- Funciones a publicar: `claim-sale`, `create-redemption`, `validate-redemption`, `play-game`, `delete-account`, `reconcile`, `sync-google-reviews`.
+- Funciones a publicar: `claim-sale`, `start-chest`, `finish-chest`, `renew-redemption`, `validate-redemption`, `play-game`, `delete-account`, `reconcile`, `sync-google-reviews`.
 - Funciones que **nunca** se publican: `dev-mock-sale` y `dev-pos-redeem` (simulan la tablet y la caja). Además responden 404 sin `DEV_ENDPOINTS=true`, variable que no se carga en producción.
 - La pantalla `/dev` y el login por email no existen en el build de producción.
 
@@ -29,12 +29,15 @@ Funciones (Supabase secrets): `POS_MODE`, `POS_BASE_URL`, `POS_HMAC_SECRET`, `PO
 
 ## Comandos (los ejecuta Augusto una vez)
 
+Atajo: `powershell -ExecutionPolicy Bypass -File scripts\publicar-backend.ps1 -ProjectRef <REF>` hace todo lo de abajo (menos el SQL del cron) y te imprime las variables para Netlify. Los secretos que genera quedan en `supabase\.env.produccion.local` (ignorado por git).
+
+
 ```
 npx supabase login
 npx supabase link --project-ref <REF-DEL-PROYECTO>
 npx supabase db push
 npx supabase secrets set POS_MODE=mock POS_HMAC_SECRET=<secreto> POS_INBOUND_HMAC_SECRET=<secreto> RECONCILE_SECRET=<secreto>
-npx supabase functions deploy claim-sale create-redemption validate-redemption play-game delete-account reconcile sync-google-reviews
+npx supabase functions deploy claim-sale start-chest finish-chest renew-redemption validate-redemption play-game delete-account reconcile sync-google-reviews
 ```
 
 Después, en el editor SQL de Supabase, programar la reconciliación (usar el mismo `RECONCILE_SECRET`):

@@ -48,7 +48,7 @@ No hagas esto antes de que el POS real esté conectado (ver INFORME-FINAL.md): s
 3. **Secretos:** generá 3 claves largas al azar (podés usar https://bitwarden.com/password-generator/, 40 caracteres) y corré:
    `npx supabase secrets set POS_MODE=mock POS_HMAC_SECRET=CLAVE1 POS_INBOUND_HMAC_SECRET=CLAVE2 RECONCILE_SECRET=CLAVE3`
    Guardá las 3 claves: CLAVE1 y CLAVE2 también se cargan después del lado del POS.
-4. **Funciones:** `npx supabase functions deploy claim-sale create-redemption validate-redemption play-game delete-account reconcile`
+4. **Funciones:** `npx supabase functions deploy claim-sale start-chest finish-chest renew-redemption validate-redemption play-game delete-account reconcile sync-google-reviews`
 5. **Tarea automática cada 5 minutos:** en Supabase → SQL Editor, pegá y ejecutá (con tu REF y CLAVE3):
    `select public.schedule_reconcile('https://REF.supabase.co/functions/v1/reconcile', 'CLAVE3');`
 6. **Login con Google de producción:** repetí el punto 3 de este archivo, pero en la pantalla de Google agregá la dirección `https://REF.supabase.co/auth/v1/callback`; después en Supabase → Authentication → Providers → Google pegá el ID y el secreto. En Providers → Email, **desactivalo**. En Authentication → URL Configuration poné tu dominio real como "Site URL" y `https://TU-DOMINIO/**` en "Redirect URLs".

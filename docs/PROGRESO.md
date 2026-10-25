@@ -113,7 +113,8 @@
 - [x] Sala de juegos con selector: Sobreviví a las migas (6 niveles), Skate de Miga y Miga Racers, todos ilimitados y sin premio.
 - [x] Miga Racers (estilo Micro Machines): 3 pistas sobre la mesa de la sandwichería, 3 vueltas contra 3 rivales con IA, derrape, turbo, choques; sube al podio (1º o 2º) para abrir la pista siguiente. Es práctica local, sin validación del servidor (no da premios). Controles: mitad izquierda/derecha de la pantalla para doblar, botón Derrapar; teclado con flechas/AD/espacio.
 - [x] Truco argentino (1 contra 1, a 15, sin flor) con envido/real/falta, retruco y vale cuatro; 3 rivales con IA (El Pibe, Doña Rosa, El Maestro). Mate en la mesa: cada sorbo suma suerte para el próximo reparto (mejora visible: se reparten 1 + suerte manos y te toca la mejor); reloj de turno de 25 s y chipá (3 monedas, +15 s). Monedas locales de la sala de juegos.
-- [ ] Skate de trucos (rediseño). Básquet tipo NBA Jam y retos online: quedan para después (pedido de Augusto).
+- [x] Skate Spot (skate de trucos, 5 niveles de parque): combos con multiplicador, flips, giros, agarres, grinds con equilibrio, cajones, pozos, rampas; estrellas por puntaje que abren el nivel siguiente. Motor propio y sin servidor (práctica), bot que calibra los objetivos. Dibujo con parallax (skyline, palmeras, primer plano) y la tabla que gira en 3D falso.
+- [ ] Básquet tipo NBA Jam y retos online: quedan para después (pedido de Augusto).
 
 ### Pendiente de definir (Augusto)
 
@@ -195,6 +196,8 @@
 - (Fase 14) Apuestas de puntos entre clientes: Augusto pidió poder apostar puntos; NO está construido. Los puntos se canjean por productos, así que podría ser un juego de azar regulado. Queda en PENDIENTES-AUGUSTO (consulta legal) y, cuando exista lo online, entra apagado por defecto en `settings`.
 
 - (Fase 14) Miga Racers se juega solo en la sala de juegos (sin premio): por eso no hay replay en el servidor. Si algún día da premios, hay que portar la simulación a `_shared` (ya es pura y con semilla) y validar con un registro de entradas como en las migas y el skate.
+
+- (Fase 14) Puertos locales de Supabase movidos de 543xx a 553xx porque Windows reservó 54306–54405 (ver PENDIENTES, sección 12).
 
 ## Ideas para después
 

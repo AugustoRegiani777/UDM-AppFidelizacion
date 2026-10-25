@@ -52,7 +52,7 @@ export default defineConfig({
     // otros puertos) y evita contenido mixto cuando se prueba con HTTPS.
     proxy: {
       '/_sb': {
-        target: 'http://127.0.0.1:54321',
+        target: 'http://127.0.0.1:55321',
         changeOrigin: true,
         ws: true,
         rewrite: (path) => path.replace(/^\/_sb/, ''),

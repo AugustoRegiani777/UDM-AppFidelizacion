@@ -2,8 +2,11 @@ import { STAGE_COUNT } from '@engine/config.ts'
 import {
   addCoins,
   getCoins,
+  parkStars,
+  saveParkStars,
   spendCoins,
   unlockAfterWin,
+  unlockedPark,
   unlockedStage,
   unlockedTrack,
   unlockRacing,
@@ -54,5 +57,29 @@ describe('monedas de la sala de juegos', () => {
     expect(spendCoins(3)).toBe(false)
     expect(getCoins()).toBe(2)
     expect(addCoins(-4)).toBe(2)
+  })
+})
+
+describe('avance de Skate Spot', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('guarda la mejor marca y abre el nivel siguiente con una estrella', () => {
+    expect(parkStars()).toEqual([0, 0, 0, 0, 0])
+    expect(unlockedPark()).toBe(1)
+    saveParkStars(1, 2)
+    saveParkStars(1, 1)
+    expect(parkStars()[0]).toBe(2)
+    expect(unlockedPark()).toBe(2)
+    saveParkStars(2, 0)
+    expect(unlockedPark()).toBe(2)
+    saveParkStars(2, 3)
+    expect(unlockedPark()).toBe(3)
+  })
+
+  it('tolera datos rotos', () => {
+    localStorage.setItem('arcade_skatepark_stars', '{no es json')
+    expect(parkStars()).toEqual([0, 0, 0, 0, 0])
+    localStorage.setItem('arcade_skatepark_stars', JSON.stringify([9, 'x', -2]))
+    expect(parkStars()).toEqual([3, 0, 0, 0, 0])
   })
 })

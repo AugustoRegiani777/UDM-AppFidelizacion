@@ -87,3 +87,43 @@ export function spendCoins(amount: number): boolean {
   setCoins(current - amount)
   return true
 }
+
+const PARK_KEY = 'arcade_skatepark_stars'
+const PARK_LEVELS = 5
+
+/** Estrellas (0..3) que se sacaron en cada nivel de Skate Spot. */
+export function parkStars(): number[] {
+  const stars = Array.from({ length: PARK_LEVELS }, () => 0)
+  try {
+    const raw = JSON.parse(localStorage.getItem(PARK_KEY) ?? '[]')
+    if (Array.isArray(raw)) {
+      raw.slice(0, PARK_LEVELS).forEach((value, i) => {
+        const n = Number(value)
+        if (Number.isFinite(n)) stars[i] = Math.max(0, Math.min(3, Math.floor(n)))
+      })
+    }
+  } catch {
+    // almacenamiento roto o vacío: se empieza de cero
+  }
+  return stars
+}
+
+/** Guarda la mejor marca del nivel. Devuelve las estrellas de todos los niveles. */
+export function saveParkStars(level: number, stars: number): number[] {
+  const all = parkStars()
+  const i = Math.min(PARK_LEVELS, Math.max(1, Math.floor(level))) - 1
+  all[i] = Math.max(all[i] ?? 0, Math.max(0, Math.min(3, Math.floor(stars))))
+  try {
+    localStorage.setItem(PARK_KEY, JSON.stringify(all))
+  } catch {
+    // sin almacenamiento: no se guarda, pero el juego sigue andando
+  }
+  return all
+}
+
+/** Nivel más alto que se puede jugar: cada estrella abre el siguiente. */
+export function unlockedPark(stars: readonly number[] = parkStars()): number {
+  let level = 1
+  while (level < PARK_LEVELS && (stars[level - 1] ?? 0) >= 1) level++
+  return level
+}

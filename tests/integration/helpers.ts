@@ -5,7 +5,7 @@ import { signedHeaders } from '../../supabase/functions/_shared/hmac'
 import type { Database } from '../../src/lib/database.types'
 
 // Claves de DEMO de Supabase local (públicas, iguales en toda instalación local).
-const URL = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
+const URL = process.env.SUPABASE_URL ?? 'http://127.0.0.1:55321'
 const ANON_KEY =
   process.env.SUPABASE_ANON_KEY ??
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'

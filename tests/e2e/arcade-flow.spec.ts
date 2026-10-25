@@ -46,13 +46,15 @@ test('Miga Racers: cuenta regresiva, la carrera arranca y se puede pausar', asyn
 test('Truco: se juega una carta, el mate suma suerte y el chipá pide monedas', async ({ page }) => {
   await signUp(page)
   await page.goto('/juegos')
-  await page.getByRole('button', { name: /Truco/ }).click()
+  await page.getByRole('button', { name: /^Truco Cartas/ }).click()
   await page.getByRole('button', { name: /El Pibe/ }).click()
   await page.getByRole('button', { name: '¡A jugar!' }).click()
 
   // Arranca el jugador (es mano): tiene tres cartas y el reloj corriendo.
   await expect(page.getByRole('timer', { name: 'Tiempo para jugar' })).toBeVisible()
-  const hand = page.locator('button:has(svg[aria-label$=" de oro"], svg[aria-label$=" de copa"], svg[aria-label$=" de espada"], svg[aria-label$=" de basto"])')
+  const hand = page.locator(
+    'button:has(svg[aria-label$=" de oro"], svg[aria-label$=" de copa"], svg[aria-label$=" de espada"], svg[aria-label$=" de basto"])',
+  )
   await expect(hand).toHaveCount(3)
 
   // Sin monedas, el chipá avisa.

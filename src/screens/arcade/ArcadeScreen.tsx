@@ -6,14 +6,16 @@ import { Cascade, CascadeItem } from '@/motion/Cascade'
 import { copy } from '@/copy'
 import { RacingArcade } from './RacingArcade'
 import { SkateArcade } from './SkateArcade'
+import { SkateParkArcade } from './SkateParkArcade'
 import { SurvivorsArcade } from './SurvivorsArcade'
 import { TrucoArcade } from './TrucoArcade'
 
-type GameId = 'survivors' | 'skate' | 'racing' | 'truco'
+type GameId = 'survivors' | 'skate' | 'skatepark' | 'racing' | 'truco'
 
 const GAMES: { id: GameId; icon: string }[] = [
   { id: 'survivors', icon: '🥪' },
-  { id: 'skate', icon: '🛹' },
+  { id: 'skatepark', icon: '🛹' },
+  { id: 'skate', icon: '🏁' },
   { id: 'racing', icon: '🏎️' },
   { id: 'truco', icon: '🃏' },
 ]
@@ -24,6 +26,7 @@ export function ArcadeScreen() {
 
   if (game === 'survivors') return <SurvivorsArcade onBack={() => setGame(null)} />
   if (game === 'skate') return <SkateArcade onBack={() => setGame(null)} />
+  if (game === 'skatepark') return <SkateParkArcade onBack={() => setGame(null)} />
   if (game === 'racing') return <RacingArcade onBack={() => setGame(null)} />
   if (game === 'truco') return <TrucoArcade onBack={() => setGame(null)} />
 

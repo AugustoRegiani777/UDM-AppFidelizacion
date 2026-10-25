@@ -18,7 +18,7 @@ Mientras no estén, la app local usa un login por email (solo en desarrollo). Pa
 2. Menú ☰ → "APIs y servicios" → "Pantalla de consentimiento de OAuth". Elegí "Externo", poné el nombre "Uno de Miga", tu email de contacto y guardá.
 3. Menú ☰ → "APIs y servicios" → "Credenciales" → "Crear credenciales" → "ID de cliente de OAuth". Tipo: "Aplicación web".
 4. En "URI de redirección autorizados" agregá:
-   - Para probar en tu compu: `http://127.0.0.1:54321/auth/v1/callback`
+   - Para probar en tu compu: `http://127.0.0.1:55321/auth/v1/callback` (si antes cargaste la del puerto 54321, agregá también esta: los puertos cambiaron, ver la sección 12)
    - Para producción (más adelante): `https://TU-PROYECTO.supabase.co/auth/v1/callback` (la dirección exacta te la doy en la fase de publicación).
 5. Google te muestra un "ID de cliente" y un "Secreto". Creá el archivo `supabase/.env` (copiá `.env.example` como guía) con:
    ```
@@ -111,3 +111,11 @@ Pediste poder apostar puntos entre clientes (por ejemplo en partidas online). To
 1. Preguntale a tu gestoría o a un abogado: "Tengo una app de fidelización cuyos puntos se canjean por productos. ¿Puedo dejar que los clientes apuesten puntos entre ellos en un juego de habilidad? ¿Necesito alguna licencia?"
 2. Mientras tanto, la alternativa segura es: rankings y torneos con premios que pone el local, sin arriesgar puntos.
 3. Cuando tengas la respuesta, contámela y lo configuro (queda apagado por defecto en `settings`).
+
+## 12. Puertos locales de Supabase (cambiaron de 543xx a 553xx)
+
+Windows reservó el rango de puertos 54306–54405 (pasa a veces después de reiniciar la compu) y justo ahí vivían los de Supabase, así que no arrancaba. Los pasé a la serie 553xx (la API local ahora es `http://127.0.0.1:55321`, la base 55322, Studio 55323 y el buzón de pruebas 55324). Ya está cambiado en `supabase/config.toml`, `.env.local`, `.env.example`, `vite.config.ts` y los tests.
+
+Lo único que tenés que hacer es lo de Google: si ya probaste el login con Google en tu compu, en Google Cloud Console → Credenciales → tu ID de cliente, agregá a "URI de redirección autorizados" `http://127.0.0.1:55321/auth/v1/callback`.
+
+Si algún día querés volver a los puertos de antes: abrí PowerShell **como administrador**, corré `net stop winnat` y `net start winnat`, y deshacé el cambio de puertos (buscá 553 y poné 543).

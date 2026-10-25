@@ -3,6 +3,7 @@ import { createSkate } from '@skate/sim.ts'
 import type { SkateConfig } from '@skate/config.ts'
 import { copy } from '@/copy'
 import type { GameOutcome, GameSession } from '../outcome.ts'
+import { enterLandscape, usePortrait } from '../shared/landscape.ts'
 import { SkateController, skateHudOf, type SkateHudData, type SkatePhase } from './controller.ts'
 import { SkateHud } from './SkateHud.tsx'
 import {
@@ -16,31 +17,6 @@ interface SkateGameProps {
   session: GameSession<SkateConfig>
   onEnd: (outcome: GameOutcome) => void
   onExit: () => void
-}
-
-/** En el celular intenta pasar a pantalla completa y bloquear la orientación horizontal (si el navegador lo permite). */
-async function enterLandscape() {
-  try {
-    await document.documentElement.requestFullscreen?.()
-    await (
-      screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }
-    ).lock?.('landscape')
-  } catch {
-    // No todos los navegadores lo permiten: el aviso de "girá el celular" cubre ese caso.
-  }
-}
-
-function usePortrait() {
-  const [portrait, setPortrait] = useState(
-    () => window.matchMedia('(orientation: portrait)').matches,
-  )
-  useEffect(() => {
-    const query = window.matchMedia('(orientation: portrait)')
-    const onChange = () => setPortrait(query.matches)
-    query.addEventListener('change', onChange)
-    return () => query.removeEventListener('change', onChange)
-  }, [])
-  return portrait
 }
 
 /** Pantalla del skate: el canvas lo maneja el controlador; acá solo hay HUD y menús. */

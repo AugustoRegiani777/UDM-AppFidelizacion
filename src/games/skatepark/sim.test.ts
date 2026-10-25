@@ -205,7 +205,7 @@ describe('obstáculos', () => {
     expect(s.score).toBeGreaterThanOrEqual(150)
   })
 
-  it('caer sobre un riel agarra el grind y el equilibrio se pierde si no se corrige', () => {
+  it('caer sobre un riel con la tabla derecha agarra el grind y avanza solo hasta el final', () => {
     const rail = { kind: 'rail', x: 100, w: 600, h: RAIL_HEIGHT } as const
     const s = emptyPark([rail])
     s.mode = 'air'
@@ -214,30 +214,24 @@ describe('obstáculos', () => {
     s.vy = 0
     run(s, 10)
     expect(s.mode).toBe('grind')
-    // Sin tocar la palanca el equilibrio se escapa.
-    let fell = false
-    for (let i = 0; i < 120 && s.status === 'playing'; i++) {
-      stepPark(s, NONE)
-      if (s.bailReason === 'grind') fell = true
-    }
-    expect(fell).toBe(true)
+    // Sin equilibrio que cuidar: no hace falta tocar nada y nunca se cae del riel.
+    run(s, 400)
+    expect(s.bails).toBe(0)
+    expect(s.mode).not.toBe('grind')
+    expect(s.score).toBeGreaterThan(60)
   })
 
-  it('corrigiendo el equilibrio se llega al final del riel y se cobra', () => {
-    const rail = { kind: 'rail', x: 100, w: 220, h: RAIL_HEIGHT } as const
+  it('caer sobre el riel de costado (giro a medias) sigue siendo una caída', () => {
+    const rail = { kind: 'rail', x: 100, w: 300, h: RAIL_HEIGHT } as const
     const s = emptyPark([rail])
     s.mode = 'air'
-    s.x = 118
+    s.x = 130
     s.y = 40
     s.vy = 0
-    run(s, 6)
-    expect(s.mode).toBe('grind')
-    run(s, 200, (st) => ({
-      stick: st.grind ? (st.grind.balance > 0.1 ? 5 : st.grind.balance < -0.1 ? 1 : 0) : 0,
-      right: false,
-    }))
-    expect(s.bails).toBe(0)
-    expect(s.score).toBeGreaterThan(60)
+    s.spin = 45
+    run(s, 10)
+    expect(s.bails).toBe(1)
+    expect(s.bailReason).toBe('grind')
   })
 
   it('un giro de 90° al caer sobre el riel hace boardslide (vale más que el 50-50)', () => {
@@ -257,6 +251,67 @@ describe('obstáculos', () => {
     b.vy = 0
     run(b, 6)
     expect(b.grind?.kind).toBe('5050')
+  })
+})
+
+describe('turbo', () => {
+  const HOLD: ParkInput = { stick: 1, right: false }
+
+  it('con el pulgar izquierdo apretado en el suelo se avanza más rápido', () => {
+    const slow = emptyPark()
+    const fast = emptyPark()
+    run(slow, 90)
+    run(fast, 90, HOLD)
+    expect(fast.turboOn).toBe(true)
+    expect(fast.x).toBeGreaterThan(slow.x * 1.25)
+  })
+
+  it('gasta energía, se vacía y se bloquea hasta recargar un poco', () => {
+    const s = emptyPark()
+    run(s, 200, HOLD)
+    expect(s.turboLock).toBe(true)
+    expect(s.turbo).toBeLessThan(0.25)
+    expect(s.turboOn).toBe(false)
+    // Aunque siga apretando, no vuelve a prender enseguida.
+    run(s, 20, HOLD)
+    expect(s.turboOn).toBe(false)
+    // Soltando se recarga y se desbloquea.
+    run(s, 200)
+    expect(s.turbo).toBeGreaterThan(0.4)
+    run(s, 2, HOLD)
+    expect(s.turboOn).toBe(true)
+  })
+
+  it('en el aire el pulgar izquierdo no da turbo (sirve para girar), pero la velocidad ganada se conserva un rato', () => {
+    const s = emptyPark()
+    run(s, 80, HOLD)
+    const boosted = s.speedMul
+    expect(boosted).toBeGreaterThan(1.3)
+    jump(s, 8)
+    run(s, 20, HOLD)
+    expect(s.mode).toBe('air')
+    expect(s.turboOn).toBe(false)
+    // Decae despacio: a los 20 ticks sigue bien por encima de la velocidad normal.
+    expect(s.speedMul).toBeGreaterThan(1.15)
+    expect(s.speedMul).toBeLessThan(boosted)
+  })
+
+  it('un combo bien aterrizado devuelve energía', () => {
+    const s = emptyPark()
+    s.turbo = 0.3
+    s.mode = 'air'
+    s.y = 30
+    s.vy = 0
+    s.combo = { points: 100, mult: 2, names: ['Kickflip'] }
+    run(s, 60)
+    expect(s.score).toBeGreaterThan(0)
+    expect(s.turbo).toBeGreaterThan(0.5)
+  })
+
+  it('el turbo trae el cartel TURBO en el aviso del juego', () => {
+    const s = emptyPark()
+    stepPark(s, HOLD)
+    expect(s.events.some((e) => e.t === 'turbo')).toBe(true)
   })
 })
 

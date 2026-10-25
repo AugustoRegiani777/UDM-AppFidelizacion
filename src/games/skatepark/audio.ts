@@ -19,6 +19,8 @@ export const sfx = {
     play('p-grindstart', 150, [
       { from: 700, to: 1700, duration: 0.14, type: 'sawtooth', volume: 0.05 },
     ]),
+  turbo: () =>
+    play('p-turbo', 200, [{ from: 260, to: 980, duration: 0.28, type: 'sawtooth', volume: 0.06 }]),
   bail: () =>
     play('p-bail', 300, [
       { from: 220, to: 45, duration: 0.45, type: 'sawtooth', volume: 0.12 },

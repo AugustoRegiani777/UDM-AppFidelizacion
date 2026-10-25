@@ -108,7 +108,11 @@ export const es = {
       { icon: '✨', text: 'En el aire, un toque del derecho es un truco (la palanca elige cuál)' },
       { icon: '🤏', text: 'En el aire, derecho mantenido: agarre (soltalo antes de caer)' },
       { icon: '🔄', text: 'Palanca ← → en el aire: girá el cuerpo. Aterrizá derecho' },
-      { icon: '⚖️', text: 'Caé sobre un riel o cajón: grind. Equilibrá con ← →' },
+      {
+        icon: '🔥',
+        text: 'Pulgar izquierdo apretado, en el suelo o en un riel: TURBO (se gasta y se recarga)',
+      },
+      { icon: '🛤️', text: 'Caé sobre un riel o cajón con la tabla derecha: grind automático' },
       { icon: '🏆', text: 'Los puntos del combo se cobran al aterrizar bien' },
     ],
     pause: 'Pausa',
@@ -117,6 +121,8 @@ export const es = {
     timeLeft: 'Tiempo que falta',
     score: 'Puntos',
     comboHint: 'Combo',
+    turbo: 'TURBO',
+    turboEmpty: 'Sin turbo: se recarga solo',
     ended: '¡Se acabó el tiempo!',
     stars: (n: number) => `${n} de 3 estrellas`,
     resultTitle: (stars: number) =>

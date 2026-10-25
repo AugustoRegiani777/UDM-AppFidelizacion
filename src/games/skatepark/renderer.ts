@@ -203,6 +203,18 @@ export class ParkRenderer {
         case 'grind':
           this.burst(s.x, s.y, ['#ffd45c', '#fff'], 10, 120, 260)
           break
+        case 'turbo':
+          this.burst(s.x - 8, s.y + 4, ['#ffb02e', '#ff6b2e', '#fff3b0'], 14, 150, 60)
+          this.popups.push({
+            text: '¡TURBO!',
+            x: s.x,
+            y: s.y + 62,
+            age: 0,
+            color: '#ff9d3c',
+            size: 22,
+            life: 0.9,
+          })
+          break
         case 'bail':
           this.shake = this.reducedMotion ? 0 : 7
           this.popups.push({
@@ -465,7 +477,8 @@ export class ParkRenderer {
     const crouch = s.mode === 'roll' ? charge * 0.2 : 0
     const bob = s.mode === 'roll' ? Math.sin(now / 90) * 0.8 : 0
     let lean = s.mode === 'air' ? Math.max(-0.4, Math.min(0.4, -s.vy / 1500)) : 0
-    if (s.mode === 'grind' && s.grind) lean = s.grind.balance * 0.55
+    if (s.mode === 'grind') lean = 0.12
+    if (s.turboOn) lean += 0.18 // se tira hacia adelante con el turbo
     if (s.mode === 'bail') lean = (s.bailTicks / 6) % (Math.PI * 2)
 
     let boardLift = 0
@@ -517,18 +530,65 @@ export class ParkRenderer {
       )
       ctx.stroke()
     }
+  }
 
-    // Medidor de equilibrio sobre el patinador.
-    if (s.mode === 'grind' && s.grind) {
-      const w = 54
-      const b = s.grind.balance
-      ctx.fillStyle = 'rgba(42,26,20,0.65)'
-      ctx.fillRect(x - w / 2, baseY - 70, w, 7)
-      ctx.fillStyle = '#86c35f'
-      ctx.fillRect(x - w * 0.15, baseY - 70, w * 0.3, 7)
-      ctx.fillStyle = Math.abs(b) > 0.7 ? '#ff6b6b' : '#fff6e0'
-      ctx.fillRect(x + (b * w) / 2 - 2, baseY - 73, 4, 13)
+  /** Turbo encendido: llamas atrás de la tabla, rayas de velocidad y el cartel TURBO. */
+  private drawTurbo(s: ParkState, alpha: number, now: number, dt: number) {
+    if (!s.turboOn) return
+    const ctx = this.ctx
+    const x = this.prevX + (s.x - this.prevX) * alpha - this.camX
+    const y = GROUND_Y - (this.prevY + (s.y - this.prevY) * alpha)
+
+    // Llamas: chispas naranjas que salen para atrás desde la tabla.
+    const flames = this.reducedMotion ? 1 : 3
+    for (let i = 0; i < flames; i++) {
+      this.emit(
+        s.x - 16,
+        s.y + 3 + Math.random() * 3,
+        -90 - Math.random() * 70,
+        (Math.random() - 0.5) * 24,
+        0.28 + Math.random() * 0.2,
+        2 + Math.random() * 2.5,
+        ['#ffd45c', '#ff9d3c', '#ff6b2e'][Math.floor(Math.random() * 3)] ?? '#ff9d3c',
+        0,
+      )
     }
+
+    if (!this.reducedMotion) {
+      // Rayas de velocidad que cruzan la pantalla.
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)'
+      ctx.lineWidth = 1.5
+      ctx.lineCap = 'round'
+      for (let i = 0; i < 9; i++) {
+        const lane = (i * 37 + 13) % 190
+        const span = 60 + ((i * 53) % 70)
+        const t = ((now / 260 + i * 0.37) % 1) * (this.viewW + span)
+        ctx.beginPath()
+        ctx.moveTo(this.viewW - t + span, 30 + lane)
+        ctx.lineTo(this.viewW - t, 30 + lane)
+        ctx.stroke()
+      }
+    }
+
+    // Cartel: fuego que late.
+    const pulse = this.reducedMotion ? 1 : 1 + Math.sin(now / 70) * 0.06
+    ctx.save()
+    ctx.translate(Math.min(this.viewW - 70, Math.max(70, x - 54)), Math.max(40, y - 92))
+    ctx.scale(pulse, pulse)
+    ctx.textAlign = 'center'
+    ctx.font = '700 38px "Bebas Neue", Poppins, sans-serif'
+    ctx.lineWidth = 6
+    ctx.lineJoin = 'round'
+    ctx.strokeStyle = INK
+    ctx.strokeText('TURBO', 0, 0)
+    const fire = ctx.createLinearGradient(0, -30, 0, 4)
+    fire.addColorStop(0, '#fff3b0')
+    fire.addColorStop(0.5, '#ffb02e')
+    fire.addColorStop(1, '#ff4d2e')
+    ctx.fillStyle = fire
+    ctx.fillText('TURBO', 0, 0)
+    ctx.restore()
+    void dt
   }
 
   private drawControls(view: ThumbsView) {
@@ -579,6 +639,7 @@ export class ParkRenderer {
     this.drawGround(this.camX)
     for (const o of s.obstacles) this.drawObstacle(o, this.camX, s)
     this.drawSkater(s, alpha, now)
+    this.drawTurbo(s, alpha, now, dt)
 
     // Partículas en coordenadas del mundo.
     for (const part of this.particles) {

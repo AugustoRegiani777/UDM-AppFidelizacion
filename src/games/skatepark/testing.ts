@@ -35,13 +35,6 @@ export function makeBot(options: BotOptions) {
     let stick = 0
     let right = false
 
-    // Equilibrio en el riel.
-    if (s.mode === 'grind' && s.grind) {
-      const b = s.grind.balance
-      stick = b > 0.12 ? 5 : b < -0.12 ? 1 : 0
-      return { stick, right: false }
-    }
-
     if (press && s.tick <= press.until && s.tick >= press.from) {
       right = true
       stick = press.stick

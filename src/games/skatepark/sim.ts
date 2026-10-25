@@ -3,10 +3,12 @@
 //
 // Controles (los mismos dos pulgares del Skate de Miga):
 //  - Suelo: derecho mantenido = agacharse y cargar; al soltar, salta.
+//  - Suelo y riel: el pulgar izquierdo (cualquier dirección) es el TURBO. Gasta energía, se recarga
+//    solo y con cada combo bien aterrizado. La velocidad que da el turbo se conserva un rato en el aire.
 //  - Aire: izquierdo ←/→ gira el cuerpo; derecho toque = truco de tabla (según la palanca);
 //    derecho mantenido = agarre (según la palanca).
-//  - Riel o cajón: al caer sobre él te agarrás (50-50 o boardslide según el giro) y hay que
-//    equilibrar con ←/→. Un toque del derecho salta del riel sin perder el combo.
+//  - Riel o cajón: al caer sobre él con el giro correcto te agarrás (50-50 o boardslide) y avanzás
+//    solo hasta el final. Un toque del derecho salta del riel sin perder el combo.
 //  - Los puntos del combo se cobran recién al aterrizar bien. Caerse los pierde.
 
 export const TICKS_PER_SECOND = 60
@@ -24,6 +26,13 @@ const BAIL_TICKS = 85
 const CLEAN_SPIN = 30
 const SKETCHY_SPIN = 55
 const FLIP_SKETCHY = 0.7
+
+const TURBO_MULT = 1.5
+const TURBO_DRAIN = 0.0075 // se vacía en ~2,2 s
+const TURBO_RECHARGE = 0.0022 // se llena en ~7,5 s
+const TURBO_MIN = 0.02
+const TURBO_UNLOCK = 0.25
+const TURBO_BANK_REFILL = 0.25
 
 export const RAIL_HEIGHT = 26
 export const LEVEL_COUNT = 5
@@ -158,6 +167,7 @@ export type ParkEvent =
   | { t: 'bail'; reason: BailReason; lost: number }
   | { t: 'grind'; kind: GrindKind }
   | { t: 'sparks' }
+  | { t: 'turbo' }
 
 export interface Combo {
   points: number
@@ -186,6 +196,12 @@ export interface ParkState {
   vy: number
   /** Qué parte de la velocidad de crucero tiene (se recupera tras una caída). */
   speedFactor: number
+  /** Energía del turbo (0..1), si está activo y si quedó bloqueado por haberse vaciado. */
+  turbo: number
+  turboOn: boolean
+  turboLock: boolean
+  /** Multiplicador de velocidad por el turbo (sube rápido y baja despacio, también en el aire). */
+  speedMul: number
   charge: number
   prevRight: boolean
   pressTick: number
@@ -195,7 +211,7 @@ export interface ParkState {
   flip: FlipState | null
   queuedTrick: number
   grab: { active: boolean; kind: GrabKind; ticks: number; lastRelease: number } | null
-  grind: { kind: GrindKind; obstacle: Obstacle; balance: number; acc: number; since: number } | null
+  grind: { kind: GrindKind; obstacle: Obstacle; acc: number; since: number } | null
   airTicks: number
   peak: number
   airStartX: number
@@ -317,6 +333,10 @@ export function createPark(level: number, seed: number): ParkState {
     y: 0,
     vy: 0,
     speedFactor: 0.85,
+    turbo: 1,
+    turboOn: false,
+    turboLock: false,
+    speedMul: 1,
     charge: 0,
     prevRight: false,
     pressTick: 0,
@@ -367,6 +387,8 @@ function bank(s: ParkState, factor: number) {
   s.bestCombo = Math.max(s.bestCombo, total)
   s.events.push({ t: 'bank', total, mult: s.combo.mult, names: [...s.combo.names] })
   s.combo = { points: 0, mult: 1, names: [] }
+  // Un combo bien cobrado devuelve energía de turbo.
+  s.turbo = Math.min(1, s.turbo + TURBO_BANK_REFILL * factor)
 }
 
 function bail(s: ParkState, reason: BailReason) {
@@ -441,7 +463,7 @@ function tryAttachGrind(s: ParkState): boolean {
     s.y = o.h
     s.vy = 0
     s.spin = 0
-    s.grind = { kind, obstacle: o, balance: (random(s) - 0.5) * 0.3, acc: 0, since: s.tick }
+    s.grind = { kind, obstacle: o, acc: 0, since: s.tick }
     addAction(s, kind === '5050' ? '50-50' : 'Boardslide', GRIND_POINTS[kind])
     s.events.push({ t: 'grind', kind })
     return true
@@ -510,7 +532,25 @@ export function stepPark(s: ParkState, input: ParkInput): void {
   const pressLen = s.tick - s.pressTick
 
   s.speedFactor = Math.min(1, s.speedFactor + (s.mode === 'bail' ? 0 : 0.006))
-  const speed = s.def.cruise * s.speedFactor
+
+  // Turbo: pulgar izquierdo apretado en el suelo o en un riel. Si se vacía, hay que esperar a que junte algo.
+  if (s.turbo <= TURBO_MIN) s.turboLock = true
+  else if (s.turbo >= TURBO_UNLOCK) s.turboLock = false
+  const wasTurbo = s.turboOn
+  s.turboOn =
+    (s.mode === 'roll' || s.mode === 'grind') &&
+    input.stick !== 0 &&
+    !s.turboLock &&
+    s.turbo > TURBO_MIN
+  if (s.turboOn) {
+    s.turbo = Math.max(0, s.turbo - TURBO_DRAIN)
+    if (!wasTurbo) s.events.push({ t: 'turbo' })
+  } else {
+    s.turbo = Math.min(1, s.turbo + TURBO_RECHARGE)
+  }
+  const target = s.turboOn ? TURBO_MULT : 1
+  s.speedMul += (target - s.speedMul) * (target > s.speedMul ? 0.18 : 0.03)
+  const speed = s.def.cruise * s.speedFactor * s.speedMul
 
   switch (s.mode) {
     case 'bail': {
@@ -619,10 +659,6 @@ export function stepPark(s: ParkState, input: ParkInput): void {
     case 'grind': {
       const g = s.grind!
       s.x += speed * DT
-      // El equilibrio es inestable: se escapa solo y hay que corregir con la palanca.
-      const instability = 0.9 + 0.28 * s.level
-      const wobble = (random(s) - 0.5) * 3.2
-      g.balance += (g.balance * instability * 1.8 + wobble + sx * 2.6) * DT
       g.acc += GRIND_RATE[g.kind] * DT
       if (g.acc >= 1) {
         const whole = Math.floor(g.acc)
@@ -631,10 +667,6 @@ export function stepPark(s: ParkState, input: ParkInput): void {
       }
       if (s.tick % 3 === 0) s.events.push({ t: 'sparks' })
 
-      if (Math.abs(g.balance) >= 1) {
-        bail(s, 'grind')
-        break
-      }
       if (release && s.pressTick >= g.since && pressLen < TAP_TICKS + 8) {
         // Salto desde el riel: se sigue el combo en el aire.
         startAir(s, OLLIE_BASE + 30)
@@ -643,12 +675,7 @@ export function stepPark(s: ParkState, input: ParkInput): void {
         break
       }
       if (s.x > g.obstacle.x + g.obstacle.w) {
-        const clean = Math.abs(g.balance) < 0.75
         s.grind = null
-        if (!clean) {
-          bail(s, 'grind')
-          break
-        }
         addAction(s, 'Grind out', 40)
         startAir(s, 90)
       }

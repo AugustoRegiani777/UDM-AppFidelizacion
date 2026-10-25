@@ -146,6 +146,28 @@ export function SkateParkGame({ level, seed, onEnd, onExit }: SkateParkGameProps
           </button>
         </div>
 
+        {/* Turbo: la barra está abajo a la izquierda, cerca del pulgar que lo maneja. */}
+        <div className="absolute bottom-3 left-3 w-44 pb-[env(safe-area-inset-bottom)]">
+          <motion.p
+            className={`font-display text-2xl leading-none ${hud.turboOn ? 'text-[#ffb02e]' : 'text-bg'} drop-shadow-[0_1px_0_rgba(42,26,20,0.8)]`}
+            animate={hud.turboOn ? { opacity: [1, 0.65, 1] } : { opacity: 1 }}
+            transition={hud.turboOn ? { duration: 0.35, repeat: Infinity } : { duration: 0.1 }}
+          >
+            {copy.skatepark.turbo}
+          </motion.p>
+          <div className="bg-ink/60 mt-1 h-3.5 overflow-hidden rounded-full border border-white/40">
+            <div
+              className={`h-full origin-left rounded-full ${hud.turbo < 0.25 ? 'bg-[#ff6b6b]' : 'bg-gradient-to-r from-[#ffd45c] to-[#ff6b2e]'}`}
+              style={{ transform: `scaleX(${Math.max(0.02, hud.turbo)})` }}
+              role="meter"
+              aria-label={copy.skatepark.turbo}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(hud.turbo * 100)}
+            />
+          </div>
+        </div>
+
         <AnimatePresence>
           {hud.comboNames.length > 0 && (
             <motion.div

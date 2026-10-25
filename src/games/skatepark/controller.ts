@@ -25,8 +25,9 @@ export interface ParkHud {
   comboPoints: number
   comboMult: number
   comboNames: string[]
-  /** -1..1 mientras se hace grind, si no null. */
-  balance: number | null
+  /** Energía del turbo (0..1) y si está encendido. */
+  turbo: number
+  turboOn: boolean
   /** 0..1 de carga del salto. */
   charge: number
   target: number
@@ -60,7 +61,8 @@ export function parkHudOf(s: ParkState): ParkHud {
     comboPoints: s.combo.points,
     comboMult: s.combo.mult,
     comboNames: s.combo.names,
-    balance: s.mode === 'grind' && s.grind ? s.grind.balance : null,
+    turbo: s.turbo,
+    turboOn: s.turboOn,
     charge: s.charge / 18,
     target: LEVELS[s.level - 1]!.target,
     stars: starsFor(s.score, s.level),
@@ -82,6 +84,10 @@ function react(events: readonly ParkEvent[]) {
         break
       case 'sparks':
         sfx.grind()
+        break
+      case 'turbo':
+        sfx.turbo()
+        vibrate(10)
         break
       case 'land':
         if (event.quality === 'clean') sfx.land()

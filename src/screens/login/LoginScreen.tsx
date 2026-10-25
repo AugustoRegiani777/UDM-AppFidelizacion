@@ -4,6 +4,7 @@ import { SignInOptions } from '@/features/auth/SignInOptions'
 import { useAuth } from '@/features/auth/useAuth'
 import { readPendingSale, saleRoute } from '@/features/claims/pendingSale'
 import { copy } from '@/copy'
+import { env } from '@/lib/env'
 
 /** Entrada de las rutas protegidas. Si venía de /s/:uuid, vuelve ahí al terminar. */
 export function LoginScreen() {
@@ -18,7 +19,13 @@ export function LoginScreen() {
   return (
     <Screen className="justify-center gap-6">
       <h1 className="font-display text-6xl leading-none">{copy.login.title}</h1>
-      <p className="text-muted text-lg">{pending ? copy.login.pendingSale : copy.login.subtitle}</p>
+      <p className="text-muted text-lg">
+        {pending
+          ? copy.login.pendingSale
+          : env.guestMode
+            ? copy.login.guestSubtitle
+            : copy.login.subtitle}
+      </p>
       <SignInOptions returnPath={returnPath} />
     </Screen>
   )

@@ -12,6 +12,7 @@ import { setSoundEnabled, useSoundEnabled } from '@/motion/preferences'
 import { Sheet } from '@/motion/Sheet'
 import { useIsAdmin } from '@/features/admin/adminApi'
 import { copy } from '@/copy'
+import { env } from '@/lib/env'
 
 export function ProfileScreen() {
   const profile = useProfile()
@@ -71,8 +72,9 @@ function ProfileForm({ name: initialName, promo }: { name: string; promo: boolea
       <AdminLink />
       <SoundToggle />
       <Button variant="ghost" onClick={() => signOut()}>
-        {copy.profile.signOut}
+        {env.guestMode ? copy.profile.signOutGuest : copy.profile.signOut}
       </Button>
+      {env.guestMode && <p className="text-muted text-sm">{copy.profile.guestWarning}</p>}
       <DeleteAccount />
     </Screen>
   )

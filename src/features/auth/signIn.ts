@@ -9,6 +9,12 @@ export async function signInWithGoogle(returnPath = '/') {
   if (error) throw error
 }
 
+/** Modo de prueba: crea una cuenta de invitado (anónima) en este navegador. */
+export async function signInAsGuest() {
+  const { error } = await supabase.auth.signInAnonymously()
+  if (error) throw error
+}
+
 /** Solo desarrollo: login por email/contraseña de Supabase local; crea el usuario si no existe. */
 export async function signInWithEmailDev(email: string, password: string) {
   const signIn = await supabase.auth.signInWithPassword({ email, password })

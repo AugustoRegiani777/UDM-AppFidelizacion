@@ -15,4 +15,9 @@ export const env = {
   supabaseAnonKey: required('VITE_SUPABASE_ANON_KEY', import.meta.env.VITE_SUPABASE_ANON_KEY),
   /** Herramientas de desarrollo (login por email, /dev). Nunca existen en un build de producción. */
   devTools: import.meta.env.DEV && import.meta.env.VITE_DEV_TOOLS === 'true',
+  /**
+   * Modo de prueba: en vez de Google, cualquiera entra como invitado (cuenta anónima, sin datos
+   * personales) y recibe los puntos de entrada de `settings.demo`. Se apaga sacando la variable.
+   */
+  guestMode: import.meta.env.VITE_GUEST_MODE === 'true',
 }

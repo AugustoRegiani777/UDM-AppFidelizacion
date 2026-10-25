@@ -201,6 +201,8 @@
 
 - (Despliegue, 25/10/2026) Backend publicado en el proyecto de Supabase `qfpqqkpyxvjzeddnqzuz` con `scripts/publicar-backend.ps1`: 13 migraciones, 4 secretos (POS en modo `mock`), 9 funciones (sin las de desarrollo) y reconciliación cada 5 minutos. Verificado: funciones dev responden 404, las demás piden sesión, 17 de 17 tablas con RLS. Falta: Netlify, login con Google y conectar el POS real.
 
+- (Modo de prueba, 25/10/2026) Mientras no esté el login con Google, la web publicada usa ingreso de invitado (`VITE_GUEST_MODE=true` en `netlify.toml`): cuenta anónima de Supabase por navegador y 1500 puntos de entrada como ajuste en el libro (`settings.demo.welcome_points`, migración `20261028000001_demo_mode.sql`). Hay que activar "Allow anonymous sign-ins" en Supabase. Para volver al login con Google: borrar `VITE_GUEST_MODE` de `netlify.toml`, desactivar el ingreso anónimo y poner `welcome_points` en 0.
+
 ## Ideas para después
 
 - Más juegos para la misma ceremonia del cofre (tres en línea, reflejos), elegidos al azar por premio.

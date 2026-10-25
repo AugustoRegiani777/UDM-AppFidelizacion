@@ -3,9 +3,9 @@ import { Button } from '@/components/Button'
 import { TextField } from '@/components/TextField'
 import { copy } from '@/copy'
 import { env } from '@/lib/env'
-import { signInWithEmailDev, signInWithGoogle } from './signIn'
+import { signInAsGuest, signInWithEmailDev, signInWithGoogle } from './signIn'
 
-/** Botón de Google y, solo en desarrollo, un login por email para probar sin credenciales. */
+/** Botón de Google (o, en modo de prueba, de invitado) y, solo en desarrollo, un login por email. */
 export function SignInOptions({ returnPath }: { returnPath: string }) {
   const [error, setError] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -24,9 +24,18 @@ export function SignInOptions({ returnPath }: { returnPath: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Button disabled={busy} onClick={() => run(() => signInWithGoogle(returnPath))}>
-        {copy.login.google}
-      </Button>
+      {env.guestMode ? (
+        <>
+          <Button disabled={busy} onClick={() => run(signInAsGuest)}>
+            {copy.login.guest}
+          </Button>
+          <p className="text-muted text-sm">{copy.login.guestNote}</p>
+        </>
+      ) : (
+        <Button disabled={busy} onClick={() => run(() => signInWithGoogle(returnPath))}>
+          {copy.login.google}
+        </Button>
+      )}
       {error && (
         <p role="alert" className="text-muted text-sm">
           {copy.login.error}

@@ -17,6 +17,10 @@ export const es = {
     title: 'Entrá en un toque',
     subtitle: 'Con tu cuenta de Google. No hay que crear contraseñas.',
     google: 'Entrar con Google',
+    guest: 'Probar la app',
+    guestSubtitle: 'Es una versión de prueba: entrás al toque, sin crear cuenta.',
+    guestNote:
+      'Tu avance y tus puntos de prueba se guardan en este celular. Si borrás los datos del navegador o salís, empezás de nuevo.',
     pendingSale: 'Entrá para sumar tu compra. Ya la guardamos, no se pierde.',
     devTitle: 'Solo desarrollo',
     devEmail: 'Email',
@@ -642,6 +646,9 @@ export const es = {
     nameLabel: 'Nombre',
     promoConsent: 'Recibir novedades y promos',
     save: 'Guardar cambios',
+    signOutGuest: 'Salir (se pierden mis puntos de prueba)',
+    guestWarning:
+      'Estás usando la versión de prueba como invitado: si salís, esta cuenta y sus puntos no se pueden recuperar.',
     sound: 'Sonidos en las celebraciones',
     saved: 'Listo, guardado.',
     signOut: 'Cerrar sesión',

@@ -12,6 +12,7 @@ import {
   reviewPlace,
   syncGoogleReviews,
   type GoogleSyncResult,
+  useEconomyStats,
   usePendingMissions,
   usePendingPlaces,
   useReportedComments,
@@ -329,6 +330,52 @@ export function GoogleSetup() {
           <code className="text-sm break-all select-all">{location.name}</code>
         </Card>
       ))}
+    </section>
+  )
+}
+
+const euros = (cents: number) =>
+  `${(cents / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
+
+/** Cuánto cuestan los premios sobre las ventas, para ajustar los precios con datos reales. */
+export function EconomyStats() {
+  const stats = useEconomyStats(true)
+  const data = stats.data
+  const lines = [...(data?.rewards ?? []), ...(data?.shop ?? [])]
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="font-display text-3xl">{copy.admin.economyTitle}</h2>
+      <p className="text-muted text-sm">{copy.admin.economyHelp}</p>
+      {stats.isPending && <p className="text-muted">{copy.admin.economyLoading}</p>}
+      {data && (
+        <Card className="flex flex-col gap-2">
+          <p>{copy.admin.economySales(euros(data.revenue_cents), data.purchases, data.days)}</p>
+          <p className="font-display text-4xl leading-none" data-testid="economy-cost">
+            {data.cost_percent === null
+              ? copy.admin.economyNoSales
+              : copy.admin.economyCost(euros(data.cost_cents), data.cost_percent)}
+          </p>
+          {lines.length > 0 && (
+            <ul className="text-muted text-sm">
+              {lines.map((line) => (
+                <li key={line.name}>
+                  {copy.admin.economyLine(line.name, line.count, euros(line.total_cents))}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-muted text-sm">
+            {copy.admin.economyGames(
+              data.players,
+              data.runs,
+              data.coins_given,
+              data.passes_given,
+              data.passes_used,
+              data.points_spent,
+            )}
+          </p>
+        </Card>
+      )}
     </section>
   )
 }

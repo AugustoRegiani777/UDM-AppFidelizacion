@@ -616,6 +616,25 @@ export const es = {
     },
   },
   admin: {
+    economyTitle: 'Economía de puntos',
+    economyHelp:
+      'Lo que se entregó en la caja en los últimos 30 días y cuánto costó, sobre las ventas. Los costos de cada premio se cargan en la tabla settings (reward_costs); hoy son supuestos.',
+    economyLoading: 'Calculando…',
+    economyNoSales: 'Todavía no hay ventas en el período',
+    economySales: (revenue: string, purchases: number, days: number) =>
+      `Ventas de los últimos ${days} días: ${revenue} (${purchases} ${purchases === 1 ? 'compra' : 'compras'}).`,
+    economyCost: (cost: string, percent: number) =>
+      `Premios: ${cost} · ${String(percent).replace('.', ',')} % de las ventas`,
+    economyLine: (name: string, count: number, total: string) => `${count} × ${name}: ${total}`,
+    economyGames: (
+      players: number,
+      runs: number,
+      coins: number,
+      passesGiven: number,
+      passesUsed: number,
+      pointsSpent: number,
+    ) =>
+      `Juegos: ${players} jugadores, ${runs} partidas oficiales, ${coins} monedas repartidas, ${passesGiven} pases dados (${passesUsed} usados) y ${pointsSpent} puntos gastados en la tienda.`,
     title: 'Administración',
     back: 'Volver al panel',
     link: 'Administración',

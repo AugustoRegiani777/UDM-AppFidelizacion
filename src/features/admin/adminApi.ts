@@ -151,3 +151,39 @@ export async function discoverGoogleLocations(): Promise<GoogleLocations> {
   if (error || !data) throw error ?? new Error('empty_response')
   return data
 }
+
+export interface EconomyLine {
+  name: string
+  count: number
+  unit_cents: number
+  total_cents: number
+}
+
+/** Cuentas de la economía de puntos: ventas, premios entregados y su costo (settings.reward_costs). */
+export interface EconomyStats {
+  days: number
+  revenue_cents: number
+  purchases: number
+  rewards: EconomyLine[]
+  shop: EconomyLine[]
+  cost_cents: number
+  cost_percent: number | null
+  points_spent: number
+  coins_given: number
+  passes_given: number
+  passes_used: number
+  runs: number
+  players: number
+}
+
+export function useEconomyStats(enabled: boolean, days = 30) {
+  return useQuery({
+    queryKey: ['admin-economy', days],
+    enabled,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('admin_economy_stats', { p_days: days })
+      if (error) throw error
+      return data as unknown as EconomyStats
+    },
+  })
+}

@@ -5,6 +5,7 @@ import { useIsAdmin } from '@/features/admin/adminApi'
 import { copy } from '@/copy'
 import {
   CreatePlace,
+  EconomyStats,
   GoogleSetup,
   MissionsReview,
   PlacesReview,
@@ -24,6 +25,7 @@ export function AdminScreen() {
         {copy.admin.back}
       </Link>
       <h1 className="font-display text-5xl leading-none">{copy.admin.title}</h1>
+      <EconomyStats />
       <MissionsReview />
       <PlacesReview />
       <ReportedComments />

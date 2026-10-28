@@ -4,9 +4,12 @@ import {
   getCoins,
   parkStars,
   saveParkStars,
+  saveSokobanStars,
+  sokobanStars,
   spendCoins,
   unlockAfterWin,
   unlockedPark,
+  unlockedSokoban,
   unlockedStage,
   unlockedTrack,
   unlockRacing,
@@ -81,5 +84,29 @@ describe('avance de Skate Spot', () => {
     expect(parkStars()).toEqual([0, 0, 0, 0, 0])
     localStorage.setItem('arcade_skatepark_stars', JSON.stringify([9, 'x', -2]))
     expect(parkStars()).toEqual([3, 0, 0, 0, 0])
+  })
+})
+
+describe('avance de Entregas de Miga', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('terminar un nivel abre el siguiente y se guarda la mejor marca', () => {
+    expect(sokobanStars()).toEqual(Array(12).fill(0))
+    expect(unlockedSokoban()).toBe(1)
+    saveSokobanStars(1, 1)
+    expect(unlockedSokoban()).toBe(2)
+    saveSokobanStars(1, 3)
+    saveSokobanStars(1, 2)
+    expect(sokobanStars()[0]).toBe(3)
+    saveSokobanStars(2, 1)
+    saveSokobanStars(3, 2)
+    expect(unlockedSokoban()).toBe(4)
+  })
+
+  it('no se salta niveles aunque haya estrellas más adelante, y tolera datos rotos', () => {
+    saveSokobanStars(5, 3)
+    expect(unlockedSokoban()).toBe(1)
+    localStorage.setItem('arcade_sokoban_stars', '[[[')
+    expect(sokobanStars()).toEqual(Array(12).fill(0))
   })
 })

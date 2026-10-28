@@ -6,11 +6,12 @@ import { Cascade, CascadeItem } from '@/motion/Cascade'
 import { copy } from '@/copy'
 import { RacingArcade } from './RacingArcade'
 import { SkateArcade } from './SkateArcade'
+import { SokobanArcade } from './SokobanArcade'
 import { SkateParkArcade } from './SkateParkArcade'
 import { SurvivorsArcade } from './SurvivorsArcade'
 import { TrucoArcade } from './TrucoArcade'
 
-type GameId = 'survivors' | 'skate' | 'skatepark' | 'racing' | 'truco'
+type GameId = 'survivors' | 'skate' | 'skatepark' | 'racing' | 'truco' | 'sokoban'
 
 const GAMES: { id: GameId; icon: string }[] = [
   { id: 'survivors', icon: '🥪' },
@@ -18,6 +19,7 @@ const GAMES: { id: GameId; icon: string }[] = [
   { id: 'skate', icon: '🏁' },
   { id: 'racing', icon: '🏎️' },
   { id: 'truco', icon: '🃏' },
+  { id: 'sokoban', icon: '📦' },
 ]
 
 /** Sala de juegos: elegís el juego y jugás todo lo que quieras, sin puntos ni premios. */
@@ -29,6 +31,7 @@ export function ArcadeScreen() {
   if (game === 'skatepark') return <SkateParkArcade onBack={() => setGame(null)} />
   if (game === 'racing') return <RacingArcade onBack={() => setGame(null)} />
   if (game === 'truco') return <TrucoArcade onBack={() => setGame(null)} />
+  if (game === 'sokoban') return <SokobanArcade onBack={() => setGame(null)} />
 
   return (
     <Screen className="gap-4">

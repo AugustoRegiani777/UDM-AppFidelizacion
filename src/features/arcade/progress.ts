@@ -127,3 +127,43 @@ export function unlockedPark(stars: readonly number[] = parkStars()): number {
   while (level < PARK_LEVELS && (stars[level - 1] ?? 0) >= 1) level++
   return level
 }
+
+const SOKOBAN_KEY = 'arcade_sokoban_stars'
+const SOKOBAN_LEVELS = 12
+
+/** Estrellas (0..3) de cada nivel de Entregas de Miga. */
+export function sokobanStars(): number[] {
+  const stars = Array.from({ length: SOKOBAN_LEVELS }, () => 0)
+  try {
+    const raw = JSON.parse(localStorage.getItem(SOKOBAN_KEY) ?? '[]')
+    if (Array.isArray(raw)) {
+      raw.slice(0, SOKOBAN_LEVELS).forEach((value, i) => {
+        const n = Number(value)
+        if (Number.isFinite(n)) stars[i] = Math.max(0, Math.min(3, Math.floor(n)))
+      })
+    }
+  } catch {
+    // almacenamiento roto o vacío: se empieza de cero
+  }
+  return stars
+}
+
+/** Guarda la mejor marca del nivel. Devuelve las estrellas de todos los niveles. */
+export function saveSokobanStars(level: number, stars: number): number[] {
+  const all = sokobanStars()
+  const i = Math.min(SOKOBAN_LEVELS, Math.max(1, Math.floor(level))) - 1
+  all[i] = Math.max(all[i] ?? 0, Math.max(0, Math.min(3, Math.floor(stars))))
+  try {
+    localStorage.setItem(SOKOBAN_KEY, JSON.stringify(all))
+  } catch {
+    // sin almacenamiento: no se guarda, pero el juego sigue andando
+  }
+  return all
+}
+
+/** Nivel más alto que se puede jugar: terminar un nivel (con cualquier cantidad de estrellas) abre el siguiente. */
+export function unlockedSokoban(stars: readonly number[] = sokobanStars()): number {
+  let level = 1
+  while (level < SOKOBAN_LEVELS && (stars[level - 1] ?? 0) >= 1) level++
+  return level
+}

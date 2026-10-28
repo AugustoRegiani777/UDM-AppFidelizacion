@@ -6,9 +6,10 @@ import {
   RELAXED_CONFIG,
   STAGE_COUNT,
   resolveConfig,
+  sanitizePerks,
 } from './config.ts'
 import { InputRecorder, isValidLog, replay } from './replay.ts'
-import { MAX_CHARGES, checksum, createGame, pick, scoreOf, step } from './sim.ts'
+import { MAX_CHARGES, checksum, createGame, pick, scoreOf, statsOf, step } from './sim.ts'
 import { playWithBot } from './testing.ts'
 
 const SEEDS = Array.from({ length: 12 }, (_, i) => 1000 + i * 7919)
@@ -368,5 +369,45 @@ describe('poderes en burbujas', () => {
     const cheating = replay(config, 33, { moves: [], picks: [], casts: spam })
     expect(cheating.valid).toBe(true)
     expect(checksum(cheating.state)).toBe(checksum(honest.state))
+  })
+})
+
+describe('mejoras de la tienda', { timeout: 60_000 }, () => {
+  it('sin mejoras la partida es la de siempre', () => {
+    expect(resolveConfig({ stage: 1 }).perks).toEqual({ hp: 0, speed: 0, magnet: 0 })
+  })
+
+  it('las mejoras se acotan: valores negativos, enormes o inventados no valen', () => {
+    expect(sanitizePerks({ hp: -3, speed: 99, magnet: 'x', otra: 5 })).toEqual({
+      hp: 0,
+      speed: 6,
+      magnet: 0,
+    })
+    expect(sanitizePerks(null)).toEqual({ hp: 0, speed: 0, magnet: 0 })
+    expect(sanitizePerks({ hp: 2.9 }).hp).toBe(2)
+  })
+
+  it('el corazón extra suma vidas y las zapatillas, velocidad', () => {
+    const plain = createGame(resolveConfig({}), 5)
+    const boosted = createGame(resolveConfig({ perks: { hp: 2, speed: 3, magnet: 1 } }), 5)
+    expect(boosted.player.maxHp).toBe(plain.player.maxHp + 2)
+    expect(boosted.player.hp).toBe(plain.player.hp + 2)
+    expect(statsOf(boosted).speed).toBeGreaterThan(statsOf(plain).speed * 1.17)
+    expect(statsOf(boosted).magnet).toBeGreaterThan(statsOf(plain).magnet)
+  })
+
+  it('con mejoras, el replay del servidor reproduce la partida (mismas reglas guardadas)', () => {
+    const config = resolveConfig({ stage: 2, perks: { hp: 2, speed: 2, magnet: 1 } })
+    const bot = playWithBot(config, 77, 0.6)
+    const result = replay(config, 77, bot.log)
+    expect(result.valid).toBe(true)
+    expect(result.status).toBe(bot.won ? 'won' : 'lost')
+    expect(result.score).toBe(bot.score)
+  })
+
+  it('las mejoras ayudan: un jugador atento gana más con ellas', () => {
+    const rate = (perks: object) =>
+      SEEDS.filter((seed) => playWithBot(resolveConfig({ stage: 4, perks }), seed, 0.6).won).length
+    expect(rate({ hp: 3, speed: 3, magnet: 2 })).toBeGreaterThanOrEqual(rate({}))
   })
 })

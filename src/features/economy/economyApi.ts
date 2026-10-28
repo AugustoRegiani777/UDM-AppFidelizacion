@@ -33,6 +33,8 @@ export interface Wallet {
   passes: number
   pass_cap: number
   show_in_rankings: boolean
+  /** Mejoras de la tienda que lleva cada juego (niveles acumulados). */
+  perks: { survivors: { hp?: number; speed?: number; magnet?: number } }
 }
 
 export interface BoardRow {
@@ -78,11 +80,12 @@ export async function fetchWallet(): Promise<Wallet> {
   return data as unknown as Wallet
 }
 
-export async function fetchBoard(game: RankedGame, stage: number): Promise<Board> {
+export async function fetchBoard(game: RankedGame, stage: number, boosted = false): Promise<Board> {
   const { data, error } = await supabase.rpc('leaderboard', {
     p_game: game,
     p_stage: stage,
     p_limit: 20,
+    p_boosted: boosted,
   })
   if (error) throw error
   return data as unknown as Board
@@ -97,4 +100,73 @@ export async function fetchPointsBoard(): Promise<Board> {
 export async function setShowInRankings(show: boolean): Promise<void> {
   const { error } = await supabase.rpc('set_show_in_rankings', { p_show: show })
   if (error) throw error
+}
+
+// --- Tienda -------------------------------------------------------------------------------------
+
+export interface ShopItem {
+  id: string
+  slug: string
+  kind: 'voucher' | 'upgrade'
+  name: string
+  description: string
+  icon: string
+  game: RankedGame | null
+  max_level: number
+  /** Nivel que ya tiene el cliente (mejoras). */
+  level: number
+  maxed: boolean
+  /** Lo que cuesta ahora (en una mejora, el próximo nivel). */
+  price: number
+}
+
+export interface ShopCatalog {
+  pass_coin_price: number
+  items: ShopItem[]
+}
+
+export interface ShopOrder {
+  id: string
+  name: string
+  icon: string
+  code: string
+  status: 'active' | 'used' | 'expired'
+  expires_at: string
+  created_at: string
+}
+
+export type BuyResult =
+  | { kind: 'upgrade'; name: string; level: number; price: number; spendable: number }
+  | {
+      kind: 'voucher'
+      name: string
+      order_id: string
+      code: string
+      expires_at: string
+      price: number
+      spendable: number
+    }
+
+export async function fetchCatalog(): Promise<ShopCatalog> {
+  const { data, error } = await supabase.rpc('shop_catalog')
+  if (error) throw error
+  return data as unknown as ShopCatalog
+}
+
+export async function fetchOrders(): Promise<ShopOrder[]> {
+  const { data, error } = await supabase.rpc('my_shop_orders')
+  if (error) throw error
+  return data as unknown as ShopOrder[]
+}
+
+export async function buyItem(itemId: string): Promise<BuyResult> {
+  const { data, error } = await supabase.rpc('buy_item', { p_item: itemId })
+  if (error) throw new RunError(error.message)
+  return data as unknown as BuyResult
+}
+
+export async function buyPassWithCoins(): Promise<{ coins: number; passes: number }> {
+  const { data, error } = await supabase.rpc('buy_pass_with_coins')
+  if (error) throw new RunError(error.message)
+  return data as unknown as { coins: number; passes: number }
 }

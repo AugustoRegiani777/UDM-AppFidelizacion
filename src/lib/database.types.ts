@@ -376,6 +376,43 @@ export type Database = {
           },
         ]
       }
+      customer_items: {
+        Row: {
+          acquired_at: string
+          customer_id: string
+          item_id: string
+          level: number
+        }
+        ComputedFields: never
+        Insert: {
+          acquired_at?: string
+          customer_id: string
+          item_id: string
+          level?: number
+        }
+        Update: {
+          acquired_at?: string
+          customer_id?: string
+          item_id?: string
+          level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'customer_items_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'customer_items_item_id_fkey'
+            columns: ['item_id']
+            isOneToOne: false
+            referencedRelation: 'shop_items'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       dev_mock_sales: {
         Row: {
           channel: string
@@ -445,6 +482,7 @@ export type Database = {
       }
       game_runs: {
         Row: {
+          boosted: boolean | null
           coins: number
           customer_id: string
           expires_at: string
@@ -453,6 +491,7 @@ export type Database = {
           id: string
           overrides: NonNullable<Json>
           pass_granted: boolean
+          perks: NonNullable<Json>
           score: number
           seed: number
           stage: number
@@ -462,6 +501,7 @@ export type Database = {
         }
         ComputedFields: never
         Insert: {
+          boosted?: never
           coins?: number
           customer_id: string
           expires_at: string
@@ -470,6 +510,7 @@ export type Database = {
           id?: string
           overrides?: NonNullable<Json>
           pass_granted?: boolean
+          perks?: NonNullable<Json>
           score?: number
           seed: number
           stage?: number
@@ -478,6 +519,7 @@ export type Database = {
           summary?: Json | null
         }
         Update: {
+          boosted?: never
           coins?: number
           customer_id?: string
           expires_at?: string
@@ -486,6 +528,7 @@ export type Database = {
           id?: string
           overrides?: NonNullable<Json>
           pass_granted?: boolean
+          perks?: NonNullable<Json>
           score?: number
           seed?: number
           stage?: number
@@ -937,6 +980,104 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_items: {
+        Row: {
+          active: boolean
+          description: string
+          game: string | null
+          icon: string
+          id: string
+          kind: string
+          max_level: number
+          name: string
+          perk: NonNullable<Json>
+          price_points: number
+          slug: string
+          sort_order: number
+        }
+        ComputedFields: never
+        Insert: {
+          active?: boolean
+          description?: string
+          game?: string | null
+          icon?: string
+          id?: string
+          kind: string
+          max_level?: number
+          name: string
+          perk?: NonNullable<Json>
+          price_points: number
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          description?: string
+          game?: string | null
+          icon?: string
+          id?: string
+          kind?: string
+          max_level?: number
+          name?: string
+          perk?: NonNullable<Json>
+          price_points?: number
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      shop_orders: {
+        Row: {
+          code: string
+          created_at: string
+          customer_id: string
+          expires_at: string
+          id: string
+          item_id: string
+          price_points: number
+          status: string
+          used_at: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          code: string
+          created_at?: string
+          customer_id: string
+          expires_at: string
+          id?: string
+          item_id: string
+          price_points: number
+          status?: string
+          used_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          customer_id?: string
+          expires_at?: string
+          id?: string
+          item_id?: string
+          price_points?: number
+          status?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'shop_orders_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'shop_orders_item_id_fkey'
+            columns: ['item_id']
+            isOneToOne: false
+            referencedRelation: 'shop_items'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -973,6 +1114,8 @@ export type Database = {
         Args: { p_customer: string; p_points: number; p_ref: string; p_table: string }
         Returns: number
       }
+      buy_item: { Args: { p_item: string }; Returns: Json }
+      buy_pass_with_coins: { Args: Record<PropertyKey, never>; Returns: Json }
       claim_mission: { Args: { p_mission: string; p_note?: string }; Returns: Json }
       claim_sale_apply: {
         Args: { p_customer: string; p_sale: Json; p_sale_uuid: string }
@@ -987,6 +1130,7 @@ export type Database = {
       customer_balance: { Args: { p_customer: string }; Returns: number }
       customer_coins: { Args: { p_customer: string }; Returns: number }
       customer_dashboard: { Args: Record<PropertyKey, never>; Returns: Json }
+      customer_perks: { Args: { p_customer: string; p_game: string }; Returns: Json }
       customer_purchase_count: { Args: { p_customer: string }; Returns: number }
       customer_spendable: { Args: { p_customer: string }; Returns: number }
       customer_streak_weeks: { Args: { p_customer: string }; Returns: number }
@@ -1014,6 +1158,7 @@ export type Database = {
         Returns: Json
       }
       games_status: { Args: Record<PropertyKey, never>; Returns: Json }
+      generate_order_code: { Args: Record<PropertyKey, never>; Returns: string }
       generate_redemption_code: { Args: Record<PropertyKey, never>; Returns: string }
       get_chest_session: { Args: { p_customer: string; p_session: string }; Returns: Json }
       get_run: { Args: { p_customer: string; p_run: string }; Returns: Json }
@@ -1022,10 +1167,14 @@ export type Database = {
         Args: { p_chest: string; p_customer: string; p_reward: string }
         Returns: Json
       }
-      leaderboard: { Args: { p_game: string; p_limit?: number; p_stage?: number }; Returns: Json }
+      leaderboard: {
+        Args: { p_boosted?: boolean; p_game: string; p_limit?: number; p_stage?: number }
+        Returns: Json
+      }
       leaderboard_points: { Args: { p_limit?: number }; Returns: Json }
       local_day_start: { Args: Record<PropertyKey, never>; Returns: string }
       match_google_reviews: { Args: Record<PropertyKey, never>; Returns: Json }
+      my_shop_orders: { Args: Record<PropertyKey, never>; Returns: Json }
       my_wallet: { Args: Record<PropertyKey, never>; Returns: Json }
       newly_unlocked_rewards: {
         Args: {
@@ -1065,6 +1214,7 @@ export type Database = {
       schedule_reconcile: { Args: { p_function_url: string; p_secret: string }; Returns: undefined }
       set_show_in_rankings: { Args: { p_show: boolean }; Returns: undefined }
       setting_json: { Args: { p_key: string }; Returns: Json }
+      shop_catalog: { Args: Record<PropertyKey, never>; Returns: Json }
       spend_coins: {
         Args: { p_amount: number; p_customer: string; p_ref: string }
         Returns: number

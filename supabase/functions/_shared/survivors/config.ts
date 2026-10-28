@@ -6,6 +6,29 @@ export const TICKS_PER_SECOND = 60
 export const ARENA_W = 360
 export const ARENA_H = 640
 
+/** Mejoras de la tienda que lleva el jugador al arrancar (niveles acumulados, ver shop_items). */
+export interface Perks {
+  /** Vidas extra. */
+  hp: number
+  /** +6 % de velocidad por nivel. */
+  speed: number
+  /** +25 % de alcance del imán por nivel. */
+  magnet: number
+}
+
+export const NO_PERKS: Perks = { hp: 0, speed: 0, magnet: 0 }
+const MAX_PERK = 6
+
+/** Los valores vienen de la base, pero igual se acotan: nadie arranca con mejoras inventadas. */
+export function sanitizePerks(value: unknown): Perks {
+  const source = (typeof value === 'object' && value !== null ? value : {}) as Record<string, unknown>
+  const clean = (n: unknown) => {
+    const v = Math.floor(Number(n))
+    return Number.isFinite(v) ? Math.min(MAX_PERK, Math.max(0, v)) : 0
+  }
+  return { hp: clean(source.hp), speed: clean(source.speed), magnet: clean(source.magnet) }
+}
+
 export interface GameConfig {
   /** Segundos de supervivencia: el minuto en el que entran las hormigas. Después viene la Reina. */
   durationSeconds: number
@@ -19,6 +42,8 @@ export interface GameConfig {
   boss: boolean
   /** Nivel del juego (1..STAGE_COUNT): más duro y con enemigos nuevos antes. */
   stage: number
+  /** Mejoras de la tienda con las que arranca la partida. */
+  perks: Perks
 }
 
 export const NORMAL_CONFIG: GameConfig = {
@@ -30,6 +55,7 @@ export const NORMAL_CONFIG: GameConfig = {
   spawnMul: 1,
   boss: true,
   stage: 1,
+  perks: NO_PERKS,
 }
 
 export const STAGE_COUNT = 6
@@ -67,7 +93,7 @@ export function resolveConfig(overrides: Partial<GameConfig> = {}, relaxed = fal
     enemySpeedMul: base.enemySpeedMul * (staged.enemySpeedMul ?? 1),
     enemyHpMul: base.enemyHpMul * (staged.enemyHpMul ?? 1),
   }
-  return { ...base, ...scaled, ...overrides, stage }
+  return { ...base, ...scaled, ...overrides, stage, perks: sanitizePerks(overrides.perks) }
 }
 
 /** 16 direcciones (22,5° cada una; 0 = derecha, sentido horario en pantalla). Literales: nada de sin/cos en la simulación. */

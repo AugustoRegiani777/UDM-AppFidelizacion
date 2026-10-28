@@ -19,6 +19,9 @@ export function WalletBar() {
           </span>
         </>
       )}
+      <Link to="/tienda" className="rounded-chip bg-brand-soft text-brand-ink px-3 py-1.5">
+        {copy.shop.link}
+      </Link>
       <Link to="/ranking" className="rounded-chip bg-brand-soft text-brand-ink px-3 py-1.5">
         {copy.economy.rankingLink}
       </Link>

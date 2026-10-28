@@ -48,7 +48,8 @@ export function RankingScreen() {
     const n = Number(params.get('nivel'))
     return Number.isInteger(n) && n >= 1 && n <= STAGE_COUNT ? n : 1
   })
-  const board = useBoard(tab, tab === 'survivors' ? stage : 1)
+  const [boosted, setBoosted] = useState(false)
+  const board = useBoard(tab, tab === 'survivors' ? stage : 1, boosted && tab === 'survivors')
   const wallet = useWallet()
 
   const toggleVisibility = async () => {
@@ -104,6 +105,17 @@ export function RankingScreen() {
         </div>
       )}
 
+      {tab === 'survivors' && (
+        <label className="text-muted flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="accent-brand size-5"
+            checked={boosted}
+            onChange={(e) => setBoosted(e.target.checked)}
+          />
+          {copy.ranking.boosted}
+        </label>
+      )}
       {tab !== 'points' && (
         <p className="text-muted text-sm">
           {tab === 'survivors' ? copy.arcade.stageName(stage) : copy.ranking.skateNote}

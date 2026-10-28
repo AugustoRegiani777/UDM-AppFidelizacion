@@ -37,7 +37,11 @@ Deno.serve(async (req) => {
       game: data.game,
       stage: data.stage,
       seed: data.seed,
-      config: gameConfig(data.game, { ...data.overrides, stage: data.stage }, false),
+      config: gameConfig(
+        data.game,
+        { ...data.overrides, stage: data.stage, perks: data.perks },
+        false,
+      ),
     })
   } catch (error) {
     return errorResponse(error)

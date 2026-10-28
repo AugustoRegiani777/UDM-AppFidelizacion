@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { resolveConfig, STAGE_COUNT, type GameConfig } from '@engine/config.ts'
+import { resolveConfig, sanitizePerks, STAGE_COUNT, type GameConfig } from '@engine/config.ts'
 import { Button } from '@/components/Button'
 import { Card } from '@/components/Card'
 import { Screen } from '@/components/Screen'
@@ -11,11 +11,12 @@ import {
   unlockedStage,
 } from '@/features/arcade/progress'
 import { finishRun, startRun, type FinishRunResult } from '@/features/economy/economyApi'
+import { useWallet } from '@/features/economy/useEconomy'
 import type { GameOutcome, GameSession } from '@/games/outcome'
 import { SurvivorsGame } from '@/games/survivors/SurvivorsGame'
 import { Cascade, CascadeItem } from '@/motion/Cascade'
 import { copy } from '@/copy'
-import { ModeSwitch, OfficialSummary, type PlayMode } from './official'
+import { ModeSwitch, OfficialSummary, PerksLine, type PlayMode } from './official'
 import { runErrorText } from './officialText'
 
 type View =
@@ -32,10 +33,10 @@ type View =
       official: FinishRunResult | null
     }
 
-function practiceSession(stage: number): GameSession<GameConfig> {
+function practiceSession(stage: number, perks: object): GameSession<GameConfig> {
   // La semilla no decide ningún premio (es práctica): alcanza con una al azar del navegador.
   const seed = (crypto.getRandomValues(new Uint32Array(1))[0] ?? 1) >>> 0
-  return { seed, config: resolveConfig({ stage }), relaxed: false }
+  return { seed, config: resolveConfig({ stage, perks: sanitizePerks(perks) }), relaxed: false }
 }
 
 /** Sobreviví a las migas en la sala de juegos: práctica libre y partida oficial (ranking, monedas y pases). */
@@ -45,10 +46,12 @@ export function SurvivorsArcade({ onBack }: { onBack: () => void }) {
   const [mode, setMode] = useState<PlayMode>('practice')
   const [unlocked, setUnlocked] = useState(unlockedStage)
   const best = survivorsBest()
+  const { data: wallet } = useWallet()
+  const perks = wallet?.perks.survivors ?? {}
 
   const play = (stage: number) => {
     if (mode === 'practice') {
-      setView({ name: 'playing', stage, session: practiceSession(stage), runId: null })
+      setView({ name: 'playing', stage, session: practiceSession(stage, perks), runId: null })
       return
     }
     setView({ name: 'starting', stage })
@@ -159,6 +162,7 @@ export function SurvivorsArcade({ onBack }: { onBack: () => void }) {
       <h2 className="font-display text-3xl">{copy.arcade.survivorsTitle}</h2>
       <p className="text-muted">{copy.arcade.survivorsBody}</p>
       <ModeSwitch mode={mode} onChange={setMode} />
+      <PerksLine perks={perks} />
       <Cascade className="flex flex-col gap-3">
         {Array.from({ length: STAGE_COUNT }, (_, i) => i + 1).map((stage) => {
           const open = stage <= unlocked

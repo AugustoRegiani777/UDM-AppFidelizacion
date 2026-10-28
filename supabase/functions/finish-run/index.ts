@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     // Se reproduce con las reglas y la semilla que el servidor guardó al abrir la partida.
     const outcome = replayGame(
       run.game,
-      { ...run.overrides, stage: run.stage },
+      { ...run.overrides, stage: run.stage, perks: run.perks },
       false,
       Number(run.seed),
       log,

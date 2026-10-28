@@ -70,3 +70,15 @@ export function OfficialSummary({ result }: { result: FinishRunResult }) {
     </div>
   )
 }
+
+/** Las mejoras de la tienda que lleva el jugador, en una línea (no muestra nada si no tiene ninguna). */
+export function PerksLine({ perks }: { perks: { hp?: number; speed?: number; magnet?: number } }) {
+  const owned = (['hp', 'speed', 'magnet'] as const).filter((key) => (perks[key] ?? 0) > 0)
+  if (owned.length === 0) return null
+  return (
+    <p className="text-muted text-sm">
+      {copy.shop.perksLine}{' '}
+      {owned.map((key) => `+${perks[key]} ${copy.shop.perkNames[key]}`).join(' · ')}
+    </p>
+  )
+}

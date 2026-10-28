@@ -14,7 +14,7 @@ Todo está preparado, pero **no se publicó nada**. Esta guía es para cuando qu
 
 - Se publican las migraciones de `supabase/migrations/` (incluye premios y reglas iniciales).
 - **No** se aplica `supabase/seed.sql` (es solo de desarrollo: ventas falsas y cron local).
-- Funciones a publicar: `claim-sale`, `start-chest`, `finish-chest`, `renew-redemption`, `validate-redemption`, `play-game`, `delete-account`, `reconcile`, `sync-google-reviews`.
+- Funciones a publicar: `claim-sale`, `start-chest`, `finish-chest`, `start-run`, `finish-run`, `renew-redemption`, `validate-redemption`, `play-game`, `delete-account`, `reconcile`, `sync-google-reviews`.
 - Funciones que **nunca** se publican: `dev-mock-sale` y `dev-pos-redeem` (simulan la tablet y la caja). Además responden 404 sin `DEV_ENDPOINTS=true`, variable que no se carga en producción.
 - La pantalla `/dev` y el login por email no existen en el build de producción.
 
@@ -42,7 +42,7 @@ npx supabase login
 npx supabase link --project-ref <REF-DEL-PROYECTO>
 npx supabase db push
 npx supabase secrets set POS_MODE=mock POS_HMAC_SECRET=<secreto> POS_INBOUND_HMAC_SECRET=<secreto> RECONCILE_SECRET=<secreto>
-npx supabase functions deploy claim-sale start-chest finish-chest renew-redemption validate-redemption play-game delete-account reconcile sync-google-reviews
+npx supabase functions deploy claim-sale start-chest finish-chest start-run finish-run renew-redemption validate-redemption play-game delete-account reconcile sync-google-reviews
 ```
 
 Después, en el editor SQL de Supabase, programar la reconciliación (usar el mismo `RECONCILE_SECRET`):

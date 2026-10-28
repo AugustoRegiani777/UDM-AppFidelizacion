@@ -216,3 +216,11 @@
 - Truco (con IA rival) y mate: animación de cebar y tomar; el mate da "suerte +1" visible (parámetro del servidor); un chipá suma segundos al reloj de turno. Se compran con monedas del juego, nunca con puntos de fidelidad.
 - Básquet 2 vs 2 tipo NBA Jam: avatar a medida, estrella compañera con IA simple por estados (tirador, pasador, defensor). Online después: primero partidas grabadas (retos asincrónicos, "El Dueño" como bot), luego tiempo real con Supabase Realtime y revalidación en el servidor.
 - Miga Racers: objetos para tirar (chorro de ketchup, aceite), más pistas, contrarreloj con fantasma, elegir el autito y retar a otro cliente en partidas grabadas.
+
+
+## Octubre 2026 · economía de puntos, comunidad y escenarios del local
+
+- **Miga Racers**: cinco pistas en el local (vitrina de sándwiches, mesa del obrador, cafetera, vitrina de bollería, fiambrera) con obstáculos que chocan, charcos que frenan y la hoja de la fiambrera que gira.
+- **Sobreviví a las migas**: cada nivel transcurre en un lugar del local; un minuto de hormigas y después la Reina (más puntos cuanto más rápido cae); poderes en burbujas que se sueltan a mano; finales amables con puntaje; mejor puntaje por nivel.
+- **Economía** (ver `docs/06-economia-de-puntos.md`): escala de la tarjeta (10 puntos por euro), saldo gastable, monedas de juego, partidas oficiales validadas en el servidor, pases de desafío, tienda (mejoras y premios del local con código para la caja), rankings con y sin mejoras, y el costo de los premios sobre las ventas en el panel de administración.
+- **Pruebas**: 232 unitarias, 55 de integración, pgTAP completo (la base) y 20 flujos de navegador.

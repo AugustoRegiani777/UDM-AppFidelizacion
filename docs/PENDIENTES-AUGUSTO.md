@@ -48,7 +48,7 @@ No hagas esto antes de que el POS real esté conectado (ver INFORME-FINAL.md): s
 3. **Secretos:** generá 3 claves largas al azar (podés usar https://bitwarden.com/password-generator/, 40 caracteres) y corré:
    `npx supabase secrets set POS_MODE=mock POS_HMAC_SECRET=CLAVE1 POS_INBOUND_HMAC_SECRET=CLAVE2 RECONCILE_SECRET=CLAVE3`
    Guardá las 3 claves: CLAVE1 y CLAVE2 también se cargan después del lado del POS.
-4. **Funciones:** `npx supabase functions deploy claim-sale start-chest finish-chest renew-redemption validate-redemption play-game delete-account reconcile sync-google-reviews`
+4. **Funciones:** `npx supabase functions deploy claim-sale start-chest finish-chest start-run finish-run renew-redemption validate-redemption play-game delete-account reconcile sync-google-reviews`
 5. **Tarea automática cada 5 minutos:** en Supabase → SQL Editor, pegá y ejecutá (con tu REF y CLAVE3):
    `select public.schedule_reconcile('https://REF.supabase.co/functions/v1/reconcile', 'CLAVE3');`
 6. **Login con Google de producción:** repetí el punto 3 de este archivo, pero en la pantalla de Google agregá la dirección `https://REF.supabase.co/auth/v1/callback`; después en Supabase → Authentication → Providers → Google pegá el ID y el secreto. En Providers → Email, **desactivalo**. En Authentication → URL Configuration poné tu dominio real como "Site URL" y `https://TU-DOMINIO/**` en "Redirect URLs".
@@ -119,3 +119,13 @@ Windows reservó el rango de puertos 54306–54405 (pasa a veces después de rei
 Lo único que tenés que hacer es lo de Google: si ya probaste el login con Google en tu compu, en Google Cloud Console → Credenciales → tu ID de cliente, agregá a "URI de redirección autorizados" `http://127.0.0.1:55321/auth/v1/callback`.
 
 Si algún día querés volver a los puertos de antes: abrí PowerShell **como administrador**, corré `net stop winnat` y `net start winnat`, y deshacé el cambio de puertos (buscá 553 y poné 543).
+
+
+## 13. Antes de publicar la economía nueva
+
+- [ ] Aplicar las migraciones nuevas en Supabase (`20261029000001` a `20261029000004`) y publicar las funciones `start-run` y `finish-run` (además de volver a publicar `start-chest`, `finish-chest` y `validate-redemption`, que cambiaron).
+- [ ] Cargar los **costos reales** en `settings.reward_costs` (hoy son supuestos) y revisar el panel de administración tras la primera semana.
+- [ ] Confirmar los precios de la tienda (`shop_items`) y qué premios se ofrecen de verdad en el local.
+- [ ] Avisar al equipo del mostrador: la caja ahora puede recibir códigos de la tienda (mismo formato MIGA-XXXX); la respuesta trae `reward.kind = "shop"`.
+- [ ] Los puntos de entrada del modo de prueba (1500) ahora valen 3 cafés y casi 2 sanguches; bajar `settings.demo.welcome_points` antes de abrir al público.
+- [ ] Consulta legal antes de cualquier apuesta entre usuarios, aunque sea con monedas de juego (ver sección 11).

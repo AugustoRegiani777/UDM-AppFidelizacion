@@ -1,6 +1,6 @@
 # Economía de puntos (propuesta para aprobar)
 
-Estado: **propuesta, sin código todavía.** Reemplaza los números de `docs/01-producto.md` (1 punto por euro, café a 150, sanguche a 300) cuando se apruebe.
+Estado: **implementado hasta el paso 8** (ver «Qué quedó hecho» al final). Pendiente: decisiones de negocio, el online y las apuestas. Reemplaza los números de `docs/01-producto.md` (1 punto por euro, café a 150, sanguche a 300) cuando se apruebe.
 
 ## Punto de partida: la tarjeta que hay hoy en el local
 
@@ -86,3 +86,38 @@ Antes de lanzar al público: consulta legal sobre el desafío como condición de
 2. **Costo real** de un café y de un sanguche (usé 0,40 € y 3 €).
 3. **Merch real** que querés ofrecer y su costo.
 4. ¿Café y sanguche se repiten siempre (cada 5 y cada 10 compras)? Supuse que sí.
+
+## Qué quedó hecho (octubre 2026)
+
+| Paso | Estado | Dónde |
+|---|---|---|
+| 1. Escala de la tarjeta | Hecho | `20261029000001_economy_scale.sql` |
+| 2. Saldo gastable | Hecho | `point_spends`, `spend_points`, `customer_spendable` |
+| 3. Monedas y pases | Hecho | `coin_movements`, `challenge_passes`, tope diario de monedas y de pases en `settings.economy` |
+| 4. Desafío con pase | Hecho | `start_chest` usa un pase si hay; `start-run` / `finish-run` dan los pases |
+| 5. Tienda | Hecho | `shop_items`, `buy_item`, `buy_pass_with_coins`; la caja valida los códigos de la tienda en `validate-redemption` |
+| 6. Mejoras en los juegos | Hecho (Sobreviví a las migas) | `customer_perks`, `game_runs.perks`, `Perks` en el motor |
+| 7. Rankings | Hecho | `leaderboard` (por juego, nivel y con/sin mejoras), `leaderboard_points`, opción de ocultarse |
+| 8. Panel del dueño | Hecho | `admin_economy_stats` y la tarjeta «Economía de puntos» en `/admin` |
+
+Valores por defecto (todos editables en `settings`, sin tocar código):
+
+- `economy`: 15 monedas por ganar, 2 por jugar, hasta 40 extra por puntaje, tope de 150 monedas por día, máximo 3 pases guardados y 3 por día, un pase cuesta 80 monedas.
+- `reward_costs` (centavos): café 40, sanguche 300, gorra 600, chipá 30, alfajor 40, medialuna 80, dulce de leche 350. **Son supuestos**: hay que cargar los costos reales.
+- Precios de la tienda: chipá 150, alfajor 130, medialuna 250, dulce de leche 1200, gorra 3000; mejoras 200 a 300 por nivel (el nivel N cuesta N veces el precio base).
+
+Reglas que se mantienen: el servidor decide todo; no se vende nada con dinero; las mejoras no son imprescindibles (todos los desafíos se pueden pasar sin ellas); las partidas con mejoras tienen su propio ranking; las monedas no se convierten en comida.
+
+## Próximo: comunidad en línea (no construido)
+
+- **Partidas entre usuarios (carreras en línea):** hoy Miga Racers corre solo en el celular. Para jugar entre personas hace falta sincronizar las partidas (Supabase Realtime) y validar el resultado en el servidor repitiendo las entradas de ambos. Es un trabajo grande y va por separado.
+- **Apostar para llevarse el pozo:** diseñado para usar **monedas de juego**, no puntos de compra. Las monedas no valen comida, así que el pozo no tiene valor en plata y el riesgo legal baja mucho. Con puntos de compra se apostaría algo que vale un café y hace falta consulta legal antes. Debe quedar apagado por defecto (`settings`), con un tope por apuesta y por día, y con protección contra cuentas que se pasan monedas entre sí.
+- **Rankings «no oficiales»:** Miga Racers, Truco y Skate Spot corren en el celular y su resultado se podría falsear. Para sumarlos al ranking hay que repetir su partida en el servidor (la carrera ya es determinista con semilla; el Truco depende del azar y es el más difícil).
+- **Entregas de Miga:** su motor es determinista y se puede repetir en el servidor para sumarlo a los rankings. Hay que moverlo a `supabase/functions/_shared`.
+
+## Decisiones de negocio que siguen abiertas
+
+1. Costo real de un café y de cada sanguche (hoy: supuestos).
+2. Qué sanguche es el premio (o un tope de precio), porque en la carta van de 7 a 22 EUR.
+3. Merch real que se quiere ofrecer y su costo.
+4. Si los precios de la tienda se quedan como están o se ajustan con las primeras semanas de datos.

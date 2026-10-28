@@ -29,7 +29,7 @@ function Secret { -join ((1..32) | ForEach-Object { '{0:x2}' -f (Get-Random -Max
 
 # Funciones que se publican. NUNCA dev-mock-sale ni dev-pos-redeem (simulan la tablet y la caja).
 $functions = @(
-  'claim-sale', 'start-chest', 'finish-chest', 'renew-redemption', 'validate-redemption',
+  'claim-sale', 'start-chest', 'finish-chest', 'start-run', 'finish-run', 'renew-redemption', 'validate-redemption',
   'play-game', 'delete-account', 'reconcile', 'sync-google-reviews'
 )
 

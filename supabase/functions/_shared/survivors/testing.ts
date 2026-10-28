@@ -1,9 +1,18 @@
 // Jugador automático para pruebas y balance: sirve para comprobar que el juego se puede ganar
 // jugando bien y que no se gana sin jugar. No se usa en producción.
 
-import { ARENA_H, ARENA_W, DIRS, NO_DIR, type GameConfig, type UpgradeId } from './config.ts'
+import {
+  ARENA_H,
+  ARENA_W,
+  DIRS,
+  NO_DIR,
+  POWERS,
+  QUEEN,
+  type GameConfig,
+  type UpgradeId,
+} from './config.ts'
 import { InputRecorder, replay, type InputLog } from './replay.ts'
-import { createGame, pick, step, type GameState } from './sim.ts'
+import { createGame, pick, scoreOf, step, type GameState } from './sim.ts'
 
 const PICK_ORDER: UpgradeId[] = [
   'multishot',
@@ -63,8 +72,34 @@ function chooseDirection(state: GameState, skill: number): number {
   return bestDir
 }
 
+/** Decide si conviene soltar una burbuja ahora: cuando hay bichos encima o la Reina está cerca. */
+function chooseCast(state: GameState): number {
+  const p = state.player
+  let near = 0
+  let queen = false
+  for (const e of state.enemies) {
+    if (!e.alive) continue
+    const dx = e.x - p.x
+    const dy = e.y - p.y
+    if (dx * dx + dy * dy < 150 * 150) near++
+    if (e.kind === QUEEN) queen = true
+  }
+  if (near < 4 && !queen) return -1
+  for (let i = 0; i < POWERS.length; i++) {
+    const id = POWERS[i]!
+    if (state.charges[id] > 0 && state.upgrades[id] > 0) {
+      if (id === 'bait' && state.bait.alive) continue
+      return i
+    }
+  }
+  return -1
+}
+
 export interface BotRun {
   won: boolean
+  score: number
+  /** Tick en el que terminó la partida. */
+  ticks: number
   hp: number
   level: number
   kills: number
@@ -86,12 +121,16 @@ export function playWithBot(config: GameConfig, seed: number, skill = 1): BotRun
     if (skill > 0 && state.tick % 4 === 0) dir = chooseDirection(state, skill)
     if (skill === 0) dir = NO_DIR
     recorder.move(state.tick, dir)
-    step(state, dir)
+    const cast = skill > 0 ? chooseCast(state) : -1
+    if (cast >= 0) recorder.cast(state.tick, cast)
+    step(state, dir, cast)
   }
   const check = replay(config, seed, recorder.log)
   if (check.status !== state.status) throw new Error('el replay no coincide con la partida en vivo')
   return {
     won: state.status === 'won',
+    score: scoreOf(state),
+    ticks: state.tick,
     hp: state.player.hp,
     level: state.level,
     kills: state.kills,

@@ -17,11 +17,13 @@ import {
   PIGEON,
   PLAYER_RADIUS,
   PLAYER_SPEED,
+  POWERS,
   QUEEN,
   TICKS_PER_SECOND,
   UPGRADES,
   type EnemyKind,
   type GameConfig,
+  type PowerId,
   type UpgradeId,
 } from './config.ts'
 import { createRng, nextFloat, nextInt, type Rng } from './rng.ts'
@@ -56,10 +58,11 @@ const ORBIT_LAYOUT: Record<number, readonly (readonly [number, number])[]> = {
 }
 const BASE_MAGNET = 46
 const PICKUP_RADIUS = PLAYER_RADIUS + 6
-const BOSS_AT = 0.6
 const WAVE_SECONDS = [18, 34]
 
-// Poderes automáticos (se activan solos con cooldown, así que no cambian las entradas del jugador).
+// Poderes: se cargan solos con el tiempo (hasta MAX_CHARGES de cada uno, como burbujas) y el jugador los
+// suelta cuando quiere. Soltar uno es una entrada más del registro de la partida (`casts`).
+export const MAX_CHARGES = 3
 export const MAX_SOLDIERS = 4
 export const MAX_CHIPAS = 8
 const SOLDIER_COOLDOWN = [0, 900, 780, 660]
@@ -157,20 +160,28 @@ export interface Bait {
 export type GameEvent =
   | { t: 'shoot' | 'hurt' | 'levelup' | 'boss' | 'wave' | 'win' | 'lose' }
   | {
-      t: 'hit' | 'kill' | 'gem' | 'charge' | 'spawn' | 'soldier' | 'chipa' | 'bait' | 'boom'
+      t: 'hit' | 'kill' | 'gem' | 'charge' | 'spawn' | 'soldier' | 'chipa' | 'bait' | 'boom' | 'power'
       x: number
       y: number
       kind?: number
     }
 
 export type GameStatus = 'playing' | 'won' | 'lost'
+/** Por qué terminó una partida perdida: sin vidas, o la Reina se escapó por el tiempo. */
+export type EndReason = '' | 'hp' | 'time'
 
 export interface GameState {
   config: GameConfig
   rng: Rng
   tick: number
+  /** Tick en el que termina el minuto de supervivencia y entra la Reina. */
+  surviveTicks: number
+  /** Tick límite de la partida (con Reina incluye el tiempo para vencerla). */
   totalTicks: number
   status: GameStatus
+  endReason: EndReason
+  /** Tick en el que cayó la Reina (-1 si todavía no). */
+  queenKillTick: number
   player: {
     x: number
     y: number
@@ -199,10 +210,10 @@ export interface GameState {
   soldiers: Soldier[]
   chipas: Chipa[]
   bait: Bait
-  soldierCd: number
-  rainCd: number
   rainLeft: number
-  baitCd: number
+  /** Burbujas de poder listas para soltar y ticks que faltan para la próxima de cada una. */
+  charges: Record<PowerId, number>
+  chargeCd: Record<PowerId, number>
   /** Eventos del último paso (sonidos, partículas). Se vacía en cada `step`. */
   events: GameEvent[]
   grid: Int32Array
@@ -231,8 +242,13 @@ function makeEnemySlot(): Enemy {
   }
 }
 
-export function totalTicksOf(config: GameConfig): number {
+export function surviveTicksOf(config: GameConfig): number {
   return Math.round(config.durationSeconds * TICKS_PER_SECOND)
+}
+
+export function totalTicksOf(config: GameConfig): number {
+  const boss = config.boss ? config.bossSeconds : 0
+  return Math.round((config.durationSeconds + boss) * TICKS_PER_SECOND)
 }
 
 export function createGame(config: GameConfig, seed: number): GameState {
@@ -242,8 +258,11 @@ export function createGame(config: GameConfig, seed: number): GameState {
     config,
     rng: createRng(seed),
     tick: 0,
+    surviveTicks: surviveTicksOf(config),
     totalTicks: totalTicksOf(config),
     status: 'playing',
+    endReason: '',
+    queenKillTick: -1,
     player: {
       x: ARENA_W / 2,
       y: ARENA_H * 0.62,
@@ -302,10 +321,10 @@ export function createGame(config: GameConfig, seed: number): GameState {
     })),
     chipas: Array.from({ length: MAX_CHIPAS }, () => ({ alive: false, x: 0, y: 0, t: 0 })),
     bait: { alive: false, x: 0, y: 0, life: 0 },
-    soldierCd: 60,
-    rainCd: 90,
     rainLeft: 0,
-    baitCd: 120,
+    charges: { soldiers: 0, chipas: 0, bait: 0 },
+    // La primera burbuja de cada poder llega rápido; las siguientes, con su enfriamiento.
+    chargeCd: { soldiers: 60, chipas: 90, bait: 120 },
     events: [],
     grid: new Int32Array(GRID_COLS * GRID_ROWS),
     gridNext: new Int32Array(MAX_ENEMIES),
@@ -399,8 +418,17 @@ function pickKind(state: GameState, seconds: number): EnemyKind {
 }
 
 function runDirector(state: GameState) {
+  // Pasado el minuto no entran más hormigas (salvo las que parió la Reina): solo queda vencerla.
+  if (state.tick >= state.surviveTicks) {
+    if (state.config.boss && !state.bossSpawned) {
+      state.bossSpawned = true
+      spawnEnemy(state, QUEEN, ARENA_W / 2, -30)
+      state.events.push({ t: 'boss' })
+    }
+    return
+  }
   const seconds = state.tick / TICKS_PER_SECOND
-  state.spawnBudget += ((1.0 + 0.055 * seconds) * state.config.spawnMul) / TICKS_PER_SECOND
+  state.spawnBudget += ((0.9 + 0.03 * seconds) * state.config.spawnMul) / TICKS_PER_SECOND
 
   while (state.spawnBudget >= 1) {
     state.spawnBudget -= 1
@@ -419,16 +447,6 @@ function runDirector(state: GameState) {
         spawnEnemy(state, ANT, x, y)
       }
     }
-  }
-
-  if (
-    state.config.boss &&
-    !state.bossSpawned &&
-    state.tick >= Math.round(state.totalTicks * BOSS_AT)
-  ) {
-    state.bossSpawned = true
-    spawnEnemy(state, QUEEN, ARENA_W / 2, -30)
-    state.events.push({ t: 'boss' })
   }
 }
 
@@ -588,6 +606,7 @@ function damageEnemy(state: GameState, e: Enemy, amount: number, fromX: number, 
   if (e.hp <= 0) {
     e.alive = false
     state.kills++
+    if (e.kind === QUEEN) state.queenKillTick = state.tick
     dropGems(state, e)
     state.events.push({ t: 'kill', x: e.x, y: e.y, kind: e.kind })
   } else {
@@ -803,29 +822,28 @@ function nearestEnemy(state: GameState, x: number, y: number, range: number): En
   return best
 }
 
+function spawnSoldiers(state: GameState) {
+  const level = state.upgrades.soldiers
+  const p = state.player
+  const count = Math.min(level + 1, MAX_SOLDIERS)
+  for (let i = 0; i < count; i++) {
+    const soldier = state.soldiers.find((q) => !q.alive)
+    if (!soldier) break
+    const slot = SOLDIER_SLOTS[i] ?? SOLDIER_SLOTS[0]!
+    soldier.alive = true
+    soldier.x = soldier.px = p.x + slot[0]
+    soldier.y = soldier.py = p.y + slot[1] - 24
+    soldier.life = SOLDIER_LIFE
+    soldier.cd = 8 + i * 5
+    soldier.slot = i
+    state.events.push({ t: 'soldier', x: soldier.x, y: soldier.y })
+  }
+}
+
 /** Soldados miga: durante 5 segundos acompañan al jugador y tiran condimentos al enemigo más cercano. */
 function runSoldiers(state: GameState) {
   const level = state.upgrades.soldiers
   const p = state.player
-  if (level > 0) {
-    state.soldierCd--
-    if (state.soldierCd <= 0) {
-      state.soldierCd = SOLDIER_COOLDOWN[Math.min(level, 3)] ?? 660
-      const count = Math.min(level + 1, MAX_SOLDIERS)
-      for (let i = 0; i < count; i++) {
-        const soldier = state.soldiers.find((q) => !q.alive)
-        if (!soldier) break
-        const slot = SOLDIER_SLOTS[i] ?? SOLDIER_SLOTS[0]!
-        soldier.alive = true
-        soldier.x = soldier.px = p.x + slot[0]
-        soldier.y = soldier.py = p.y + slot[1] - 24
-        soldier.life = SOLDIER_LIFE
-        soldier.cd = 8 + i * 5
-        soldier.slot = i
-        state.events.push({ t: 'soldier', x: soldier.x, y: soldier.y })
-      }
-    }
-  }
   for (const soldier of state.soldiers) {
     if (!soldier.alive) continue
     soldier.px = soldier.x
@@ -879,24 +897,16 @@ function hurtArea(state: GameState, x: number, y: number, radius: number, amount
 function runChipas(state: GameState) {
   const level = state.upgrades.chipas
   const p = state.player
-  if (level > 0) {
-    if (state.rainLeft > 0) {
-      state.rainLeft--
-      if (state.rainLeft % CHIPA_EVERY === 0) {
-        const chipa = state.chipas.find((c) => !c.alive)
-        if (chipa) {
-          chipa.alive = true
-          chipa.x = Math.min(ARENA_W - 10, Math.max(10, p.x + (nextFloat(state.rng) - 0.5) * 300))
-          chipa.y = Math.min(ARENA_H - 10, Math.max(10, p.y + (nextFloat(state.rng) - 0.5) * 300))
-          chipa.t = CHIPA_FALL
-          state.events.push({ t: 'chipa', x: chipa.x, y: chipa.y })
-        }
-      }
-    } else {
-      state.rainCd--
-      if (state.rainCd <= 0) {
-        state.rainCd = CHIPA_COOLDOWN[Math.min(level, 3)] ?? 480
-        state.rainLeft = CHIPA_RAIN_TICKS
+  if (state.rainLeft > 0) {
+    state.rainLeft--
+    if (state.rainLeft % CHIPA_EVERY === 0) {
+      const chipa = state.chipas.find((c) => !c.alive)
+      if (chipa) {
+        chipa.alive = true
+        chipa.x = Math.min(ARENA_W - 10, Math.max(10, p.x + (nextFloat(state.rng) - 0.5) * 300))
+        chipa.y = Math.min(ARENA_H - 10, Math.max(10, p.y + (nextFloat(state.rng) - 0.5) * 300))
+        chipa.t = CHIPA_FALL
+        state.events.push({ t: 'chipa', x: chipa.x, y: chipa.y })
       }
     }
   }
@@ -910,22 +920,20 @@ function runChipas(state: GameState) {
   }
 }
 
+function dropBait(state: GameState) {
+  const p = state.player
+  const bait = state.bait
+  bait.alive = true
+  bait.x = Math.min(ARENA_W - 20, Math.max(20, p.x + p.faceX * 70))
+  bait.y = Math.min(ARENA_H - 20, Math.max(20, p.y + p.faceY * 70))
+  bait.life = BAIT_LIFE
+  state.events.push({ t: 'bait', x: bait.x, y: bait.y })
+}
+
 /** Medialuna de cebo: atrae a los bichos y, al terminar, explota con daño en área. */
 function runBait(state: GameState) {
   const level = state.upgrades.bait
-  const p = state.player
   const bait = state.bait
-  if (level > 0 && !bait.alive) {
-    state.baitCd--
-    if (state.baitCd <= 0) {
-      state.baitCd = BAIT_COOLDOWN[Math.min(level, 3)] ?? 600
-      bait.alive = true
-      bait.x = Math.min(ARENA_W - 20, Math.max(20, p.x + p.faceX * 70))
-      bait.y = Math.min(ARENA_H - 20, Math.max(20, p.y + p.faceY * 70))
-      bait.life = BAIT_LIFE
-      state.events.push({ t: 'bait', x: bait.x, y: bait.y })
-    }
-  }
   if (!bait.alive) return
   bait.life--
   if (bait.life > 0) return
@@ -934,14 +942,50 @@ function runBait(state: GameState) {
   state.events.push({ t: 'boom', x: bait.x, y: bait.y, kind: 2 })
 }
 
+const POWER_COOLDOWNS: Record<PowerId, readonly number[]> = {
+  soldiers: SOLDIER_COOLDOWN,
+  chipas: CHIPA_COOLDOWN,
+  bait: BAIT_COOLDOWN,
+}
+
+/** Con el tiempo cada poder junta una burbuja nueva (hasta MAX_CHARGES) y queda esperando. */
+function chargePowers(state: GameState) {
+  for (let i = 0; i < POWERS.length; i++) {
+    const id = POWERS[i]!
+    const level = state.upgrades[id]
+    if (level <= 0 || state.charges[id] >= MAX_CHARGES) continue
+    state.chargeCd[id]--
+    if (state.chargeCd[id] > 0) continue
+    state.charges[id]++
+    state.chargeCd[id] = POWER_COOLDOWNS[id][Math.min(level, 3)] ?? 600
+    state.events.push({ t: 'power', x: 0, y: 0, kind: i })
+  }
+}
+
+/** Suelta una burbuja de poder. Devuelve false si no hay una lista (o si el cebo ya está puesto). */
+function castPower(state: GameState, index: number): boolean {
+  const id = POWERS[index]
+  if (!id || state.upgrades[id] <= 0 || state.charges[id] <= 0) return false
+  if (id === 'bait' && state.bait.alive) return false
+  state.charges[id]--
+  if (id === 'soldiers') spawnSoldiers(state)
+  else if (id === 'chipas') state.rainLeft = CHIPA_RAIN_TICKS
+  else dropBait(state)
+  return true
+}
+
 // --- API pública --------------------------------------------------------------------------------
 
-/** Avanza un tick con la dirección pedida (0..15, o 16 = quieto). No hace nada en pausa o al terminar. */
-export function step(state: GameState, dir: number): void {
+/**
+ * Avanza un tick con la dirección pedida (0..15, o 16 = quieto). `cast` es el poder que se suelta en este
+ * tick (0..2) o -1. No hace nada en pausa o al terminar.
+ */
+export function step(state: GameState, dir: number, cast = -1): void {
   if (state.status !== 'playing' || state.pending) return
   state.events.length = 0
   state.tick++
 
+  if (cast >= 0) castPower(state, cast)
   movePlayer(state, dir)
   runDirector(state)
   moveEnemies(state)
@@ -951,6 +995,7 @@ export function step(state: GameState, dir: number): void {
   fireWeapon(state)
   moveProjectiles(state)
   runOrbiters(state)
+  chargePowers(state)
   runSoldiers(state)
   runChipas(state)
   runBait(state)
@@ -962,11 +1007,32 @@ export function step(state: GameState, dir: number): void {
   for (const q of state.projectiles) if (!q.alive) q.lastHit = -1
   if (p.hp <= 0) {
     state.status = 'lost'
+    state.endReason = 'hp'
     state.events.push({ t: 'lose' })
-  } else if (state.tick >= state.totalTicks) {
+  } else if (state.queenKillTick >= 0) {
     state.status = 'won'
     state.events.push({ t: 'win' })
+  } else if (!state.config.boss && state.tick >= state.surviveTicks) {
+    // Sin Reina (partidas cortas de prueba) alcanza con aguantar el tiempo.
+    state.status = 'won'
+    state.events.push({ t: 'win' })
+  } else if (state.tick >= state.totalTicks) {
+    // La Reina se escapó: se acabó el tiempo para vencerla.
+    state.status = 'lost'
+    state.endReason = 'time'
+    state.events.push({ t: 'lose' })
   }
+}
+
+/**
+ * Puntaje de la partida: 10 por hormiga que cayó, más (si ganó) 1000 por vencer a la Reina, 20 por cada
+ * segundo que sobró del tiempo para vencerla —cuanto más rápido, más puntos— y 100 por cada vida que quedó.
+ */
+export function scoreOf(state: GameState): number {
+  const kills = state.kills * 10
+  if (state.status !== 'won' || !state.config.boss) return kills
+  const bossLeft = Math.max(0, state.totalTicks - state.queenKillTick)
+  return kills + 1000 + Math.floor(bossLeft / 3) + Math.max(0, state.player.hp) * 100
 }
 
 /** Elige una de las mejoras ofrecidas. Devuelve false si no había nada pendiente o el índice no existe. */
@@ -1002,5 +1068,6 @@ export function checksum(state: GameState): number {
   for (const q of state.soldiers) if (q.alive) (mix(q.x), mix(q.y), mix(q.life))
   for (const c of state.chipas) if (c.alive) (mix(c.x), mix(c.y))
   if (state.bait.alive) (mix(state.bait.x), mix(state.bait.y))
+  for (const id of POWERS) mix(state.charges[id])
   return h >>> 0
 }

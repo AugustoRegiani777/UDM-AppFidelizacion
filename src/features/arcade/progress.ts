@@ -167,3 +167,33 @@ export function unlockedSokoban(stars: readonly number[] = sokobanStars()): numb
   while (level < SOKOBAN_LEVELS && (stars[level - 1] ?? 0) >= 1) level++
   return level
 }
+
+const SURVIVORS_BEST_KEY = 'arcade_survivors_best'
+
+/** Mejor puntaje por nivel de Sobreviví a las migas (índice 0 = nivel 1). */
+export function survivorsBest(): number[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SURVIVORS_BEST_KEY) ?? '[]')
+    return Array.from({ length: STAGE_COUNT }, (_, i) => {
+      const value = Array.isArray(raw) ? Number(raw[i]) : 0
+      return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0
+    })
+  } catch {
+    return Array.from({ length: STAGE_COUNT }, () => 0)
+  }
+}
+
+/** Guarda el puntaje si supera al mejor del nivel. Devuelve true si es un récord nuevo. */
+export function saveSurvivorsBest(stage: number, score: number): boolean {
+  const all = survivorsBest()
+  const index = clampStage(stage) - 1
+  const value = Math.floor(score)
+  if (!(value > (all[index] ?? 0))) return false
+  all[index] = value
+  try {
+    localStorage.setItem(SURVIVORS_BEST_KEY, JSON.stringify(all))
+  } catch {
+    // sin almacenamiento: el récord no se guarda
+  }
+  return true
+}

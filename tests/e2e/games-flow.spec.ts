@@ -19,7 +19,7 @@ test('raspadita y ruleta: el servidor decide, se juega una vez y se explican las
   await signUpAndAccept(page)
 
   // Raspadita ganada con la compra: se raspa con el dedo (arrastre sobre el canvas).
-  await expect(page.getByText('¡Sumaste 30 puntos!')).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText('¡Sumaste 300 puntos!')).toBeVisible({ timeout: 20_000 })
   await page.getByRole('link', { name: '¡Raspá tu premio!' }).click()
   const canvas = page.getByTestId('scratch-canvas')
   await expect(canvas).toBeVisible()

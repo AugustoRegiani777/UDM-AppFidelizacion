@@ -4,12 +4,22 @@
 import {
   ARENA_H,
   ARENA_W,
+  POWERS,
+  QUEEN,
   TICKS_PER_SECOND,
   type GameConfig,
   type UpgradeId,
 } from '@engine/config.ts'
 import { InputRecorder } from '@engine/replay.ts'
-import { createGame, pick, step, xpNeeded, type GameEvent, type GameState } from '@engine/sim.ts'
+import {
+  createGame,
+  pick,
+  scoreOf,
+  step,
+  xpNeeded,
+  type GameEvent,
+  type GameState,
+} from '@engine/sim.ts'
 import { copy } from '@/copy'
 import { vibrate } from '@/motion/feedback'
 import { sfx, unlockAudio } from './audio.ts'
@@ -36,14 +46,23 @@ const FRAME_SAMPLES = 90
 
 export type { GameOutcome, GameSession }
 
+const clock = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
+
 export function hudOf(state: GameState): HudData {
+  const boss = state.config.boss && state.tick >= state.surviveTicks
+  const target = boss ? state.totalTicks : state.surviveTicks
+  const queen = state.enemies.find((e) => e.alive && e.kind === QUEEN)
   return {
     hp: Math.max(0, state.player.hp),
     maxHp: state.player.maxHp,
-    secondsLeft: Math.max(0, Math.ceil((state.totalTicks - state.tick) / TICKS_PER_SECOND)),
-    totalSeconds: state.config.durationSeconds,
+    phase: boss ? 'boss' : 'survive',
+    secondsLeft: Math.max(0, Math.ceil((target - state.tick) / TICKS_PER_SECOND)),
+    totalSeconds: boss ? state.config.bossSeconds : state.config.durationSeconds,
+    queenRatio: queen ? Math.max(0, queen.hp / queen.maxHp) : null,
     level: state.level,
     xpRatio: state.xp / xpNeeded(state.level),
+    powers: POWERS.map((id) => ({ level: state.upgrades[id], charges: state.charges[id] })),
   }
 }
 
@@ -86,6 +105,10 @@ function react(events: readonly GameEvent[]) {
       case 'bait':
         sfx.bait()
         break
+      case 'power':
+        sfx.power()
+        vibrate(10)
+        break
       case 'boom':
         sfx.boom()
         vibrate(15)
@@ -111,6 +134,12 @@ export class GameController {
   private endTimer = 0
   private readonly resizeObserver: ResizeObserver
   private readonly onVisibility = () => document.hidden && this.pause()
+  /** Poderes que el jugador pidió soltar; se aplican de a uno por paso de simulación. */
+  private readonly castQueue: number[] = []
+  private readonly onKey = (e: KeyboardEvent) => {
+    const index = ['1', '2', '3'].indexOf(e.key)
+    if (index !== -1) this.cast(index)
+  }
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -136,6 +165,7 @@ export class GameController {
     })
     this.resizeObserver.observe(container)
     document.addEventListener('visibilitychange', this.onVisibility)
+    window.addEventListener('keydown', this.onKey)
     callbacks.onHud(hudOf(this.state))
   }
 
@@ -175,6 +205,15 @@ export class GameController {
     this.setPhase('paused')
   }
 
+  /** Pide soltar una burbuja de poder (0 = soldados, 1 = chipás, 2 = cebo). Sin burbuja lista no hace nada. */
+  cast(index: number) {
+    if (this.phase !== 'playing') return
+    const id = POWERS[index]
+    if (!id || this.state.upgrades[id] <= 0 || this.state.charges[id] <= 0) return
+    if (this.castQueue.includes(index)) return
+    this.castQueue.push(index)
+  }
+
   /** Aplica la mejora elegida y sigue jugando. */
   choose(index: number) {
     if (!this.state.pending) return
@@ -212,13 +251,19 @@ export class GameController {
     while (this.accumulator >= STEP_MS) {
       const dir = this.input.direction()
       this.recorder.move(state.tick, dir)
-      step(state, dir)
+      const cast = this.castQueue.shift() ?? -1
+      if (cast >= 0) this.recorder.cast(state.tick, cast)
+      step(state, dir, cast)
       this.renderer.ingest(state.events, state)
       react(state.events)
       if (state.events.some((e) => e.t === 'boss')) this.showBanner('boss')
       else if (state.events.some((e) => e.t === 'wave')) this.showBanner('wave')
       this.accumulator -= STEP_MS
       if (state.pending || state.status !== 'playing') break
+    }
+    // Una burbuja nueva o gastada se ve enseguida, sin esperar al refresco normal del HUD.
+    if (state.events.some((e) => e.t === 'power' || e.t === 'soldier' || e.t === 'chipa' || e.t === 'bait')) {
+      this.callbacks.onHud(hudOf(state))
     }
 
     this.renderer.render(state, Math.min(this.accumulator / STEP_MS, 1), this.input.view(), now)
@@ -248,15 +293,25 @@ export class GameController {
     } else {
       sfx.lose()
     }
+    const score = scoreOf(state)
+    const seconds = Math.floor(state.tick / TICKS_PER_SECOND)
+    const queen = state.enemies.find((e) => e.kind === QUEEN && e.alive)
+    const queenLife = queen ? Math.round((Math.max(0, queen.hp) / queen.maxHp) * 100) : 100
+    const lostText = state.bossSpawned
+      ? copy.chest.lostBodyQueen(queenLife)
+      : copy.chest.lostBody(seconds, state.config.durationSeconds)
+    const queenTime = clock(Math.max(0, (state.queenKillTick - state.surviveTicks) / TICKS_PER_SECOND))
+    const statsText = won
+      ? copy.chest.statsWon(state.kills, state.level, score, queenTime)
+      : copy.chest.stats(state.kills, state.level, score)
     this.endTimer = window.setTimeout(() => {
       this.callbacks.onEnd({
         won,
         log: this.recorder.log,
-        lostText: copy.chest.lostBody(
-          Math.floor(state.tick / TICKS_PER_SECOND),
-          state.config.durationSeconds,
-        ),
-        statsText: copy.chest.stats(state.kills, state.level),
+        lostText,
+        statsText,
+        score,
+        reason: state.endReason === 'time' ? 'time' : 'hp',
       })
     }, END_DELAY_MS)
   }
@@ -267,6 +322,7 @@ export class GameController {
     window.clearTimeout(this.endTimer)
     this.resizeObserver.disconnect()
     document.removeEventListener('visibilitychange', this.onVisibility)
+    window.removeEventListener('keydown', this.onKey)
     this.input.dispose()
   }
 }

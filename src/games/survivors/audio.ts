@@ -25,6 +25,8 @@ export const sfx = {
   chipa: () =>
     play('chipa', 80, [{ from: 520, to: 180, duration: 0.14, type: 'triangle', volume: 0.07 }]),
   bait: () => play('bait', 300, arpeggio([659, 784], 0.08)),
+  power: () =>
+    play('power', 150, [{ from: 520, to: 1040, duration: 0.12, type: 'sine', volume: 0.07 }]),
   boom: () =>
     play('boom', 120, [
       { from: 150, to: 40, duration: 0.3, type: 'sawtooth', volume: 0.11 },

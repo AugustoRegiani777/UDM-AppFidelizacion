@@ -272,7 +272,7 @@ export const es = {
     reasons: { tricks: '', fold: 'Se fue al mazo.', noquiero: 'No quiso el truco.' },
     reasonsMine: { tricks: '', fold: 'Te fuiste al mazo.', noquiero: 'No quisiste el truco.' },
     matchWon: '¡Ganaste la partida!',
-    matchLost: 'Perdiste esta partida',
+    matchLost: 'Esta vez ganaron ellos. ¡Revancha!',
     coinsEarned: (n: number) => `+${n} ${n === 1 ? 'moneda' : 'monedas'}`,
     mateSip: 'Tomar mate',
     mateRefill: 'Cebar',
@@ -374,6 +374,9 @@ export const es = {
     backToLevels: 'Elegir nivel',
     wonTitle: (name: string) => `¡Pasaste ${name}!`,
     lostTitle: 'Casi. ¡Probá de nuevo!',
+    bestScore: (n: number) => `Mejor: ${n} puntos`,
+    scoreLine: (n: number) => `${n} puntos`,
+    newBest: '¡Nuevo récord!',
     allDone: 'Pasaste todos los niveles. ¡Sos una leyenda de la miga!',
     practiceNotice: 'Práctica: este nivel no da puntos ni premios.',
   },
@@ -412,13 +415,17 @@ export const es = {
     loading: 'Preparando el cofre…',
     verifying: 'Chequeando tu partida…',
     opened: '¡Cofre abierto!',
-    openedBody: 'Sobreviviste y te ganaste tu premio.',
+    openedBody: 'Venciste a la Reina y te ganaste tu premio.',
     seeCode: 'Ver mi código',
     lostTitle: '¡Casi!',
     lostBody: (seconds: number, total: number) =>
       `Aguantaste ${seconds} de ${total} segundos. Probá de nuevo: cada partida es distinta.`,
-    stats: (kills: number, level: number) =>
-      `${kills} hormigas y bichos derrotados · Nivel ${level}`,
+    lostBodyQueen: (lifePercent: number) =>
+      `Llegaste hasta la Reina y le dejaste el ${lifePercent} % de vida. ¡Estás a un paso! Los poderes en burbuja ayudan.`,
+    stats: (kills: number, level: number, score: number) =>
+      `${kills} hormigas y bichos derrotados · Nivel ${level} · ${score} puntos`,
+    statsWon: (kills: number, level: number, score: number, queenTime: string) =>
+      `La Reina cayó en ${queenTime} · ${kills} bichos derrotados · Nivel ${level} · ${score} puntos`,
     retry: 'Intentar de nuevo',
     errorTitle: 'Uy, algo falló',
     errorBody: 'No pudimos chequear tu partida. Tu progreso no se pierde: probá de nuevo.',
@@ -427,12 +434,16 @@ export const es = {
   },
   survivors: {
     title: 'Sobreviví a las migas',
-    goal: (seconds: number) => `Sobreviví ${seconds} segundos`,
+    goal: (seconds: number, queen: boolean) =>
+      queen
+        ? `Aguantá ${seconds} segundos y vencé a la Reina`
+        : `Sobreviví ${seconds} segundos`,
     howTo: [
       { icon: '👆', text: 'Arrastrá el dedo para moverte' },
       { icon: '🥪', text: 'Tu sanguche tira migas solo al bicho más cercano' },
       { icon: '✨', text: 'Juntá gemas, subí de nivel y elegí mejoras' },
-      { icon: '👑', text: 'Cuidado: a mitad de camino llega la Reina' },
+      { icon: '🫧', text: 'Los poderes se juntan en burbujas: tocalas para soltarlos cuando quieras' },
+      { icon: '👑', text: 'Después del minuto llega la Reina: cuanto más rápido la vencés, más puntos' },
     ],
     play: '¡Jugar!',
     exit: 'Salir',
@@ -441,14 +452,20 @@ export const es = {
     pause: 'Pausar',
     lives: (n: number) => `${n} ${n === 1 ? 'vida' : 'vidas'}`,
     timeLeft: 'Tiempo que falta',
+    queenIn: 'Reina en',
+    queenFight: 'Vencé a la Reina',
+    queenLife: 'Vida de la Reina',
+    powerBubble: (name: string, ready: number) =>
+      ready > 0 ? `Soltar ${name} (${ready} listo${ready === 1 ? '' : 's'})` : `${name}: cargando`,
     level: (n: number) => `Nv. ${n}`,
     bossBanner: '¡Llega la Reina!',
     waveBanner: '¡Oleada!',
     levelUpTitle: (n: number) => `¡Nivel ${n}!`,
     levelUpHint: 'Elegí una mejora',
     upgradeLevel: (n: number, max: number) => `Nivel ${n} de ${max}`,
-    survived: '¡Sobreviviste!',
-    caught: 'Te alcanzaron',
+    endWon: '¡La Reina cayó!',
+    endLostHp: '¡Las hormigas se llevaron las migas!',
+    endLostTime: '¡La Reina se escapó con las migas!',
     relaxedNotice: 'Modo relajado: los bichos son más lentos. Mismas reglas, más aire.',
     upgrades: {
       fireRate: { icon: '⚡', name: 'Miga rápida', description: 'Tirás migas más seguido.' },
@@ -638,7 +655,7 @@ export const es = {
     rotateTitle: 'Girá el celular',
     rotateBody: 'El skate se juega en horizontal, con los dos pulgares.',
     survived: '¡Llegaste a la meta!',
-    caught: 'Te caíste de la tabla',
+    caught: '¡Casi! La tabla se te escapó',
     checkpointBanner: '¡Punto de control!',
     bailBanner: '¡Cayó!',
     finishBanner: '¡Meta!',

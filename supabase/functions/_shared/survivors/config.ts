@@ -7,19 +7,23 @@ export const ARENA_W = 360
 export const ARENA_H = 640
 
 export interface GameConfig {
+  /** Segundos de supervivencia: el minuto en el que entran las hormigas. Después viene la Reina. */
   durationSeconds: number
+  /** Tiempo máximo para vencer a la Reina una vez que aparece. */
+  bossSeconds: number
   playerHp: number
   enemySpeedMul: number
   enemyHpMul: number
   spawnMul: number
-  /** La Reina hormiga aparece al 60 % de la partida. */
+  /** Hay Reina: aparece al terminar el minuto y la partida se gana matándola. */
   boss: boolean
   /** Nivel del juego (1..STAGE_COUNT): más duro y con enemigos nuevos antes. */
   stage: number
 }
 
 export const NORMAL_CONFIG: GameConfig = {
-  durationSeconds: 50,
+  durationSeconds: 60,
+  bossSeconds: 90,
   playerHp: 5,
   enemySpeedMul: 1,
   enemyHpMul: 1,
@@ -30,14 +34,14 @@ export const NORMAL_CONFIG: GameConfig = {
 
 export const STAGE_COUNT = 6
 
-/** Ajustes por nivel sobre la configuración base. El nivel 1 es el juego original. */
+/** Ajustes por nivel sobre la configuración base. Todos duran un minuto; lo que sube es la presión. */
 export const STAGES: readonly Partial<GameConfig>[] = [
   {},
-  { durationSeconds: 52, spawnMul: 1.04, enemySpeedMul: 1.01 },
-  { durationSeconds: 54, spawnMul: 1.08, enemySpeedMul: 1.03, enemyHpMul: 1.04 },
-  { durationSeconds: 56, spawnMul: 1.12, enemySpeedMul: 1.05, enemyHpMul: 1.08 },
-  { durationSeconds: 58, spawnMul: 1.17, enemySpeedMul: 1.07, enemyHpMul: 1.12 },
-  { durationSeconds: 60, spawnMul: 1.22, enemySpeedMul: 1.09, enemyHpMul: 1.18 },
+  { spawnMul: 1.04, enemySpeedMul: 1.01 },
+  { spawnMul: 1.08, enemySpeedMul: 1.03, enemyHpMul: 1.04 },
+  { spawnMul: 1.12, enemySpeedMul: 1.05, enemyHpMul: 1.08 },
+  { spawnMul: 1.17, enemySpeedMul: 1.07, enemyHpMul: 1.12 },
+  { spawnMul: 1.22, enemySpeedMul: 1.09, enemyHpMul: 1.18 },
 ]
 
 export function clampStage(stage: number): number {
@@ -59,7 +63,6 @@ export function resolveConfig(overrides: Partial<GameConfig> = {}, relaxed = fal
   const staged = STAGES[stage - 1] ?? {}
   // El modo relajado suaviza el nivel (mismas multiplicaciones sobre su base más mansa).
   const scaled: Partial<GameConfig> = {
-    durationSeconds: staged.durationSeconds ?? base.durationSeconds,
     spawnMul: base.spawnMul * (staged.spawnMul ?? 1),
     enemySpeedMul: base.enemySpeedMul * (staged.enemySpeedMul ?? 1),
     enemyHpMul: base.enemyHpMul * (staged.enemyHpMul ?? 1),
@@ -121,6 +124,10 @@ export type UpgradeId =
   | 'soldiers'
   | 'chipas'
   | 'bait'
+
+/** Poderes que se cargan solos y se sueltan a mano (índice = orden en la pantalla y en el registro). */
+export type PowerId = 'soldiers' | 'chipas' | 'bait'
+export const POWERS: readonly PowerId[] = ['soldiers', 'chipas', 'bait']
 
 export interface UpgradeDef {
   id: UpgradeId

@@ -7,6 +7,10 @@ export interface GameOutcome {
   lostText: string
   /** Resumen corto de la partida. */
   statsText: string
+  /** Puntaje de la partida (más puntos = mejor). */
+  score?: number
+  /** Por qué se perdió: sin vidas o por tiempo. */
+  reason?: 'hp' | 'time'
 }
 
 export interface GameSession<Config> {

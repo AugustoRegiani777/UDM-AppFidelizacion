@@ -14,14 +14,14 @@ test.afterAll(() => resetChestConfig())
 test('cofre con skate: se juega en horizontal y al llegar a la meta sale el código', async ({
   page,
 }) => {
-  const sale = await createMockSale({ total_cents: 16000 })
+  const sale = await createMockSale({ total_cents: 4000 })
   await page.goto(`/s/${sale}`)
   await page.getByLabel('Email').fill(`e2e-${crypto.randomUUID()}@test.local`)
   await page.getByLabel('Contraseña').fill('secret-123456')
   await page.getByRole('button', { name: 'Entrar con email' }).click()
   await page.getByRole('checkbox', { name: /reglas del programa/i }).check()
   await page.getByRole('button', { name: 'Empezar a sumar' }).click()
-  await expect(page.getByText('¡Sumaste 160 puntos!')).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText('¡Sumaste 400 puntos!')).toBeVisible({ timeout: 20_000 })
 
   const popup = page.getByRole('dialog')
   await expect(popup.getByText(/un café va por la casa/i)).toBeVisible({ timeout: 10_000 })

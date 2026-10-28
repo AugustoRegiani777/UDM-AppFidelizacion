@@ -1,7 +1,7 @@
 // Registro de los juegos del cofre: cada uno sabe armar su configuración, validar el registro de
 // entradas que manda el cliente y reproducir la partida para decidir si se ganó.
 
-import { resolveConfig, type GameConfig } from './survivors/config.ts'
+import { TICKS_PER_SECOND, resolveConfig, type GameConfig } from './survivors/config.ts'
 import { isValidLog, replay } from './survivors/replay.ts'
 import { MAX_SPEED, resolveSkateConfig, type SkateConfig } from './skate/config.ts'
 import { isValidSkateLog, replaySkate } from './skate/replay.ts'
@@ -64,7 +64,8 @@ export function replayGame(
   const result = replay(config, seed, log as Parameters<typeof replay>[2])
   return {
     won: result.valid && result.status === 'won',
-    minSeconds: config.durationSeconds * MIN_TIME_RATIO,
+    // Ganar lleva tanto como la partida reproducida (el minuto de hormigas y la pelea con la Reina).
+    minSeconds: (result.ticks / TICKS_PER_SECOND) * MIN_TIME_RATIO,
     summary: {
       valid: result.valid,
       status: result.status,
@@ -72,6 +73,8 @@ export function replayGame(
       kills: result.kills,
       level: result.level,
       hp: result.hp,
+      score: result.score,
+      end_reason: result.endReason,
     },
   }
 }

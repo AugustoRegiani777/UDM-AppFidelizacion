@@ -28,7 +28,7 @@ test('escanear el QR sin sesión: login, bienvenida y compra sumada sin perder e
   await acceptWelcome(page)
 
   await expect(page).toHaveURL(new RegExp(`/s/${sale}`))
-  await expect(page.getByText('¡Sumaste 62 puntos!')).toBeVisible()
+  await expect(page.getByText('¡Sumaste 620 puntos!')).toBeVisible()
 
   await page.reload()
   await expect(page.getByText('Esta compra ya estaba sumada')).toBeVisible()
@@ -55,7 +55,7 @@ test('una venta que el POS todavía no conoce queda pendiente y se acredita sola
 
   await expect(page.getByText('Tu compra todavía no llegó')).toBeVisible()
   // La pantalla vuelve a consultar sola cada 10 s y celebra cuando aparece.
-  await expect(page.getByText('¡Sumaste 20 puntos!')).toBeVisible({ timeout: 25_000 })
+  await expect(page.getByText('¡Sumaste 200 puntos!')).toBeVisible({ timeout: 25_000 })
 })
 
 test('la portada funciona como punto de entrada (QR fijo / NFC)', async ({ page }) => {

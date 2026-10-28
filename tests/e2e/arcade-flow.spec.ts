@@ -25,7 +25,7 @@ test('Miga Racers: cuenta regresiva, la carrera arranca y se puede pausar', asyn
   await signUp(page)
   await page.goto('/juegos')
   await page.getByRole('button', { name: /Miga Racers/ }).click()
-  await expect(page.getByText('Terminá 1º o 2º en la pista anterior para abrirla')).toHaveCount(2)
+  await expect(page.getByText('Terminá 1º o 2º en la pista anterior para abrirla')).toHaveCount(4)
   await page.getByRole('button', { name: /Pista 1/ }).click()
 
   const ready = page.getByRole('dialog', { name: 'Miga Racers' })

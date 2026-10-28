@@ -39,10 +39,10 @@ test('el escáner interno lee el QR de la caja y suma la compra', async ({ page 
   await page.getByRole('button', { name: 'Activar cámara' }).click()
 
   await expect(page).toHaveURL(new RegExp(`/s/${SALE_UUID}`), { timeout: 20_000 })
-  await expect(page.getByText('¡Sumaste 62 puntos!')).toBeVisible()
+  await expect(page.getByText('¡Sumaste 620 puntos!')).toBeVisible()
 
   await page.getByRole('link', { name: 'Ir a mi panel' }).click()
-  await expect(page.getByText('Te faltan 88 puntos')).toBeVisible()
+  await expect(page.getByText('Te faltan 180 puntos').first()).toBeVisible()
   await expect(page.getByText('+62').first()).toBeVisible()
 
   await page.getByRole('link', { name: 'Ver todo el historial' }).click()

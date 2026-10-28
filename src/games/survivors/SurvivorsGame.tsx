@@ -32,6 +32,7 @@ export function SurvivorsGame({ session, stageLabel, onEnd, onExit }: SurvivorsG
   const [levelUp, setLevelUp] = useState<LevelUpState | null>(null)
   const [banner, setBanner] = useState<'boss' | 'wave' | null>(null)
   const [won, setWon] = useState(false)
+  const [reason, setReason] = useState<'hp' | 'time'>('hp')
 
   useEffect(() => {
     onEndRef.current = onEnd
@@ -45,6 +46,7 @@ export function SurvivorsGame({ session, stageLabel, onEnd, onExit }: SurvivorsG
       onBanner: setBanner,
       onEnd: (outcome) => {
         setWon(outcome.won)
+        setReason(outcome.reason ?? 'hp')
         onEndRef.current(outcome)
       },
     })
@@ -61,10 +63,16 @@ export function SurvivorsGame({ session, stageLabel, onEnd, onExit }: SurvivorsG
       className="bg-ink fixed inset-0 grid touch-none place-items-center overflow-hidden select-none"
     >
       <canvas ref={canvasRef} className="block" role="img" aria-label={copy.survivors.title} />
-      <HudOverlay hud={hud} banner={banner} onPause={() => controllerRef.current?.pause()} />
+      <HudOverlay
+        hud={hud}
+        banner={banner}
+        onPause={() => controllerRef.current?.pause()}
+        onCast={(index) => controllerRef.current?.cast(index)}
+      />
       {phase === 'ready' && (
         <ReadyOverlay
           durationSeconds={session.config.durationSeconds}
+          boss={session.config.boss}
           relaxed={session.relaxed}
           stageLabel={stageLabel}
           onPlay={() => controllerRef.current?.start()}
@@ -82,7 +90,7 @@ export function SurvivorsGame({ session, stageLabel, onEnd, onExit }: SurvivorsG
           onPick={(index) => controllerRef.current?.choose(index)}
         />
       )}
-      {phase === 'ended' && <EndedOverlay won={won} />}
+      {phase === 'ended' && <EndedOverlay won={won} reason={reason} />}
     </div>
   )
 }

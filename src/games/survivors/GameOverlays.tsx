@@ -28,6 +28,8 @@ function Backdrop({ children, label }: { children: React.ReactNode; label: strin
 
 interface ReadyOverlayProps {
   durationSeconds: number
+  /** Hay Reina: el objetivo incluye vencerla. */
+  boss: boolean
   relaxed: boolean
   /** Etiqueta del nivel (solo en la sala de juegos). */
   stageLabel?: string
@@ -37,6 +39,7 @@ interface ReadyOverlayProps {
 
 export function ReadyOverlay({
   durationSeconds,
+  boss,
   relaxed,
   stageLabel,
   onPlay,
@@ -47,7 +50,7 @@ export function ReadyOverlay({
     <Backdrop label={copy.survivors.title}>
       <h2 className="font-display text-5xl leading-none">{copy.survivors.title}</h2>
       {stageLabel && <p className="text-brand-ink text-xl font-bold">{stageLabel}</p>}
-      <p className="text-lg font-semibold">{copy.survivors.goal(durationSeconds)}</p>
+      <p className="text-lg font-semibold">{copy.survivors.goal(durationSeconds, boss)}</p>
       <ul className="text-muted flex flex-col gap-2 text-left">
         {copy.survivors.howTo.map((line) => (
           <li key={line.text} className="flex items-center gap-3">
@@ -92,7 +95,7 @@ export function PauseOverlay({ onResume, onExit }: { onResume: () => void; onExi
   )
 }
 
-export function EndedOverlay({ won }: { won: boolean }) {
+export function EndedOverlay({ won, reason }: { won: boolean; reason: 'hp' | 'time' }) {
   return (
     <motion.div
       className="absolute inset-0 z-20 grid place-items-center bg-ink/55"
@@ -105,7 +108,11 @@ export function EndedOverlay({ won }: { won: boolean }) {
         animate={{ scale: 1, opacity: 1 }}
         transition={spring.bouncy}
       >
-        {won ? copy.survivors.survived : copy.survivors.caught}
+        {won
+          ? copy.survivors.endWon
+          : reason === 'time'
+            ? copy.survivors.endLostTime
+            : copy.survivors.endLostHp}
       </motion.p>
     </motion.div>
   )

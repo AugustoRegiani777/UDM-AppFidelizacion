@@ -13,6 +13,8 @@ import {
   unlockedStage,
   unlockedTrack,
   unlockRacing,
+  saveSurvivorsBest,
+  survivorsBest,
 } from './progress'
 
 describe('avance de la sala de juegos', () => {
@@ -110,5 +112,14 @@ describe('avance de Entregas de Miga', () => {
     expect(unlockedSokoban()).toBe(1)
     localStorage.setItem('arcade_sokoban_stars', '[[[')
     expect(sokobanStars()).toEqual(Array(12).fill(0))
+  })
+
+  it('el mejor puntaje de Sobreviví a las migas se guarda por nivel y solo sube', () => {
+    expect(survivorsBest()).toEqual([0, 0, 0, 0, 0, 0])
+    expect(saveSurvivorsBest(2, 3000)).toBe(true)
+    expect(saveSurvivorsBest(2, 2500)).toBe(false)
+    expect(saveSurvivorsBest(2, 3200)).toBe(true)
+    expect(saveSurvivorsBest(1, 900)).toBe(true)
+    expect(survivorsBest()).toEqual([900, 3200, 0, 0, 0, 0])
   })
 })

@@ -26,7 +26,7 @@ describe('cofre con juego', () => {
   it('el servidor reproduce la partida: un cliente que dice haber ganado sin jugar no recibe código', async () => {
     await setChestOverrides({})
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     const started = await startChest(ana, await rewardId('Un café'))
     expect(started.body).toMatchObject({ already_unlocked: false, relaxed: false })
     expect(started.body.config.durationSeconds).toBeGreaterThan(30)
@@ -41,7 +41,7 @@ describe('cofre con juego', () => {
   it('ganar antes del tiempo real de la partida se rechaza', async () => {
     await setChestOverrides({ ...QUICK_GAME, durationSeconds: 5 })
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     const started = await startChest(ana, await rewardId('Un café'))
     const rushed = await finishChest(ana, started.body.session_id)
     expect(rushed.status).toBe(409)
@@ -51,7 +51,7 @@ describe('cofre con juego', () => {
   it('pasar el juego emite el código y la sesión no se reutiliza', async () => {
     await setChestOverrides(QUICK_GAME)
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     const reward = await rewardId('Un café')
     const started = await startChest(ana, reward)
     await sleep(2000)
@@ -69,7 +69,7 @@ describe('cofre con juego', () => {
   it('después de dos derrotas se ofrece el modo relajado', async () => {
     await setChestOverrides({})
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     const reward = await rewardId('Un café')
     for (let i = 0; i < 2; i++) {
       const started = await startChest(ana, reward)
@@ -84,7 +84,7 @@ describe('cofre con juego', () => {
   it('valida la forma del pedido y que la sesión sea propia', async () => {
     await setChestOverrides({})
     const [ana, beto] = await Promise.all([createCustomer('ana'), createCustomer('beto')])
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     const started = await startChest(ana, await rewardId('Un café'))
 
     const badLog = await callFunction(
@@ -102,7 +102,7 @@ describe('cofre con juego', () => {
 
   it('el cliente no puede saltarse el juego llamando directo a la base', async () => {
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     const reward = await rewardId('Un café')
     for (const fn of ['issue_redemption', 'start_chest', 'finish_chest', 'renew_redemption']) {
       const attempt = await ana.client.rpc(

@@ -122,8 +122,9 @@ export async function validateAsPos(
 }
 
 /** Le da puntos a un cliente de la forma real: reclamando una venta del POS falso. */
-export async function giveSalePoints(customer: Customer, euros: number): Promise<void> {
-  const sale = await createMockSale({ total_cents: euros * 100 })
+/** Le da `points` puntos con una venta (la escala es de 10 puntos por euro, ver docs/06). */
+export async function giveSalePoints(customer: Customer, points: number): Promise<void> {
+  const sale = await createMockSale({ total_cents: points * 10 })
   await claimSale(customer, sale)
 }
 

@@ -34,7 +34,7 @@ describe('juegos', () => {
     expect(first.status).toBe(200)
     const second = await play(ana.token, 'scratch', claimId)
     expect(second.body).toMatchObject({ prize_id: first.body.prize_id, repeat: true })
-    expect(await balanceOf(ana)).toBe(30 + first.body.points)
+    expect(await balanceOf(ana)).toBe(300 + first.body.points)
   })
 
   it('no se puede raspar la compra de otro, una inventada ni un juego que no existe', async () => {

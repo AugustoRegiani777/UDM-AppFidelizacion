@@ -12,7 +12,7 @@ test.beforeAll(() => setChestOverrides(QUICK_GAME))
 test.afterAll(() => resetChestConfig())
 
 test('compra grande: regalo, cofre con juego, código y validación en caja', async ({ page }) => {
-  const sale = await createMockSale({ total_cents: 16000 })
+  const sale = await createMockSale({ total_cents: 4000 })
 
   await page.goto(`/s/${sale}`)
   await page.getByLabel('Email').fill(`e2e-${crypto.randomUUID()}@test.local`)
@@ -21,7 +21,7 @@ test('compra grande: regalo, cofre con juego, código y validación en caja', as
   await page.getByRole('checkbox', { name: /reglas del programa/i }).check()
   await page.getByRole('button', { name: 'Empezar a sumar' }).click()
 
-  await expect(page.getByText('¡Sumaste 160 puntos!')).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText('¡Sumaste 400 puntos!')).toBeVisible({ timeout: 20_000 })
 
   // El popup de premio se abre solo y se puede cerrar con la X.
   const popup = page.getByRole('dialog')
@@ -60,8 +60,8 @@ test('compra grande: regalo, cofre con juego, código y validación en caja', as
   expect(validated.body).toMatchObject({ valid: true })
   await expect(page.getByText(/disfrutá tu un café/i)).toBeVisible({ timeout: 10_000 })
 
-  // Los puntos no se gastan: el saldo sigue en 160 y el próximo café es a los 300.
+  // Los puntos no se gastan: el saldo sigue en 400 y el próximo café es a los 800.
   await page.getByRole('link', { name: 'Volver al panel' }).click()
-  await expect(page.getByText('160').first()).toBeVisible()
-  await expect(page.getByText('Te faltan 140 puntos').first()).toBeVisible()
+  await expect(page.getByText('400').first()).toBeVisible()
+  await expect(page.getByText('Te faltan 400 puntos').first()).toBeVisible()
 })

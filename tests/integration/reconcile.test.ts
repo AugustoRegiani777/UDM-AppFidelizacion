@@ -33,14 +33,14 @@ describe('reconcile', () => {
     await sleep(2500)
     const result = await reconcile()
     expect(result.body.confirmed).toBeGreaterThanOrEqual(1)
-    expect(await balanceOf(ana)).toBe(42)
+    expect(await balanceOf(ana)).toBe(420)
   })
 
   it('descuenta los puntos de una venta que se anuló después', async () => {
     const ana = await createCustomer('ana')
     const sale = await createMockSale({ total_cents: 5000 })
     await claimSale(ana, sale)
-    expect(await balanceOf(ana)).toBe(50)
+    expect(await balanceOf(ana)).toBe(500)
 
     await admin.from('dev_mock_sales').update({ voided: true }).eq('uuid', sale)
     const result = await reconcile()

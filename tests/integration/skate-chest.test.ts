@@ -18,7 +18,7 @@ describe('cofre con skate', { timeout: 60_000 }, () => {
 
   async function customerWithCoffee() {
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     return { ana, reward: await rewardId('Un café') }
   }
 

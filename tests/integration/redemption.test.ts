@@ -18,7 +18,7 @@ describe('canje de premios (caja)', () => {
 
   it('flujo completo: el código sale al pasar el juego, la caja lo valida y los puntos NO se gastan', async () => {
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
 
     const code = await openChest(ana, await rewardId('Un café'))
     expect(code.status).toBe(200)
@@ -31,7 +31,7 @@ describe('canje de premios (caja)', () => {
       valid: true,
       reward: { name: 'Un café', kind: 'points' },
     })
-    expect(await balanceOf(ana)).toBe(160)
+    expect(await balanceOf(ana)).toBe(400)
 
     const again = await validateAsPos(code.body.code)
     expect(again.body).toEqual({ valid: false, reason: 'used' })
@@ -39,7 +39,7 @@ describe('canje de premios (caja)', () => {
 
   it('con dos cajas validando el mismo código a la vez, gana una sola', async () => {
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     const { body } = await openChest(ana, await rewardId('Un café'))
 
     const results = await Promise.all(Array.from({ length: 6 }, () => validateAsPos(body.code)))
@@ -49,7 +49,7 @@ describe('canje de premios (caja)', () => {
 
   it('un código vencido no canjea y se puede renovar sin volver a jugar', async () => {
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     const { body } = await openChest(ana, await rewardId('Un café'))
     await admin
       .from('redemptions')
@@ -83,7 +83,7 @@ describe('canje de premios (caja)', () => {
 
   it('un cliente no puede validar códigos por su cuenta ni ver los de otro', async () => {
     const [ana, beto] = await Promise.all([createCustomer('ana'), createCustomer('beto')])
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     const { body } = await openChest(ana, await rewardId('Un café'))
 
     const asClient = await callFunction(
@@ -100,7 +100,7 @@ describe('canje de premios (caja)', () => {
 
   it('el simulador de caja de desarrollo firma y valida como el POS', async () => {
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 160)
+    await giveSalePoints(ana, 400)
     const { body } = await openChest(ana, await rewardId('Un café'))
     expect((await callFunction('dev-pos-redeem', { code: body.code })).body).toMatchObject({
       valid: true,

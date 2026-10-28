@@ -16,9 +16,9 @@ describe('claim-sale', () => {
 
     const { status, body } = await claimSale(ana, sale)
     expect(status).toBe(200)
-    expect(body).toMatchObject({ status: 'confirmed', points: 162, balance: 162 })
+    expect(body).toMatchObject({ status: 'confirmed', points: 1620, balance: 1620 })
     expect(body.unlocked[0].name).toBe('Un café')
-    expect(await balanceOf(ana)).toBe(162)
+    expect(await balanceOf(ana)).toBe(1620)
   })
 
   it('no suma dos veces la misma venta y no se la deja a otro cliente', async () => {
@@ -28,7 +28,7 @@ describe('claim-sale', () => {
 
     await claimSale(ana, sale)
     const again = await claimSale(ana, sale)
-    expect(again.body).toMatchObject({ status: 'confirmed', repeat: true, balance: 50 })
+    expect(again.body).toMatchObject({ status: 'confirmed', repeat: true, balance: 500 })
 
     const other = await claimSale(beto, sale)
     expect(other.body).toMatchObject({ status: 'rejected', reason: 'already_claimed' })
@@ -59,8 +59,8 @@ describe('claim-sale', () => {
 
     await sleep(2500)
     const later = await claimSale(ana, sale)
-    expect(later.body).toMatchObject({ status: 'confirmed', points: 30 })
-    expect(await balanceOf(ana)).toBe(30)
+    expect(later.body).toMatchObject({ status: 'confirmed', points: 300 })
+    expect(await balanceOf(ana)).toBe(300)
   })
 
   it('con dos clientes escaneando a la vez, la venta es de uno solo', async () => {
@@ -70,7 +70,7 @@ describe('claim-sale', () => {
     const results = await Promise.all([claimSale(ana, sale), claimSale(beto, sale)])
     const statuses = results.map((r) => r.body.status).sort()
     expect(statuses).toEqual(['confirmed', 'rejected'])
-    expect((await balanceOf(ana)) + (await balanceOf(beto))).toBe(40)
+    expect((await balanceOf(ana)) + (await balanceOf(beto))).toBe(400)
   })
 
   it('pide sesión y valida el uuid', async () => {

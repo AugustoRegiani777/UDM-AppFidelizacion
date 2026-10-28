@@ -2,6 +2,13 @@
 begin;
 select plan(12);
 
+-- Escala fija para estos casos (1 punto por euro, café 150, sanguche 300, gorra 1000). La escala real
+-- de la tarjeta (10 puntos por euro) se prueba en 10_economy_scale.test.sql.
+update public.settings set value = '1' where key = 'points_per_euro';
+update public.rewards set threshold = 150 where kind = 'points' and name = 'Un café';
+update public.rewards set threshold = 300 where kind = 'points' and name = 'Un sanguche de miga';
+update public.rewards set threshold = 1000 where kind = 'points' and name = 'Gorra Uno de Miga';
+
 insert into auth.users (id, instance_id, aud, role, email)
 values ('aaaaaaaa-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ana@test.com');
 

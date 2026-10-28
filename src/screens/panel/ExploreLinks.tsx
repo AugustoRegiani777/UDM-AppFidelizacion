@@ -19,6 +19,7 @@ export function ExploreLinks() {
     <section className="flex flex-col gap-3">
       <LinkCard to="/misiones" title={copy.missions.section} cta={copy.missions.sectionCta} />
       <LinkCard to="/juegos" title={copy.arcade.section} cta={copy.arcade.sectionCta} />
+      <LinkCard to="/ranking" title={copy.ranking.title} cta={copy.arcade.sectionCta} />
       <LinkCard to="/comunidad" title={copy.community.section} cta={copy.community.sectionCta} />
     </section>
   )

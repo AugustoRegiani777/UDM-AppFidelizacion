@@ -19,6 +19,10 @@ export interface ReplayOutcome {
   won: boolean
   summary: Record<string, unknown>
   minSeconds: number
+  /** Pasos de simulación que duró la partida reproducida (60 por segundo). */
+  ticks: number
+  /** Puntaje de la partida: cuanto más alto, mejor. Alimenta los rankings y las monedas. */
+  score: number
 }
 
 /** Configuración final (reglas del juego + modo relajado), la misma que recibe el cliente. */
@@ -48,8 +52,20 @@ export function replayGame(
     const config = gameConfig('skate', overrides, relaxed) as SkateConfig
     const result = replaySkate(config, seed, log as Parameters<typeof replaySkate>[2])
     const length = buildTerrain(undefined, config.courseLimit).length
+    const won = result.status === 'won'
+    // Puntaje del circuito: 500 por llegar, más aterrizajes limpios, vidas que sobran y rapidez
+    // (se descuenta de un presupuesto de tres veces el tiempo mínimo de la pista).
+    const budgetTicks = (length / MAX_SPEED) * TICKS_PER_SECOND * 3
+    const score = won
+      ? 500 +
+        result.clean * 40 +
+        Math.max(0, result.lives) * 100 +
+        Math.max(0, Math.floor((budgetTicks - result.ticks) / 6))
+      : result.clean * 10
     return {
-      won: result.status === 'won',
+      won,
+      ticks: result.ticks,
+      score,
       minSeconds: (length / MAX_SPEED) * MIN_TIME_RATIO,
       summary: {
         status: result.status,
@@ -64,6 +80,8 @@ export function replayGame(
   const result = replay(config, seed, log as Parameters<typeof replay>[2])
   return {
     won: result.valid && result.status === 'won',
+    ticks: result.ticks,
+    score: result.score,
     // Ganar lleva tanto como la partida reproducida (el minuto de hormigas y la pelea con la Reina).
     minSeconds: (result.ticks / TICKS_PER_SECOND) * MIN_TIME_RATIO,
     summary: {

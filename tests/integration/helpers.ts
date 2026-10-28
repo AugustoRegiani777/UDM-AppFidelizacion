@@ -200,3 +200,11 @@ export async function openChest(customer: Customer, reward: string) {
   const finished = await finishChest(customer, started.body.session_id)
   return { status: finished.status, body: finished.body.redemption ?? finished.body }
 }
+
+/** Reglas de la partida oficial de Sobreviví para las pruebas (settings.ranked_game). */
+export async function configureRanked(overrides: Record<string, unknown>): Promise<void> {
+  await admin
+    .from('settings')
+    .update({ value: { overrides: { survivors: overrides } } as never })
+    .eq('key', 'ranked_game')
+}

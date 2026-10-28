@@ -84,6 +84,12 @@ export const router = createBrowserRouter([
                 }),
               },
               {
+                path: '/ranking',
+                lazy: async () => ({
+                  Component: (await import('@/screens/ranking/RankingScreen')).RankingScreen,
+                }),
+              },
+              {
                 path: '/ruleta',
                 lazy: async () => ({
                   Component: (await import('@/screens/games/RouletteScreen')).RouletteScreen,

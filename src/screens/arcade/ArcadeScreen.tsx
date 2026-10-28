@@ -10,6 +10,7 @@ import { SokobanArcade } from './SokobanArcade'
 import { SkateParkArcade } from './SkateParkArcade'
 import { SurvivorsArcade } from './SurvivorsArcade'
 import { TrucoArcade } from './TrucoArcade'
+import { WalletBar } from './WalletBar'
 
 type GameId = 'survivors' | 'skate' | 'skatepark' | 'racing' | 'truco' | 'sokoban'
 
@@ -40,6 +41,7 @@ export function ArcadeScreen() {
       </Link>
       <h1 className="font-display text-5xl leading-none">{copy.arcade.title}</h1>
       <p className="text-muted">{copy.arcade.subtitle}</p>
+      <WalletBar />
       <Cascade className="flex flex-col gap-3">
         {GAMES.map(({ id, icon }) => (
           <CascadeItem key={id}>

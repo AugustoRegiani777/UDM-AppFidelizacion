@@ -325,13 +325,55 @@ export const es = {
     nextTrack: 'Siguiente pista',
     backToTracks: 'Elegir pista',
   },
+  economy: {
+    modeLabel: 'Modo de juego',
+    practice: 'Práctica',
+    official: 'Oficial',
+    officialBody:
+      'Cuenta para el ranking y da monedas y pases. El servidor chequea tu partida, así que tarda unos segundos al terminar.',
+    starting: 'Preparando la partida…',
+    verifying: 'Chequeando tu partida…',
+    coinsLabel: (n: number) => `${n} ${n === 1 ? 'moneda' : 'monedas'}`,
+    passesLabel: (n: number) => `${n} ${n === 1 ? 'pase' : 'pases'}`,
+    coinsHint: 'Las monedas se ganan jugando. Sirven para mejoras y cosméticos, no para comida.',
+    passHint: 'Un pase abre tu próximo premio sin tener que jugar el desafío.',
+    coinsEarned: (n: number) => `+${n} ${n === 1 ? 'moneda' : 'monedas'}`,
+    coinsCapped: 'Llegaste al tope de monedas de hoy. Mañana seguís sumando.',
+    passEarned: '¡Ganaste un pase de desafío! Tu próximo premio se abre sin jugar.',
+    newBest: '¡Nuevo récord personal!',
+    seeRanking: 'Ver el ranking',
+    rankingLink: 'Ranking',
+    errorTitle: 'No pudimos chequear tu partida',
+    errorBody: 'No pasa nada: tu avance está a salvo. Probá de nuevo en unos segundos.',
+    errorTooFast:
+      'La partida terminó más rápido de lo posible, así que no la contamos. Probá de nuevo.',
+    errorRateLimited: 'Estás jugando muy rápido. Esperá un minuto y seguimos.',
+  },
+  ranking: {
+    title: 'Ranking',
+    subtitle: 'Los mejores puntajes de la comunidad. Solo cuentan las partidas oficiales.',
+    back: 'Volver a los juegos',
+    tabs: { survivors: 'Sobreviví', skate: 'Skate', points: 'Puntos' },
+    stageLabel: 'Nivel',
+    skateNote: 'Circuito completo: más puntos cuanto más limpio y rápido.',
+    pointsNote: 'Quién más puntos acumuló comprando y jugando.',
+    empty: 'Todavía nadie entró al ranking. ¡Sé el primero!',
+    loading: 'Cargando el ranking…',
+    error: 'No pudimos cargar el ranking. Probá de nuevo más tarde.',
+    you: 'Vos',
+    yourRank: (rank: number, score: number) => `Estás en el puesto ${rank} con ${score} puntos.`,
+    notRanked: 'Jugá una partida oficial y ganala para entrar al ranking.',
+    noPointsYet: 'Sumá tu primera compra para entrar al ranking.',
+    privacy: 'Se muestra tu nombre y la inicial del apellido.',
+    hideMe: 'No mostrarme en los rankings',
+  },
   arcade: {
     section: 'Sala de juegos',
     sectionCta: 'Entrar',
     back: 'Volver al panel',
     title: 'Sala de juegos',
     subtitle:
-      'Elegí un juego y jugalo todo lo que quieras, sin premio y sin apuro. Los premios del cofre se juegan desde el premio que desbloqueás con tus puntos.',
+      'Elegí un juego. En práctica jugás todo lo que quieras, sin apuro. En partida oficial entrás al ranking y ganás monedas y pases.',
     backToGames: 'Volver a los juegos',
     skateWon: '¡Completaste el circuito!',
     games: {
@@ -435,15 +477,19 @@ export const es = {
   survivors: {
     title: 'Sobreviví a las migas',
     goal: (seconds: number, queen: boolean) =>
-      queen
-        ? `Aguantá ${seconds} segundos y vencé a la Reina`
-        : `Sobreviví ${seconds} segundos`,
+      queen ? `Aguantá ${seconds} segundos y vencé a la Reina` : `Sobreviví ${seconds} segundos`,
     howTo: [
       { icon: '👆', text: 'Arrastrá el dedo para moverte' },
       { icon: '🥪', text: 'Tu sanguche tira migas solo al bicho más cercano' },
       { icon: '✨', text: 'Juntá gemas, subí de nivel y elegí mejoras' },
-      { icon: '🫧', text: 'Los poderes se juntan en burbujas: tocalas para soltarlos cuando quieras' },
-      { icon: '👑', text: 'Después del minuto llega la Reina: cuanto más rápido la vencés, más puntos' },
+      {
+        icon: '🫧',
+        text: 'Los poderes se juntan en burbujas: tocalas para soltarlos cuando quieras',
+      },
+      {
+        icon: '👑',
+        text: 'Después del minuto llega la Reina: cuanto más rápido la vencés, más puntos',
+      },
     ],
     play: '¡Jugar!',
     exit: 'Salir',

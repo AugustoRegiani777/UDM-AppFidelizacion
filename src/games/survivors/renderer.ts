@@ -91,6 +91,8 @@ export class SurvivorsRenderer {
 
   /** `cssWidth` es el ancho del canvas en píxeles CSS; el alto sale de la proporción de la arena. */
   resize(cssWidth: number, devicePixelRatio: number) {
+    // Antes de que el contenedor tenga tamaño no hay nada que dibujar (un canvas de 0 px rompe drawImage).
+    if (!(cssWidth > 0)) return
     const scale = (cssWidth * devicePixelRatio) / ARENA_W
     this.canvas.width = Math.round(ARENA_W * scale)
     this.canvas.height = Math.round(ARENA_H * scale)

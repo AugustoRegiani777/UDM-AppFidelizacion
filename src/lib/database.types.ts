@@ -114,6 +114,46 @@ export type Database = {
           },
         ]
       }
+      challenge_passes: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          run_id: string | null
+          used_at: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          run_id?: string | null
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          run_id?: string | null
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'challenge_passes_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'challenge_passes_run_id_fkey'
+            columns: ['run_id']
+            isOneToOne: false
+            referencedRelation: 'game_runs'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       chest_sessions: {
         Row: {
           customer_id: string
@@ -219,6 +259,42 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'claims_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      coin_movements: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string
+          id: string
+          kind: string
+          ref_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          kind: string
+          ref_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          kind?: string
+          ref_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'coin_movements_customer_id_fkey'
             columns: ['customer_id']
             isOneToOne: false
             referencedRelation: 'profiles'
@@ -360,6 +436,66 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'game_plays_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      game_runs: {
+        Row: {
+          coins: number
+          customer_id: string
+          expires_at: string
+          finished_at: string | null
+          game: string
+          id: string
+          overrides: NonNullable<Json>
+          pass_granted: boolean
+          score: number
+          seed: number
+          stage: number
+          started_at: string
+          status: string
+          summary: Json | null
+        }
+        ComputedFields: never
+        Insert: {
+          coins?: number
+          customer_id: string
+          expires_at: string
+          finished_at?: string | null
+          game: string
+          id?: string
+          overrides?: NonNullable<Json>
+          pass_granted?: boolean
+          score?: number
+          seed: number
+          stage?: number
+          started_at?: string
+          status?: string
+          summary?: Json | null
+        }
+        Update: {
+          coins?: number
+          customer_id?: string
+          expires_at?: string
+          finished_at?: string | null
+          game?: string
+          id?: string
+          overrides?: NonNullable<Json>
+          pass_granted?: boolean
+          score?: number
+          seed?: number
+          stage?: number
+          started_at?: string
+          status?: string
+          summary?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'game_runs_customer_id_fkey'
             columns: ['customer_id']
             isOneToOne: false
             referencedRelation: 'profiles'
@@ -583,6 +719,42 @@ export type Database = {
           },
         ]
       }
+      point_spends: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string
+          id: string
+          item_kind: string
+          item_ref: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          item_kind: string
+          item_ref?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          item_kind?: string
+          item_ref?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'point_spends_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -594,6 +766,7 @@ export type Database = {
           program_consent_at: string | null
           promo_consent: boolean
           promo_consent_at: string | null
+          show_in_rankings: boolean
         }
         ComputedFields: never
         Insert: {
@@ -606,6 +779,7 @@ export type Database = {
           program_consent_at?: string | null
           promo_consent?: boolean
           promo_consent_at?: string | null
+          show_in_rankings?: boolean
         }
         Update: {
           avatar_url?: string | null
@@ -617,6 +791,7 @@ export type Database = {
           program_consent_at?: string | null
           promo_consent?: boolean
           promo_consent_at?: string | null
+          show_in_rankings?: boolean
         }
         Relationships: []
       }
@@ -810,8 +985,10 @@ export type Database = {
         Returns: undefined
       }
       customer_balance: { Args: { p_customer: string }; Returns: number }
+      customer_coins: { Args: { p_customer: string }; Returns: number }
       customer_dashboard: { Args: Record<PropertyKey, never>; Returns: Json }
       customer_purchase_count: { Args: { p_customer: string }; Returns: number }
+      customer_spendable: { Args: { p_customer: string }; Returns: number }
       customer_streak_weeks: { Args: { p_customer: string }; Returns: number }
       expire_pending_claims: { Args: Record<PropertyKey, never>; Returns: number }
       expire_redemptions: { Args: { p_customer?: string }; Returns: number }
@@ -825,16 +1002,31 @@ export type Database = {
         }
         Returns: Json
       }
+      finish_run: {
+        Args: {
+          p_customer: string
+          p_min_seconds: number
+          p_run: string
+          p_score: number
+          p_summary: Json
+          p_won: boolean
+        }
+        Returns: Json
+      }
       games_status: { Args: Record<PropertyKey, never>; Returns: Json }
       generate_redemption_code: { Args: Record<PropertyKey, never>; Returns: string }
       get_chest_session: { Args: { p_customer: string; p_session: string }; Returns: Json }
+      get_run: { Args: { p_customer: string; p_run: string }; Returns: Json }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       issue_redemption: {
         Args: { p_chest: string; p_customer: string; p_reward: string }
         Returns: Json
       }
+      leaderboard: { Args: { p_game: string; p_limit?: number; p_stage?: number }; Returns: Json }
+      leaderboard_points: { Args: { p_limit?: number }; Returns: Json }
       local_day_start: { Args: Record<PropertyKey, never>; Returns: string }
       match_google_reviews: { Args: Record<PropertyKey, never>; Returns: Json }
+      my_wallet: { Args: Record<PropertyKey, never>; Returns: Json }
       newly_unlocked_rewards: {
         Args: {
           p_balance_after: number
@@ -848,6 +1040,7 @@ export type Database = {
       pick_prize: { Args: { p_prizes: Json }; Returns: Json }
       place_comments_list: { Args: { p_place: string }; Returns: Json }
       play_game: { Args: { p_customer: string; p_game: string; p_ref?: string }; Returns: Json }
+      public_name: { Args: { p_name: string }; Returns: string }
       rate_limit_hit: { Args: { p_action: string; p_customer: string }; Returns: boolean }
       reconcile_candidates: {
         Args: Record<PropertyKey, never>
@@ -870,8 +1063,18 @@ export type Database = {
         Returns: undefined
       }
       schedule_reconcile: { Args: { p_function_url: string; p_secret: string }; Returns: undefined }
+      set_show_in_rankings: { Args: { p_show: boolean }; Returns: undefined }
       setting_json: { Args: { p_key: string }; Returns: Json }
+      spend_coins: {
+        Args: { p_amount: number; p_customer: string; p_ref: string }
+        Returns: number
+      }
+      spend_points: {
+        Args: { p_amount: number; p_customer: string; p_kind: string; p_ref: string }
+        Returns: number
+      }
       start_chest: { Args: { p_customer: string; p_reward: string }; Returns: Json }
+      start_run: { Args: { p_customer: string; p_game: string; p_stage: number }; Returns: Json }
       submit_place: {
         Args: {
           p_address: string

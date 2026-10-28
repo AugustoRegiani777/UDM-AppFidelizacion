@@ -15,7 +15,7 @@ test('sala de juegos: se elige el juego, los niveles arrancan bloqueados y se pu
   await expect(page.getByText('Ganá el nivel anterior para abrirlo')).toHaveCount(5)
   await page.getByRole('button', { name: /Nivel 1/ }).click()
   const ready = page.getByRole('dialog', { name: 'Sobreviví a las migas' })
-  await expect(ready.getByText('Nivel 1 · La cocina')).toBeVisible()
+  await expect(ready.getByText('Nivel 1 · La vitrina de sándwiches')).toBeVisible()
   await ready.getByRole('button', { name: 'Salir' }).click()
   await page.getByRole('button', { name: 'Volver a los juegos' }).click()
   await expect(page.getByRole('button', { name: /Miga Racers/ })).toBeVisible()

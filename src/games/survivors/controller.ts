@@ -120,7 +120,7 @@ export class GameController {
   ) {
     this.state = createGame(session.config, session.seed)
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    this.renderer = new SurvivorsRenderer(canvas, reduced)
+    this.renderer = new SurvivorsRenderer(canvas, reduced, session.config.stage)
     this.input = new InputController(container, (clientX, clientY) => {
       const rect = canvas.getBoundingClientRect()
       return {

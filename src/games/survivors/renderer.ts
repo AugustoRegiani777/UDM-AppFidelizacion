@@ -82,9 +82,11 @@ export class SurvivorsRenderer {
   constructor(
     private readonly canvas: HTMLCanvasElement,
     private readonly reducedMotion: boolean,
+    /** Etapa: define en qué lugar del local transcurre (solo cambia el fondo). */
+    private readonly stage = 1,
   ) {
     this.ctx = canvas.getContext('2d', { alpha: false })!
-    this.sprites = buildSprites(1)
+    this.sprites = buildSprites(1, stage)
   }
 
   /** `cssWidth` es el ancho del canvas en píxeles CSS; el alto sale de la proporción de la arena. */
@@ -96,7 +98,7 @@ export class SurvivorsRenderer {
     this.canvas.style.height = `${(cssWidth * ARENA_H) / ARENA_W}px`
     if (Math.abs(scale - this.scale) > 0.001 || this.sprites.scale !== scale) {
       this.scale = scale
-      this.sprites = buildSprites(scale)
+      this.sprites = buildSprites(scale, this.stage)
     }
     this.ctx.imageSmoothingEnabled = true
     this.ctx.imageSmoothingQuality = 'high'

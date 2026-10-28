@@ -4,6 +4,7 @@
 
 import { ARENA_H, ARENA_W } from '@engine/config.ts'
 import { drawHero } from '../shared/hero.ts'
+import { drawStageBackground } from './scenery.ts'
 
 export interface SpriteSet {
   scale: number
@@ -311,31 +312,7 @@ function drawToast(ctx: CanvasRenderingContext2D) {
   ctx.fill()
 }
 
-/** Mantel de cuadros rojos y crema (los colores de la marca) con viñeta suave. */
-function drawBackground(canvas: HTMLCanvasElement, scale: number) {
-  const ctx = canvas.getContext('2d')!
-  ctx.scale(scale, scale)
-  ctx.fillStyle = '#f8edd8'
-  ctx.fillRect(0, 0, ARENA_W, ARENA_H)
-  const cell = 36
-  ctx.fillStyle = 'rgba(200,16,46,0.13)'
-  for (let y = 0; y < ARENA_H; y += cell * 2) ctx.fillRect(0, y, ARENA_W, cell)
-  for (let x = 0; x < ARENA_W; x += cell * 2) ctx.fillRect(x, 0, cell, ARENA_H)
-  const vignette = ctx.createRadialGradient(
-    ARENA_W / 2,
-    ARENA_H / 2,
-    ARENA_H * 0.25,
-    ARENA_W / 2,
-    ARENA_H / 2,
-    ARENA_H * 0.68,
-  )
-  vignette.addColorStop(0, 'rgba(42,26,20,0)')
-  vignette.addColorStop(1, 'rgba(42,26,20,0.28)')
-  ctx.fillStyle = vignette
-  ctx.fillRect(0, 0, ARENA_W, ARENA_H)
-}
-
-export function buildSprites(scale: number): SpriteSet {
+export function buildSprites(scale: number, stage = 1): SpriteSet {
   const ant: [HTMLCanvasElement, HTMLCanvasElement] = [
     sprite(34, 34, scale, (c) => drawAnt(c, 0)),
     sprite(34, 34, scale, (c) => drawAnt(c, 1)),
@@ -347,7 +324,9 @@ export function buildSprites(scale: number): SpriteSet {
   const pigeon = sprite(56, 44, scale, drawPigeon)
   const queen = sprite(84, 60, scale, drawQueen)
   const background = makeCanvas(ARENA_W, ARENA_H, scale)
-  drawBackground(background, scale)
+  const bg = background.getContext('2d')!
+  bg.scale(scale, scale)
+  drawStageBackground(bg, stage)
 
   return {
     scale,

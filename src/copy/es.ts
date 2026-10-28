@@ -358,9 +358,14 @@ export const es = {
     survivorsBody:
       'Seis niveles, cada uno más largo y más picante. Ganá uno para abrir el siguiente.',
     stageName: (n: number) =>
-      ['La cocina', 'El mostrador', 'La vereda', 'La plaza', 'El mercado', 'La noche de Valencia'][
-        n - 1
-      ] ?? `Nivel ${n}`,
+      [
+        'La vitrina de sándwiches',
+        'La mesa del obrador',
+        'La cafetera',
+        'La vitrina de bollería',
+        'La fiambrera',
+        'La noche en el local',
+      ][n - 1] ?? `Nivel ${n}`,
     stageLabel: (n: number) => `Nivel ${n}`,
     locked: 'Ganá el nivel anterior para abrirlo',
     play: 'Jugar',

@@ -1,8 +1,26 @@
-// Dibujo de "Miga Racers" sobre canvas 2D: una tabla de madera sobre un mantel a cuadros, vista desde arriba.
-// La simulación no sabe nada de esto: acá viven la cámara, el humo, las chispas y el zoom del turbo.
+// Dibujo de "Miga Racers" sobre canvas 2D, vista desde arriba, en el lugar del local de cada pista
+// (vitrina, obrador, cafetera, bollería, fiambrera). La simulación no sabe nada de esto: acá viven la
+// cámara, el humo, las chispas y el zoom del turbo.
 
-import { buildTrack, type Track } from './tracks.ts'
-import { CAR_RADIUS, playerOf, type Car, type RaceEvent, type RaceState } from './sim.ts'
+import { buildTrack, type SceneId, type Track } from './tracks.ts'
+import {
+  CAR_RADIUS,
+  playerOf,
+  sweeperPos,
+  type Car,
+  type RaceEvent,
+  type RaceState,
+} from './sim.ts'
+import { SCENES, drawBlade, drawSolid, drawZone, type SceneStyle } from './scenes.ts'
+
+/** Color de las salpicaduras al pisar un charco, según el lugar. */
+const SPLASH: Record<SceneId, string[]> = {
+  vitrina: ['#ffffff'],
+  obrador: ['#bfe3f4', '#8cc8e8'],
+  cafetera: ['#6b4128', '#4a2c1c'],
+  boleria: ['#c98838', '#a8651f'],
+  fiambrera: ['#f0d98a', '#d9b85a'],
+}
 
 interface Particle {
   active: boolean
@@ -58,22 +76,17 @@ function makeProps(track: Track): Prop[] {
   return props
 }
 
-function makeGingham(): HTMLCanvasElement {
-  const size = 192
+function makeTile(style: SceneStyle): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = size
-  const ctx = canvas.getContext('2d')!
-  ctx.fillStyle = '#fff3d6'
-  ctx.fillRect(0, 0, size, size)
-  ctx.fillStyle = 'rgba(200,16,46,0.2)'
-  ctx.fillRect(0, 0, size / 2, size)
-  ctx.fillRect(0, 0, size, size / 2)
+  canvas.width = canvas.height = style.tileSize
+  style.tile(canvas.getContext('2d')!, style.tileSize)
   return canvas
 }
 
 export class RacingRenderer {
   private readonly ctx: CanvasRenderingContext2D
-  private readonly gingham: CanvasPattern | null
+  private readonly floor: CanvasPattern | null
+  private readonly style: SceneStyle
   private readonly trackPath = new Path2D()
   private readonly props: Prop[]
   private particles: Particle[] = Array.from({ length: MAX_PARTICLES }, () => ({
@@ -102,8 +115,9 @@ export class RacingRenderer {
     private readonly reducedMotion: boolean,
   ) {
     this.ctx = canvas.getContext('2d', { alpha: false })!
-    this.gingham = this.ctx.createPattern(makeGingham(), 'repeat')
-    this.gingham?.setTransform(new DOMMatrix().scale(0.5))
+    this.style = SCENES[track.def.scene]
+    this.floor = this.ctx.createPattern(makeTile(this.style), 'repeat')
+    this.floor?.setTransform(new DOMMatrix().scale(0.5))
     const t = buildTrack(track.def)
     this.trackPath.moveTo(t.xs[0]!, t.ys[0]!)
     for (let i = 1; i < t.count; i++) this.trackPath.lineTo(t.xs[i]!, t.ys[i]!)
@@ -173,6 +187,8 @@ export class RacingRenderer {
         if (event.own && !this.reducedMotion) this.shake = Math.max(this.shake, 5)
       } else if (event.t === 'boost') {
         this.burst(event.x, event.y, ['#ffe58a', '#ff9d5c', '#fff'], event.own ? 14 : 6, 150)
+      } else if (event.t === 'splash') {
+        this.burst(event.x, event.y, SPLASH[state.track.def.scene], 10, 90)
       } else if (event.t === 'finish') {
         const p = playerOf(state)
         this.burst(p.x, p.y, ['#f7c948', '#c8102e', '#fff'], 30, 200)
@@ -231,59 +247,12 @@ export class RacingRenderer {
 
   private drawProp(p: Prop) {
     const ctx = this.ctx
-    ctx.fillStyle = 'rgba(42,26,20,0.18)'
-    ctx.beginPath()
-    ctx.ellipse(p.x + 2, p.y + 3, p.r, p.r * 0.8, 0, 0, Math.PI * 2)
-    ctx.fill()
-    switch (p.kind) {
-      case 0: // aceituna
-        ctx.fillStyle = '#4c6b2a'
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r * 0.75, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = '#c8102e'
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r * 0.28, 0, Math.PI * 2)
-        ctx.fill()
-        break
-      case 1: // rodaja de tomate
-        ctx.fillStyle = '#d6281c'
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = '#ff8a7a'
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r * 0.6, 0, Math.PI * 2)
-        ctx.fill()
-        break
-      case 2: // taza de café vista desde arriba
-        ctx.fillStyle = '#fff6e0'
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.strokeStyle = INK
-        ctx.lineWidth = 1.2
-        ctx.stroke()
-        ctx.fillStyle = '#5b3b2e'
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r * 0.68, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.strokeStyle = '#fff6e0'
-        ctx.lineWidth = 3
-        ctx.beginPath()
-        ctx.arc(p.x + p.r + 2, p.y, p.r * 0.35, -1.2, 1.2)
-        ctx.stroke()
-        break
-      default: // migas
-        ctx.fillStyle = '#e0b86e'
-        for (const [dx, dy, s] of [
-          [-4, -2, 3],
-          [3, 1, 2.4],
-          [-1, 5, 2],
-        ] as const) {
-          ctx.fillRect(p.x + dx, p.y + dy, s, s)
-        }
-    }
+    const draw = this.style.props[p.kind % this.style.props.length]!
+    ctx.save()
+    ctx.translate(p.x, p.y)
+    ctx.rotate(p.x * 0.013)
+    draw(ctx, p.r)
+    ctx.restore()
   }
 
   private drawTrack(state: RaceState) {
@@ -292,19 +261,20 @@ export class RacingRenderer {
     ctx.lineJoin = 'round'
     ctx.lineCap = 'round'
     ctx.setLineDash([])
-    ctx.strokeStyle = 'rgba(42,26,20,0.2)'
+    const palette = this.style.track
+    ctx.strokeStyle = palette.shadow
     ctx.lineWidth = t.def.width + 22
     ctx.stroke(this.trackPath)
-    ctx.strokeStyle = '#7a4b25'
+    ctx.strokeStyle = palette.edge
     ctx.lineWidth = t.def.width + 14
     ctx.stroke(this.trackPath)
-    ctx.strokeStyle = '#c99a5f'
+    ctx.strokeStyle = palette.base
     ctx.lineWidth = t.def.width
     ctx.stroke(this.trackPath)
-    ctx.strokeStyle = '#d6ac73'
+    ctx.strokeStyle = palette.inner
     ctx.lineWidth = t.def.width - 22
     ctx.stroke(this.trackPath)
-    ctx.strokeStyle = 'rgba(255,246,224,0.65)'
+    ctx.strokeStyle = palette.dash
     ctx.lineWidth = 3
     ctx.setLineDash([14, 18])
     ctx.lineCap = 'butt'
@@ -344,6 +314,36 @@ export class RacingRenderer {
       }
     }
     ctx.restore()
+  }
+
+  /** Charcos, obstáculos y la hoja que gira (solo lo que se ve en pantalla). */
+  private drawHazards(state: RaceState, halfW: number, halfH: number) {
+    const ctx = this.ctx
+    const t = state.track
+    const visible = (x: number, y: number, r: number) =>
+      Math.abs(x - this.cam.x) < halfW + r + 30 && Math.abs(y - this.cam.y) < halfH + r + 30
+    for (const z of t.zones) {
+      if (!visible(z.x, z.y, z.r)) continue
+      ctx.save()
+      ctx.translate(z.x, z.y)
+      drawZone(ctx, z.kind, z.r)
+      ctx.restore()
+    }
+    for (const o of t.solids) {
+      if (!visible(o.x, o.y, o.r)) continue
+      ctx.save()
+      ctx.translate(o.x, o.y)
+      drawSolid(ctx, o.kind, o.r)
+      ctx.restore()
+    }
+    for (const sw of t.sweepers) {
+      const p = sweeperPos(sw, state.tick)
+      if (!visible(p.x, p.y, sw.r)) continue
+      ctx.save()
+      ctx.translate(p.x, p.y)
+      drawBlade(ctx, sw.r, state.tick * 0.35)
+      ctx.restore()
+    }
   }
 
   render(state: RaceState, alpha: number, now: number) {
@@ -394,7 +394,7 @@ export class RacingRenderer {
     // Mantel: se pinta solo la parte visible del mundo.
     const halfW = this.canvas.width / 2 / scale + 4
     const halfH = this.canvas.height / 2 / scale + 4
-    ctx.fillStyle = this.gingham ?? '#fff3d6'
+    ctx.fillStyle = this.floor ?? '#fff3d6'
     ctx.fillRect(this.cam.x - halfW, this.cam.y - halfH, halfW * 2, halfH * 2)
 
     for (const prop of this.props) {
@@ -402,6 +402,7 @@ export class RacingRenderer {
         this.drawProp(prop)
     }
     this.drawTrack(state)
+    this.drawHazards(state, halfW, halfH)
 
     // Humo de las gomas al derrapar y chispas del turbo.
     const smoke = !this.reducedMotion

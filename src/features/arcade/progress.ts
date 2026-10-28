@@ -29,7 +29,7 @@ export function unlockAfterWin(stage: number): number {
 }
 
 const RACING_KEY = 'arcade_racing_unlocked'
-const RACING_TRACKS = 3
+const RACING_TRACKS = 5
 
 /** Pista más alta que se puede correr (empieza en 1). */
 export function unlockedTrack(): number {

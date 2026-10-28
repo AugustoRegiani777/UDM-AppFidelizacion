@@ -44,8 +44,10 @@ describe('avance de las carreras', () => {
     expect(unlockRacing(1)).toBe(2)
     expect(unlockRacing(1)).toBe(2)
     expect(unlockRacing(2)).toBe(3)
-    expect(unlockRacing(3)).toBe(3)
-    expect(unlockedTrack()).toBe(3)
+    expect(unlockRacing(3)).toBe(4)
+    expect(unlockRacing(4)).toBe(5)
+    expect(unlockRacing(5)).toBe(5)
+    expect(unlockedTrack()).toBe(5)
   })
 })
 

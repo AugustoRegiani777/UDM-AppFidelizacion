@@ -29,7 +29,7 @@ test('Miga Racers: cuenta regresiva, la carrera arranca y se puede pausar', asyn
   await page.getByRole('button', { name: /Pista 1/ }).click()
 
   const ready = page.getByRole('dialog', { name: 'Miga Racers' })
-  await expect(ready.getByText('La mesa de la cocina')).toBeVisible()
+  await expect(ready.getByText('La vitrina de sándwiches')).toBeVisible()
   await ready.getByRole('button', { name: '¡A correr!' }).click()
 
   // 3, 2, 1 y ¡YA!

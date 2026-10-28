@@ -288,16 +288,31 @@ export const es = {
   },
   racing: {
     title: 'Miga Racers',
-    subtitle: 'Autitos sobre la mesa de la sandwichería. Tres vueltas contra tres rivales.',
+    subtitle: 'Autitos por el local de Uno de Miga. Tres vueltas contra tres rivales.',
     trackLabel: (n: number) => `Pista ${n}`,
     trackName: (n: number) =>
-      ['La mesa de la cocina', 'El mostrador', 'La noche de Valencia'][n - 1] ?? `Pista ${n}`,
+      [
+        'La vitrina de sándwiches',
+        'La mesa del obrador',
+        'La cafetera',
+        'La vitrina de bollería',
+        'La fiambrera',
+      ][n - 1] ?? `Pista ${n}`,
+    trackHint: (n: number) =>
+      [
+        'Esquivá el pote de dulce de leche y la lata de alfajores.',
+        'Rollos de film, etiquetas y charcos de agua.',
+        'Cuidado con la rejilla: el café derramado te frena.',
+        'Los charcos de dulce de leche son pegajosos.',
+        'La hoja de la fiambrera gira: pasá cuando se aleja.',
+      ][n - 1] ?? '',
     locked: 'Terminá 1º o 2º en la pista anterior para abrirla',
     howTo: [
       { icon: '👈', text: 'Tocá la mitad izquierda o derecha de la pantalla para doblar' },
       { icon: '🚗', text: 'El auto acelera solo: dos dedos a la vez van derecho' },
       { icon: '🌀', text: 'Mantené "Derrapar" en las curvas cerradas' },
       { icon: '⚡', text: 'Los parches amarillos te dan turbo' },
+      { icon: '🫗', text: 'Los charcos te frenan y los obstáculos te hacen rebotar' },
     ],
     play: '¡A correr!',
     go: '¡YA!',
@@ -334,7 +349,10 @@ export const es = {
         body: 'Trucos, combos, grinds y cinco niveles de parque. Mejor en horizontal.',
       },
       truco: { name: 'Truco', body: 'Cartas, envido y mate en la mesa. Contra tres rivales.' },
-      racing: { name: 'Miga Racers', body: 'Carreras de autitos sobre la mesa. Tres pistas.' },
+      racing: {
+        name: 'Miga Racers',
+        body: 'Carreras de autitos por el local: vitrina, obrador, cafetera, bollería y fiambrera.',
+      },
     },
     survivorsTitle: 'Sobreviví a las migas',
     survivorsBody:

@@ -24,6 +24,10 @@ const BOOST_MULT = 1.35
 const PAD_RADIUS = 24
 const SEARCH_WINDOW = 36
 const WALL_FACTOR = 1.85
+/** Los charcos (dulce de leche, café, agua, aceite) bajan la velocidad máxima a esta fracción. */
+const ZONE_MULT = 0.55
+const SOLID_BOUNCE = 0.35
+const SWEEP_BOUNCE = 0.9
 
 export interface Controls {
   steer: number
@@ -52,12 +56,14 @@ export interface Car {
   /** Derrape lateral actual (para humo y sonido). */
   slip: number
   flash: number
+  /** Está pisando un charco. */
+  inZone: boolean
 }
 
 export type RaceEvent =
   | { t: 'count'; n: number }
   | { t: 'go' | 'lap' | 'finish' }
-  | { t: 'boost' | 'bump'; x: number; y: number; own: boolean }
+  | { t: 'boost' | 'bump' | 'splash'; x: number; y: number; own: boolean }
 
 export type RaceStatus = 'countdown' | 'racing' | 'finished'
 
@@ -118,6 +124,7 @@ export function createRace(trackIndex: number, seed: number): RaceState {
       color: COLORS[slot] ?? '#fff',
       slip: 0,
       flash: 0,
+      inZone: false,
     })
   }
   return { track, tick: 0, raceTick: 0, status: 'countdown', cars, position: 0, events: [], seed }
@@ -203,7 +210,8 @@ function stepCar(state: RaceState, car: Car, controls: Controls & { analog?: num
     MAX_SPEED *
     (car.isPlayer ? 1 : car.skill * track.def.aiSpeed) *
     (car.boost > 0 ? BOOST_MULT : 1) *
-    (car.offTrack ? OFFTRACK_MAX : 1)
+    (car.offTrack ? OFFTRACK_MAX : 1) *
+    (car.inZone ? ZONE_MULT : 1)
 
   // Se gira el rumbo y recién después se separa la velocidad en "adelante" y "de costado".
   const forward = car.vx * Math.cos(car.h) + car.vy * Math.sin(car.h)
@@ -249,6 +257,54 @@ function stepCar(state: RaceState, car: Car, controls: Controls & { analog?: num
       car.boost = BOOST_TICKS
       state.events.push({ t: 'boost', x: car.x, y: car.y, own: car.isPlayer })
     }
+  }
+}
+
+/** Dónde está una hoja giratoria en un tick dado. */
+export function sweeperPos(sw: Track['sweepers'][number], tick: number): { x: number; y: number } {
+  const a = sw.phase + (tick * Math.PI * 2) / sw.period
+  return { x: sw.cx + Math.cos(a) * sw.orbit, y: sw.cy + Math.sin(a) * sw.orbit }
+}
+
+/** Charcos y obstáculos: los charcos frenan, los obstáculos y la hoja rebotan al auto. */
+function hazards(state: RaceState, car: Car) {
+  const { track } = state
+  let wet = false
+  for (const z of track.zones) {
+    const dx = car.x - z.x
+    const dy = car.y - z.y
+    if (dx * dx + dy * dy < z.r * z.r) wet = true
+  }
+  if (wet && !car.inZone && car.isPlayer) {
+    state.events.push({ t: 'splash', x: car.x, y: car.y, own: true })
+  }
+  car.inZone = wet
+
+  const bounce = (cx: number, cy: number, r: number, restitution: number) => {
+    const dx = car.x - cx
+    const dy = car.y - cy
+    const min = r + CAR_RADIUS * 0.85
+    const d2 = dx * dx + dy * dy
+    if (d2 >= min * min || d2 === 0) return
+    const d = Math.sqrt(d2)
+    const nx = dx / d
+    const ny = dy / d
+    car.x = cx + nx * min
+    car.y = cy + ny * min
+    const vn = car.vx * nx + car.vy * ny
+    if (vn < 0) {
+      car.vx -= (1 + restitution) * vn * nx
+      car.vy -= (1 + restitution) * vn * ny
+      car.vx *= 0.92
+      car.vy *= 0.92
+      car.flash = 6
+      if (-vn > 40) state.events.push({ t: 'bump', x: car.x, y: car.y, own: car.isPlayer })
+    }
+  }
+  for (const solid of track.solids) bounce(solid.x, solid.y, solid.r, SOLID_BOUNCE)
+  for (const sw of track.sweepers) {
+    const p = sweeperPos(sw, state.tick)
+    bounce(p.x, p.y, sw.r, SWEEP_BOUNCE)
   }
 }
 
@@ -328,6 +384,7 @@ export function stepRace(state: RaceState, input: Controls): void {
       car.skill = Math.max(0.9, Math.min(1.06, car.skill + nudge))
     }
     stepCar(state, car, controls)
+    hazards(state, car)
     const after = Math.floor(car.progress / state.track.length)
     if (car.isPlayer && after > before && after < laps) state.events.push({ t: 'lap' })
     if (car.progress >= laps * state.track.length) {

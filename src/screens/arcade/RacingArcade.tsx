@@ -89,6 +89,9 @@ export function RacingArcade({ onBack }: { onBack: () => void }) {
                       {copy.racing.trackLabel(track)}
                     </span>
                     <span className="block font-bold">{copy.racing.trackName(track)}</span>
+                    {open && (
+                      <span className="text-muted block text-sm">{copy.racing.trackHint(track)}</span>
+                    )}
                     {!open && <span className="text-muted text-sm">{copy.racing.locked}</span>}
                   </span>
                   <span className={open ? 'text-brand-ink font-semibold' : 'text-2xl'}>

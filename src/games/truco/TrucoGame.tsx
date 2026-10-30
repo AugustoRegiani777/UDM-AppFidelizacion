@@ -7,7 +7,7 @@ import { spring } from '@/motion/presets'
 import { setSoundEnabled, useSoundEnabled } from '@/motion/preferences'
 import { chooseAction, type Profile } from './ai.ts'
 import { sfx, unlockAudio } from './audio.ts'
-import { trucoRank } from './cards.ts'
+import { cardNick, trucoRank } from './cards.ts'
 import { CardView, Fosforos } from './CardView.tsx'
 import {
   act,
@@ -19,7 +19,10 @@ import {
   type Seat,
   type TrucoState,
 } from './engine.ts'
+import { PACING } from './pacing.ts'
 import { MATE_SIPS, MateView } from './MateView.tsx'
+import { summarizeEnvido, summarizeHand, type EnvidoSummary } from './summary.ts'
+import { EnvidoPanel, HandSummaryView } from './TrucoSummary.tsx'
 
 const TURN_SECONDS = 25
 const CHIPA_COST = 3
@@ -29,9 +32,17 @@ const MATCH_COINS = 5
 interface TrucoGameProps {
   profile: Profile
   seed: number
+  /** Para cambiar las pausas (por ejemplo en las pruebas). */
+  pacing?: Partial<typeof PACING>
   onRematch: () => void
   onExit: () => void
 }
+
+/** Una pausa corta para que se vea qué pasó: se cierra sola o con el botón "Seguir". */
+type Beat =
+  | { kind: 'trick'; id: number; seat: Seat | -1; index: number; text: string; ms: number }
+  | { kind: 'envido'; id: number; envido: EnvidoSummary; ms: number }
+  | { kind: 'end'; id: number; ms: number }
 
 interface Bubble {
   text: string
@@ -75,7 +86,8 @@ const chip =
 const chipPrimary = `${chip} bg-brand text-white`
 const chipSecondary = `${chip} bg-surface text-ink`
 
-export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) {
+export function TrucoGame({ profile, seed, pacing, onRematch, onExit }: TrucoGameProps) {
+  const pace = { ...PACING, ...pacing }
   const sound = useSoundEnabled()
   const opponent = copy.truco.opponents[profile.id]
 
@@ -97,6 +109,7 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
   const [toast, setToast] = useState<string | null>(null)
   const [deadline, setDeadline] = useState(0)
   const [now, setNow] = useState(0)
+  const [beat, setBeat] = useState<Beat | null>(null)
 
   const later = useCallback((fn: () => void, ms: number) => {
     timers.current.push(window.setTimeout(fn, ms))
@@ -138,6 +151,8 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
             break
           case 'envido': {
             const r = event.result
+            // Si se quiso, los tantos se muestran en una pausa con las cartas (ver makeBeat).
+            if (r.accepted) break
             setToast(
               copy.truco.envidoResult(r.points[0], r.points[1], r.winner === 0, r.won, r.accepted),
             )
@@ -170,6 +185,37 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
     [later, showBubble],
   )
 
+  /** Qué pausa corresponde después de una acción (null = seguir de corrido). */
+  const makeBeat = useCallback(
+    (state: TrucoState): Beat | null => {
+      const id = Math.random()
+      const envidoEvent = state.events.find((e) => e.t === 'envido')
+      if (envidoEvent && envidoEvent.result.accepted) {
+        const envido = summarizeEnvido(state)
+        if (envido) return { kind: 'envido', id, envido, ms: pace.envidoMs }
+      }
+      const trick = state.events.find((e) => e.t === 'trick')
+      if (trick) {
+        const index = state.tricks.length - 1
+        let text: string
+        if (trick.winner === -1) {
+          text = copy.truco.trickTie
+        } else {
+          const card = state.table[trick.winner][index]
+          const nick = card ? cardNick(card) : ''
+          const variants = trick.winner === 0 ? copy.truco.trickMine : copy.truco.trickRival
+          text = variants[(state.handNumber + index) % variants.length]!(nick)
+        }
+        const keepGoing = state.phase === 'play' || state.phase === 'respond'
+        if (keepGoing) text = `${text} ${copy.truco.trickKeepGoing}`
+        return { kind: 'trick', id, seat: trick.winner, index, text, ms: pace.trickMs }
+      }
+      if (state.events.some((e) => e.t === 'hand')) return { kind: 'end', id, ms: pace.endMs }
+      return null
+    },
+    [pace.envidoMs, pace.trickMs, pace.endMs],
+  )
+
   const apply = useCallback(
     (seat: Seat, action: Action) => {
       const prev = gameRef.current
@@ -188,23 +234,42 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
         setToast(null)
       }
       handleEvents(next)
+      const nextBeat = action.t === 'next' ? null : makeBeat(next)
+      setBeat(nextBeat)
       const humanTurn = next.turn === 0 && (next.phase === 'play' || next.phase === 'respond')
       setNow(Date.now())
-      setDeadline(humanTurn ? Date.now() + TURN_SECONDS * 1000 : 0)
+      // Durante una pausa el reloj del jugador espera: arranca cuando se cierra.
+      setDeadline(humanTurn && !nextBeat ? Date.now() + TURN_SECONDS * 1000 : 0)
     },
-    [handleEvents],
+    [handleEvents, makeBeat],
   )
+
+  const endBeat = useCallback(() => {
+    setBeat(null)
+    const g = gameRef.current
+    if (g.turn === 0 && (g.phase === 'play' || g.phase === 'respond')) {
+      setNow(Date.now())
+      setDeadline(Date.now() + TURN_SECONDS * 1000)
+    }
+  }, [])
+
+  // La pausa se cierra sola; "Seguir" la adelanta.
+  useEffect(() => {
+    if (!beat) return
+    const id = window.setTimeout(endBeat, beat.ms)
+    return () => window.clearTimeout(id)
+  }, [beat, endBeat])
 
   // Turno del rival: piensa un ratito y juega.
   useEffect(() => {
-    if (!started || game.turn !== 1) return
+    if (!started || beat || game.turn !== 1) return
     if (game.phase !== 'play' && game.phase !== 'respond') return
     const id = window.setTimeout(
       () => apply(1, chooseAction(gameRef.current, 1, profile, aiRandom.current)),
       750 + aiRandom.current() * 900,
     )
     return () => window.clearTimeout(id)
-  }, [game, started, profile, apply])
+  }, [game, started, beat, profile, apply])
 
   // Reloj del jugador: si se acaba, juega solo lo más seguro.
   useEffect(() => {
@@ -277,7 +342,8 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
     sfx.pour()
   }
 
-  const myTurn = game.turn === 0 && (game.phase === 'play' || game.phase === 'respond')
+  const myTurn =
+    game.turn === 0 && (game.phase === 'play' || game.phase === 'respond') && beat === null
   const legal = myTurn ? legalActions(game, 0) : []
   const can = (t: Action['t']) => legal.some((a) => a.t === t)
   const canEnvido = (call: EnvidoCall) => legal.some((a) => a.t === 'envido' && a.call === call)
@@ -310,6 +376,9 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
       : copy.truco.buttons[call]
 
   const result = game.handResult
+  const summary = summarizeHand(game)
+  const gameOver = game.phase === 'handOver' || game.phase === 'matchOver'
+  const trickBeat = beat?.kind === 'trick' ? beat : null
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#1f5a3c] text-[#fff6e0] select-none">
@@ -371,9 +440,13 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
 
       {/* Cartas del rival */}
       <div className="relative z-10 mt-2 flex justify-center gap-1.5" aria-hidden>
-        {game.hands[1].map((_, i) => (
-          <CardView key={i} back className="w-[min(11vw,46px)]" />
-        ))}
+        {game.hands[1].map((card, i) =>
+          gameOver && summary?.revealRival ? (
+            <CardView key={i} card={card} className="w-[min(11vw,46px)]" />
+          ) : (
+            <CardView key={i} back className="w-[min(11vw,46px)]" />
+          ),
+        )}
       </div>
 
       {/* Mesa */}
@@ -407,7 +480,21 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
                         animate={{ y: 0, opacity: 1, scale: 1, rotate: (i - 1) * 3 }}
                         transition={spring.bouncy}
                       >
-                        <CardView card={card} className="w-full" highlight={won} />
+                        <motion.div
+                          animate={
+                            trickBeat && trickBeat.seat === seat && trickBeat.index === i
+                              ? { scale: [1, 1.28, 1.14], y: [0, -8, -4] }
+                              : { scale: 1, y: 0 }
+                          }
+                          transition={{ duration: 0.7, ease: 'easeOut' }}
+                          data-winner={
+                            trickBeat && trickBeat.seat === seat && trickBeat.index === i
+                              ? 'true'
+                              : undefined
+                          }
+                        >
+                          <CardView card={card} className="w-full" highlight={won} />
+                        </motion.div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -448,9 +535,29 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
       </main>
 
       {/* Avisos */}
-      <div className="relative z-10 flex min-h-12 flex-col items-center justify-center px-3 text-center">
+      <div className="relative z-10 flex min-h-14 flex-col items-center justify-center px-3 text-center">
         <AnimatePresence mode="wait">
-          {toast ? (
+          {trickBeat ? (
+            <motion.div
+              key={trickBeat.id}
+              role="status"
+              data-testid="trick-banner"
+              className="text-ink flex max-w-full items-center gap-2 rounded-2xl bg-[#f7c948] px-3 py-1.5 shadow-lg"
+              initial={{ opacity: 0, scale: 0.7, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={spring.bouncy}
+            >
+              <p className="font-display text-xl leading-tight">{trickBeat.text}</p>
+              <button
+                type="button"
+                onClick={endBeat}
+                className="bg-ink min-h-11 shrink-0 rounded-full px-4 text-sm font-bold text-white active:scale-95"
+              >
+                {copy.truco.follow}
+              </button>
+            </motion.div>
+          ) : toast ? (
             <motion.p
               key={toast}
               className="rounded-xl bg-black/40 px-3 py-1 text-sm font-semibold"
@@ -538,17 +645,49 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
         </AnimatePresence>
       </div>
 
-      {/* Fin de la mano */}
+      {/* Los tantos del envido, con las cartas que los forman */}
       <AnimatePresence>
-        {game.phase === 'handOver' && result && (
+        {beat?.kind === 'envido' && (
           <motion.div
-            className="bg-ink/55 absolute inset-0 z-20 grid place-items-center p-5"
+            key={beat.id}
+            className="bg-ink/60 absolute inset-0 z-20 flex overflow-y-auto p-4"
+            role="dialog"
+            aria-label={copy.truco.envidoShown}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-surface text-ink rounded-card flex w-full max-w-xs flex-col items-center gap-3 p-6 text-center"
+              className="bg-surface text-ink rounded-card m-auto flex w-full max-w-sm flex-col gap-3 p-5 text-center"
+              initial={{ scale: 0.85, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={spring.bouncy}
+            >
+              <h2 className="font-display text-3xl leading-none">{copy.truco.envidoShown}</h2>
+              <EnvidoPanel
+                envido={beat.envido}
+                mineDealt={game.dealt[0]}
+                rivalDealt={game.dealt[1]}
+              />
+              <Button onClick={endBeat}>{copy.truco.follow}</Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Fin de la mano */}
+      <AnimatePresence>
+        {game.phase === 'handOver' && result && !beat && (
+          <motion.div
+            className="bg-ink/55 absolute inset-0 z-20 flex overflow-y-auto p-4"
+            role="dialog"
+            aria-label={copy.truco.summary.title}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-surface text-ink rounded-card m-auto flex w-full max-w-sm flex-col items-center gap-3 p-5 text-center"
               initial={{ scale: 0.8, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={spring.bouncy}
@@ -558,11 +697,16 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
                   ? copy.truco.handWon(result.points)
                   : copy.truco.handLost(result.points)}
               </p>
-              <p className="text-muted text-sm">
-                {(result.winner === 0 ? copy.truco.reasons : copy.truco.reasonsMine)[result.reason]}
-              </p>
-              <p className="text-muted text-sm">{copy.truco.luckHint}</p>
-              <Button onClick={() => apply(0, { t: 'next' })}>{copy.truco.next}</Button>
+              {result.winner !== 0 && (
+                <p className="text-sm font-semibold">
+                  {copy.truco.summary.cheer[game.handNumber % copy.truco.summary.cheer.length]}
+                </p>
+              )}
+              {summary && <HandSummaryView summary={summary} />}
+              <p className="text-muted text-xs">{copy.truco.luckHint}</p>
+              <div className="bg-surface sticky bottom-0 w-full pt-1">
+                <Button onClick={() => apply(0, { t: 'next' })}>{copy.truco.next}</Button>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -602,7 +746,7 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
         </Backdrop>
       )}
 
-      {game.phase === 'matchOver' && (
+      {game.phase === 'matchOver' && !beat && (
         <Backdrop label={game.matchWinner === 0 ? copy.truco.matchWon : copy.truco.matchLost}>
           <p className="text-6xl" aria-hidden>
             {game.matchWinner === 0 ? '🏆' : '😅'}
@@ -614,6 +758,11 @@ export function TrucoGame({ profile, seed, onRematch, onExit }: TrucoGameProps) 
             {game.scores[0]} a {game.scores[1]}
           </p>
           {earned > 0 && <p className="font-bold">🪙 {copy.truco.coinsEarned(earned)}</p>}
+          {summary && (summary.envido || summary.tricks.length > 0) && (
+            <div className="max-h-[40vh] overflow-y-auto">
+              <HandSummaryView summary={summary} />
+            </div>
+          )}
           <Button onClick={onRematch}>{copy.truco.rematch}</Button>
           <Button variant="ghost" onClick={onExit}>
             {copy.truco.exit}

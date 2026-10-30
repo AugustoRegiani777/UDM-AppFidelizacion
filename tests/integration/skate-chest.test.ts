@@ -16,6 +16,14 @@ import {
 describe('cofre con skate', { timeout: 60_000 }, () => {
   afterAll(() => resetChestConfig())
 
+  it('con la configuración normal el cofre ya no sortea skate (solo Sobreviví a las migas)', async () => {
+    await resetChestConfig()
+    const ana = await createCustomer('ana')
+    await giveSalePoints(ana, 400)
+    const started = await startChest(ana, await rewardId('Un café'))
+    expect(started.body.game).toBe('survivors')
+  })
+
   async function customerWithCoffee() {
     const ana = await createCustomer('ana')
     await giveSalePoints(ana, 400)

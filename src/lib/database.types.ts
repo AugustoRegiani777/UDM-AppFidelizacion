@@ -1135,6 +1135,7 @@ export type Database = {
       customer_purchase_count: { Args: { p_customer: string }; Returns: number }
       customer_spendable: { Args: { p_customer: string }; Returns: number }
       customer_streak_weeks: { Args: { p_customer: string }; Returns: number }
+      ensure_profile: { Args: Record<PropertyKey, never>; Returns: boolean }
       expire_pending_claims: { Args: Record<PropertyKey, never>; Returns: number }
       expire_redemptions: { Args: { p_customer?: string }; Returns: number }
       finish_chest: {

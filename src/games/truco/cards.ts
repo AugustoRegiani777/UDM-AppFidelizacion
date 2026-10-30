@@ -55,3 +55,56 @@ export function envidoPoints(hand: readonly Card[]): number {
 
 export const cardName = (card: Card) =>
   `${card.n} de ${card.suit === 'oro' ? 'oro' : card.suit === 'copa' ? 'copa' : card.suit === 'espada' ? 'espada' : 'basto'}`
+
+export interface EnvidoBreakdown {
+  /** Tanto total de la mano. */
+  points: number
+  /** Cartas que hacen el tanto (dos del mismo palo, o la más alta si no hay pares). */
+  cards: Card[]
+  /** 20 si hay dos del mismo palo; 0 si el tanto es una sola carta. */
+  base: 0 | 20
+}
+
+/** De dónde sale el tanto: qué cartas lo forman. */
+export function envidoBreakdown(hand: readonly Card[]): EnvidoBreakdown {
+  let best: EnvidoBreakdown = { points: 0, cards: [], base: 0 }
+  for (const card of hand) {
+    if (envidoValue(card) > best.points || best.cards.length === 0) {
+      best = { points: envidoValue(card), cards: [card], base: 0 }
+    }
+  }
+  for (let i = 0; i < hand.length; i++) {
+    for (let j = i + 1; j < hand.length; j++) {
+      const a = hand[i]!
+      const b = hand[j]!
+      if (a.suit !== b.suit) continue
+      const points = 20 + envidoValue(a) + envidoValue(b)
+      if (points > best.points) best = { points, cards: [a, b], base: 20 }
+    }
+  }
+  return best
+}
+
+/** "33 de espada: 7 de espada + 6 de espada + 20" (o "7 de oro" si no hay dos del mismo palo). */
+export function envidoFormula(b: EnvidoBreakdown): string {
+  const parts = b.cards.map((c) => (envidoValue(c) === 0 ? `${cardName(c)} (0)` : cardName(c)))
+  if (b.base) parts.push(String(b.base))
+  const suit = b.cards[0]?.suit
+  const head = b.base ? `${b.points} de ${suit}` : `${b.points}`
+  return `${head}: ${parts.join(' + ')}`
+}
+
+/** Cómo se nombra una carta cuando gana una baza ("el ancho de espadas", "un tres de copa"). */
+export function cardNick(card: Card): string {
+  const rank = trucoRank(card)
+  if (rank === 14) return 'el ancho de espadas'
+  if (rank === 13) return 'el ancho de bastos'
+  if (rank === 12) return 'el siete de espadas'
+  if (rank === 11) return 'el siete de oro'
+  const plural = (suit: Suit) =>
+    suit === 'espada' ? 'espadas' : suit === 'basto' ? 'bastos' : suit === 'oro' ? 'oro' : 'copas'
+  if (card.n === 3) return `un tres de ${plural(card.suit)}`
+  if (card.n === 2) return `un dos de ${plural(card.suit)}`
+  if (card.n === 1) return `un ancho de ${plural(card.suit)}`
+  return `un ${card.n} de ${plural(card.suit)}`
+}

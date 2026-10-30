@@ -13,3 +13,7 @@ tests/e2e/.fake-camera
 
 # Resultados intermedios del generador de niveles (el resultado final es levels.data.ts)
 src/games/sokoban/tools/out/
+
+# Credenciales de Google (OAuth): nunca al repositorio
+client_secret*.json
+*client_secret*.json

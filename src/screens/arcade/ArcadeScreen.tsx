@@ -4,35 +4,38 @@ import { Card } from '@/components/Card'
 import { Screen } from '@/components/Screen'
 import { Cascade, CascadeItem } from '@/motion/Cascade'
 import { copy } from '@/copy'
+import { useHoldUpdates } from '@/pwa/useHoldUpdates'
+import { NinjaArcade } from './NinjaArcade'
 import { RacingArcade } from './RacingArcade'
-import { SkateArcade } from './SkateArcade'
+import { MigaSkateArcade } from './MigaSkateArcade'
 import { SokobanArcade } from './SokobanArcade'
-import { SkateParkArcade } from './SkateParkArcade'
 import { SurvivorsArcade } from './SurvivorsArcade'
 import { TrucoArcade } from './TrucoArcade'
 import { WalletBar } from './WalletBar'
 
-type GameId = 'survivors' | 'skate' | 'skatepark' | 'racing' | 'truco' | 'sokoban'
+type GameId = 'survivors' | 'migaskate' | 'racing' | 'truco' | 'sokoban' | 'ninja'
 
 const GAMES: { id: GameId; icon: string }[] = [
   { id: 'survivors', icon: '🥪' },
-  { id: 'skatepark', icon: '🛹' },
-  { id: 'skate', icon: '🏁' },
+  { id: 'migaskate', icon: '🛹' },
   { id: 'racing', icon: '🏎️' },
   { id: 'truco', icon: '🃏' },
   { id: 'sokoban', icon: '📦' },
+  { id: 'ninja', icon: '🥷' },
 ]
 
 /** Sala de juegos: elegís el juego y jugás todo lo que quieras, sin puntos ni premios. */
 export function ArcadeScreen() {
   const [game, setGame] = useState<GameId | null>(null)
+  // Con un juego en pantalla, una versión nueva de la app espera a que salgas.
+  useHoldUpdates(game !== null)
 
   if (game === 'survivors') return <SurvivorsArcade onBack={() => setGame(null)} />
-  if (game === 'skate') return <SkateArcade onBack={() => setGame(null)} />
-  if (game === 'skatepark') return <SkateParkArcade onBack={() => setGame(null)} />
+  if (game === 'migaskate') return <MigaSkateArcade onBack={() => setGame(null)} />
   if (game === 'racing') return <RacingArcade onBack={() => setGame(null)} />
   if (game === 'truco') return <TrucoArcade onBack={() => setGame(null)} />
   if (game === 'sokoban') return <SokobanArcade onBack={() => setGame(null)} />
+  if (game === 'ninja') return <NinjaArcade onBack={() => setGame(null)} />
 
   return (
     <Screen className="gap-4">

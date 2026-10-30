@@ -2,6 +2,7 @@
 // ni premios, así que no hace falta guardarlo en el servidor. Si el almacenamiento falla, se juega igual.
 
 import { STAGE_COUNT, clampStage } from '@engine/config.ts'
+import { TRACK_COUNT } from '@/games/racing/tracks'
 
 const KEY = 'arcade_survivors_unlocked'
 
@@ -29,7 +30,7 @@ export function unlockAfterWin(stage: number): number {
 }
 
 const RACING_KEY = 'arcade_racing_unlocked'
-const RACING_TRACKS = 5
+const RACING_TRACKS = TRACK_COUNT // las pistas salen del código, nunca de datos guardados
 
 /** Pista más alta que se puede correr (empieza en 1). */
 export function unlockedTrack(): number {
@@ -196,4 +197,84 @@ export function saveSurvivorsBest(stage: number, score: number): boolean {
     // sin almacenamiento: el récord no se guarda
   }
   return true
+}
+
+const NINJA_KEY = 'arcade_ninja_stars'
+export const NINJA_LEVELS = 10
+
+/** Estrellas (0..3) de cada nivel de Miga Ninja. */
+export function ninjaStars(): number[] {
+  const stars = Array.from({ length: NINJA_LEVELS }, () => 0)
+  try {
+    const raw = JSON.parse(localStorage.getItem(NINJA_KEY) ?? '[]')
+    if (Array.isArray(raw)) {
+      raw.slice(0, NINJA_LEVELS).forEach((value, i) => {
+        const n = Number(value)
+        if (Number.isFinite(n)) stars[i] = Math.max(0, Math.min(3, Math.floor(n)))
+      })
+    }
+  } catch {
+    // almacenamiento roto o vacío: se empieza de cero
+  }
+  return stars
+}
+
+/** Guarda la mejor marca del nivel. Devuelve las estrellas de todos los niveles. */
+export function saveNinjaStars(level: number, stars: number): number[] {
+  const all = ninjaStars()
+  const i = Math.min(NINJA_LEVELS, Math.max(1, Math.floor(level))) - 1
+  all[i] = Math.max(all[i] ?? 0, Math.max(0, Math.min(3, Math.floor(stars))))
+  try {
+    localStorage.setItem(NINJA_KEY, JSON.stringify(all))
+  } catch {
+    // sin almacenamiento: no se guarda, pero el juego sigue andando
+  }
+  return all
+}
+
+/** Nivel más alto que se puede jugar: pasar un nivel (1 estrella o más) abre el siguiente. */
+export function unlockedNinja(stars: readonly number[] = ninjaStars()): number {
+  let level = 1
+  while (level < NINJA_LEVELS && (stars[level - 1] ?? 0) >= 1) level++
+  return level
+}
+
+const MIGA_SKATE_KEY = 'arcade_migaskate_stars'
+const MIGA_SKATE_SPOTS = 5
+
+/** Estrellas (0..3) que se sacaron en cada spot de Miga Skate. */
+export function migaSkateStars(): number[] {
+  const stars = Array.from({ length: MIGA_SKATE_SPOTS }, () => 0)
+  try {
+    const raw = JSON.parse(localStorage.getItem(MIGA_SKATE_KEY) ?? '[]')
+    if (Array.isArray(raw)) {
+      raw.slice(0, MIGA_SKATE_SPOTS).forEach((value, i) => {
+        const n = Number(value)
+        if (Number.isFinite(n)) stars[i] = Math.max(0, Math.min(3, Math.floor(n)))
+      })
+    }
+  } catch {
+    // almacenamiento roto o vacío: se empieza de cero
+  }
+  return stars
+}
+
+/** Guarda la mejor marca del spot. Devuelve las estrellas de todos los spots. */
+export function saveMigaSkateStars(spot: number, stars: number): number[] {
+  const all = migaSkateStars()
+  const i = Math.min(MIGA_SKATE_SPOTS, Math.max(1, Math.floor(spot))) - 1
+  all[i] = Math.max(all[i] ?? 0, Math.max(0, Math.min(3, Math.floor(stars))))
+  try {
+    localStorage.setItem(MIGA_SKATE_KEY, JSON.stringify(all))
+  } catch {
+    // sin almacenamiento: no se guarda, pero el juego sigue andando
+  }
+  return all
+}
+
+/** Spot más alto que se puede jugar: una estrella en uno abre el siguiente. */
+export function unlockedMigaSkate(stars: readonly number[] = migaSkateStars()): number {
+  let spot = 1
+  while (spot < MIGA_SKATE_SPOTS && (stars[spot - 1] ?? 0) >= 1) spot++
+  return spot
 }

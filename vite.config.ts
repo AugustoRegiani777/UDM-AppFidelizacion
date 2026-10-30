@@ -12,7 +12,10 @@ export default defineConfig({
     ...(process.env.DEV_HTTPS ? [basicSsl()] : []),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // La app se registra a mano (src/pwa/register.ts): descarga la versión nueva sola y la aplica
+      // cuando no hay un juego en pantalla. Ver docs/DEPLOY.md.
+      registerType: 'prompt',
+      injectRegister: false,
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Uno de Miga',
@@ -35,7 +38,11 @@ export default defineConfig({
         ],
       },
       // /s/:uuid y las demás rutas de la SPA caen en index.html; /dev no se cachea offline.
-      workbox: { navigateFallbackDenylist: [/^\/functions\//] },
+      workbox: {
+        navigateFallbackDenylist: [/^\/functions\//],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+      },
     }),
   ],
   resolve: {

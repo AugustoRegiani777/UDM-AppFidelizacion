@@ -17,7 +17,10 @@ export async function updateProfile(displayName: string, promoConsent: boolean) 
 }
 
 export async function deleteAccount() {
-  const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' })
+  const { error } = await supabase.functions.invoke('delete-account', {
+    method: 'POST',
+    body: { confirm: true },
+  })
   if (error) throw error
   await supabase.auth.signOut({ scope: 'local' })
 }

@@ -1,17 +1,21 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import type { GameConfig } from '@engine/config.ts'
-import type { SkateConfig } from '@skate/config.ts'
 import { supabase } from '@/lib/supabase'
 
 export class RewardNotReachedError extends Error {}
 
-export type ChestGameName = 'survivors' | 'skate'
+export type ChestGameName = 'survivors'
 
 export type StartChestResult =
   | { already_unlocked: true; redemption_id: string }
-  | ({ already_unlocked: false; session_id: string; seed: number; relaxed: boolean } & (
-      { game: 'survivors'; config: GameConfig } | { game: 'skate'; config: SkateConfig }
-    ))
+  | {
+      already_unlocked: false
+      session_id: string
+      seed: number
+      relaxed: boolean
+      game: 'survivors'
+      config: GameConfig
+    }
 
 export interface FinishChestResult {
   won: boolean

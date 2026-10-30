@@ -8,8 +8,8 @@ import { setShowInRankings, type Board } from '@/features/economy/economyApi'
 import { useBoard, useWallet } from '@/features/economy/useEconomy'
 import { copy } from '@/copy'
 
-type Tab = 'survivors' | 'skate' | 'points'
-const TABS: Tab[] = ['survivors', 'skate', 'points']
+type Tab = 'survivors' | 'points'
+const TABS: Tab[] = ['survivors', 'points']
 
 const isTab = (value: string | null): value is Tab => TABS.includes(value as Tab)
 
@@ -116,11 +116,7 @@ export function RankingScreen() {
           {copy.ranking.boosted}
         </label>
       )}
-      {tab !== 'points' && (
-        <p className="text-muted text-sm">
-          {tab === 'survivors' ? copy.arcade.stageName(stage) : copy.ranking.skateNote}
-        </p>
-      )}
+      {tab === 'survivors' && <p className="text-muted text-sm">{copy.arcade.stageName(stage)}</p>}
       {tab === 'points' && <p className="text-muted text-sm">{copy.ranking.pointsNote}</p>}
 
       {board.isPending && (

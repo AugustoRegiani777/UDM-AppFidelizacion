@@ -26,7 +26,7 @@ export const es = {
     guest: 'Probar la app',
     guestSubtitle: 'Es una versión de prueba: entrás al toque, sin crear cuenta.',
     guestNote:
-      'Tu avance y tus puntos de prueba se guardan en este celular. Si borrás los datos del navegador o salís, empezás de nuevo.',
+      'Tu avance y tus puntos de prueba se guardan en este celular. Podés guardarlos con tu cuenta de Google desde tu perfil; si salís sin hacerlo, empezás de nuevo.',
     pendingSale: 'Entrá para sumar tu compra. Ya la guardamos, no se pierde.',
     devTitle: 'Solo desarrollo',
     devEmail: 'Email',
@@ -131,6 +131,209 @@ export const es = {
     locked: 'Terminá el nivel anterior para abrirlo',
     play: 'Jugar',
   },
+  migaskate: {
+    title: 'Miga Skate',
+    subtitle:
+      'Patinás con los dedos, como en la vida real. Explorá cada spot, hacé trucos y cumplí los tres objetivos.',
+    spotLabel: (n: number) => `Spot ${n}`,
+    spotName: (id: string) =>
+      (
+        {
+          plaza: 'La plaza de la miga',
+          museum: 'Las escaleras del museo',
+          boxes: 'Cajones y rieles',
+          bowl: 'La piscina',
+          park: 'El parque grande',
+        } as Record<string, string>
+      )[id] ?? id,
+    spotBlurb: (id: string) =>
+      (
+        {
+          plaza: 'Una rampita, un riel bajo y cajones para entrar en calor.',
+          museum: 'Escaleras, pasamanos y una plataforma para ollies grandes.',
+          boxes: 'Un funbox, cornisas y rieles para encadenar grinds.',
+          bowl: 'Cuartos de pipa por todos lados: ganá altura y agarrá la tabla.',
+          park: 'Todo junto: escaleras, cuartos, cornisas y rieles.',
+        } as Record<string, string>
+      )[id] ?? '',
+    locked: 'Sacá una estrella en el spot anterior para abrirlo',
+    stars: (n: number) => `${n} de 3 estrellas`,
+    play: '¡A patinar!',
+    loading: 'Armando el parque…',
+    noWebglTitle: 'Tu celular no puede mostrar el parque en 3D',
+    noWebglBody: 'Probá con otro navegador o actualizá el que tenés. Los demás juegos siguen andando.',
+    guide: [
+      { icon: '☝️', text: 'Ollie: apoyá el dedo en la cola de la tabla y deslizá hacia arriba. Más rápido, más alto.' },
+      { icon: '🌀', text: 'Shove-it: desde la cola, deslizá arriba y al costado.' },
+      { icon: '🔥', text: 'Flips: apoyá un dedo al costado de la tabla y tirá en diagonal: izquierda kickflip, derecha heelflip.' },
+      { icon: '🤏', text: 'En el aire, mantené el dedo sobre la tabla para agarrarla. Un latigazo de lado en el centro gira el cuerpo.' },
+      { icon: '🛹', text: 'Arrastrá el dedo de lado sobre el centro para doblar. Deslizá hacia abajo para empujar.' },
+      { icon: '⚖️', text: 'Manual: mantené el dedo en la cola o la nariz y balanceá. Grind: ollie hacia un riel.' },
+    ],
+    keyboardHint: 'Con teclado: flechas para doblar, espacio ollie, K kickflip, H heelflip, S shove-it, G agarre, M manual.',
+    goal: (seconds: number) =>
+      `Tenés ${seconds} segundos por spot. Cada objetivo cumplido es una estrella.`,
+    objectivesTitle: 'Objetivos',
+    objective: (o: { kind: string; target?: number; tag?: string; count?: number }) => {
+      const tagNames: Record<string, string> = {
+        ollie: 'ollies',
+        nollie: 'nollies',
+        flip: 'flips',
+        kickflip: 'kickflip',
+        heelflip: 'heelflip',
+        doubleflip: 'flip doble',
+        flip360: '360 flip',
+        shuvit: 'shove-its',
+        shuvit360: '360 shove-it',
+        spin180: 'giro de 180',
+        spin360: 'giro de 360',
+        grab: 'agarre',
+        grind: 'grind en un riel',
+        boardslide: 'boardslide',
+        manual: 'manual',
+        air: 'salto de rampa',
+      }
+      switch (o.kind) {
+        case 'score':
+          return `Sumá ${o.target} puntos`
+        case 'combo':
+          return `Un combo de ${o.target} puntos`
+        case 'comboLen':
+          return `Encadená ${o.target} trucos en un combo`
+        case 'grindSeconds':
+          return `Un grind de ${o.target} segundos`
+        case 'manualSeconds':
+          return `Un manual de ${o.target} segundos`
+        case 'height':
+          return `Saltá a ${o.target} metros de altura`
+        default:
+          return (o.count ?? 1) > 1
+            ? `Aterrizá ${o.count} ${tagNames[o.tag ?? ''] ?? o.tag}`
+            : `Aterrizá un ${tagNames[o.tag ?? ''] ?? o.tag}`
+      }
+    },
+    tricks: {
+      ollie: 'Ollie',
+      kickflip: 'Kickflip',
+      heelflip: 'Heelflip',
+      doubleKickflip: 'Double kickflip',
+      doubleHeelflip: 'Double heelflip',
+      varialKickflip: 'Varial kickflip',
+      varialHeelflip: 'Varial heelflip',
+      flip360: '360 flip',
+      laserflip: 'Laser flip',
+      shuvit: 'Pop shove-it',
+      shuvit360: '360 shove-it',
+      spin180: '180',
+      spin360: '360',
+      air: 'Aire',
+      indy: 'Indy',
+      melon: 'Melon',
+      noseGrab: 'Nose grab',
+      tailGrab: 'Tail grab',
+      grind: '50-50',
+      boardslide: 'Boardslide',
+      manual: 'Manual',
+      noseManual: 'Nose manual',
+    } as Record<string, string>,
+    nollie: 'Nollie',
+    pause: 'Pausa',
+    resume: 'Seguir',
+    exit: 'Salir',
+    finishSession: 'Terminar sesión',
+    score: 'Puntos',
+    comboLabel: 'Combo',
+    timeLeft: 'Tiempo que falta',
+    balance: 'Equilibrio',
+    noseLabel: 'Nariz',
+    tailLabel: 'Cola',
+    padLabel: 'Tabla: tocá y deslizá para patinar',
+    bank: (points: number) => `+${points}`,
+    lost: (points: number) => `¡Casi! Ese combo de ${points} estaba cerca. ¡A la próxima!`,
+    bails: [
+      '¡Casi! Probá de nuevo',
+      '¡Uy, qué cerca!',
+      'Se escapó la tabla, ¡otra!',
+      '¡Se arma! La próxima sale',
+    ],
+    bailManual: '¡Casi el manual! Probá más suave',
+    bailGrind: '¡Casi el grind! Corregí con el dedo',
+    objectiveDone: (text: string) => `¡Objetivo cumplido! ${text}`,
+    hintFirst: 'Apoyá el dedo en la cola de la tabla y deslizá hacia arriba',
+    ended: '¡Se acabó la sesión!',
+    allDone: '¡Spot completo!',
+    resultTitle: (stars: number) =>
+      stars >= 3 ? '¡Leyenda del spot!' : stars >= 1 ? '¡Buena sesión!' : 'Seguí practicando',
+    resultStats: (landed: number, bails: number, bestCombo: number) =>
+      `${landed} aterrizajes, ${bails} ${bails === 1 ? 'casi' : 'casis'} y un mejor combo de ${bestCombo} puntos.`,
+    next: 'Siguiente spot',
+    again: 'Patinar de nuevo',
+    backToSpots: 'Elegir spot',
+    reducedMotionNote: 'Efectos reducidos: sin sacudidas ni destellos.',
+  },
+  ninja: {
+    title: 'Miga Ninja',
+    subtitle:
+      'Cortá con el dedo todo lo rico que sale volando: sándwiches, medialunas, chipá, cinnamons y cafés. ¡Y ojo con la hormiga gigante!',
+    levelOf: (n: number, total: number) => `Nivel ${n} de ${total}`,
+    levels: [
+      { name: 'El mostrador', tagline: 'Calentá el dedo: sándwiches, medialunas y cafés.' },
+      { name: 'La vitrina', tagline: 'Más cosas a la vez. Llega el chipá y asoma alguna hormiga.' },
+      { name: 'El obrador', tagline: 'Cinnamons recién salidos, y un dorado que da frenesí.' },
+      { name: 'La cafetera', tagline: 'Un café frío congela el tiempo. Aprovechalo.' },
+      { name: 'Plaza del Ayuntamiento', tagline: 'Atardecer en el centro de Valencia.' },
+      { name: 'Mercado Central', tagline: 'Tandas cruzadas entre toldos y arcos.' },
+      { name: 'Malvarrosa', tagline: 'Lluvia de sándwiches frente al mar.' },
+      { name: 'Ciudad de las Artes', tagline: 'Rápido y entre los arcos blancos.' },
+      { name: 'Noche de Fallas', tagline: 'Fuegos artificiales y mucha hormiga suelta.' },
+      { name: 'La gran final', tagline: 'Todo junto. ¡Que no pare la fiesta!' },
+    ] as { name: string; tagline: string }[],
+    howTo: [
+      { icon: '👆', text: 'Deslizá el dedo (o el mouse) para cortar todo lo rico que sale volando.' },
+      { icon: '🥪', text: 'Cortá varios de un tajo, y seguidos, para combos y más puntos.' },
+      { icon: '🐜', text: 'No cortes la hormiga gigante: te quita una vida.' },
+      { icon: '❤️', text: 'Si se te cae algo rico, perdés una vida. Con una buena racha, la recuperás.' },
+    ],
+    specials: [
+      { icon: '🌟', text: 'El cinnamon dorado desata el frenesí: puntos dobles y lluvia de comida.' },
+      { icon: '🧊', text: 'El café frío congela el tiempo para que cortes con calma.' },
+    ],
+    goalScore: (n: number) => `Objetivo: ${n} puntos`,
+    goalCuts: (n: number) => `Objetivo: cortar ${n}`,
+    goalDone: '¡Objetivo cumplido!',
+    seconds: (n: number) => `${n} s`,
+    lives: (n: number, max: number) => `Vidas: ${n} de ${max}`,
+    combo: (n: number) => `Racha ${n}`,
+    score: (n: number) => `${n} pts`,
+    streakToLife: (n: number) => `${n} cortes seguidos para una vida de regalo`,
+    go: '¡A cortar!',
+    pause: 'Pausa',
+    resume: 'Seguir',
+    exit: 'Salir',
+    won: '¡Nivel completo!',
+    notYet: '¡Casi lo lográs!',
+    notYetBody: (goal: string) => `Sumaste un montón. Para pasar de nivel: ${goal.toLowerCase()}`,
+    result: (score: number, cuts: number, bestCombo: number) =>
+      `${score} puntos, ${cuts} cortes y una racha de ${bestCombo}.`,
+    stars: (n: number) => `${n} de 3 estrellas`,
+    starsHint: (two: number, three: number) =>
+      `2 estrellas con ${two} puntos, 3 estrellas con ${three}.`,
+    next: 'Siguiente nivel',
+    retry: 'Jugar de nuevo',
+    backToLevels: 'Elegir nivel',
+    allDone: '¡Cortaste todos los niveles!',
+    locked: 'Pasá el nivel anterior para abrirlo',
+    play: 'Jugar',
+    popups: {
+      miss: '¡Se cayó!',
+      life: '¡Una vida de regalo!',
+      frenzy: '¡FRENESÍ!',
+      freeze: '¡Cámara lenta!',
+      goal: '¡Objetivo cumplido!',
+      stroke: (n: number, bonus: number) => `¡${n} de un tajo! +${bonus}`,
+    },
+    icons: ['🥪', '🥐', '🥖', '☕', '🏛️', '🧺', '🏖️', '🏟️', '🎆', '👑'],
+  },
   skatepark: {
     title: 'Skate Spot',
     subtitle:
@@ -208,9 +411,9 @@ export const es = {
     back: 'Elegir rival',
     coins: (n: number) => `${n} ${n === 1 ? 'moneda' : 'monedas'}`,
     opponents: {
-      pibe: { name: 'El Pibe', icon: '🧒', bio: 'Recién arranca y se tira muchos faroles.' },
-      rosa: { name: 'Doña Rosa', icon: '👵', bio: 'Sabe jugar y no regala nada.' },
-      maestro: { name: 'El Maestro', icon: '🧔', bio: 'Juega fino y casi no se equivoca.' },
+      pibe: { name: 'El Pibe', icon: '🧒', bio: 'Recién arranca: juega derecho, canta lo que tiene y no sabe mentir.' },
+      rosa: { name: 'Doña Rosa', icon: '👵', bio: 'Sabe jugar, a veces blufea y sabe cuándo irse al mazo.' },
+      maestro: { name: 'El Maestro', icon: '🧔', bio: 'Juega fino, canta sin tener y te miente a la cara. Cuidado con la falta envido.' },
     },
     howTo: [
       { icon: '🃏', text: 'Tres cartas cada uno. Gana la mano quien gana dos bazas.' },
@@ -285,6 +488,54 @@ export const es = {
     noCoins: 'Te faltan monedas',
     timeUp: 'Se acabó el tiempo',
     turnClock: 'Tiempo para jugar',
+    follow: 'Seguir',
+    trickMine: [
+      (card: string) => `¡Te la llevaste con ${card}!`,
+      (card: string) => `¡Bien jugado: ${card}!`,
+      (card: string) => `¡Ahí cayó ${card} y se la quedó tu mesa!`,
+    ],
+    trickRival: [
+      (card: string) => `¡Se la llevó con ${card}!`,
+      (card: string) => `¡Qué carta: ${card}! Esa es de ellos.`,
+      (card: string) => `¡Ahí apareció ${card}! Todavía queda partido.`,
+    ],
+    trickTie: '¡Parda! Las dos cartas valen lo mismo.',
+    trickKeepGoing: 'La mano sigue.',
+    envidoShown: 'Se muestran los tantos',
+    summary: {
+      title: 'Resumen de la mano',
+      yourCards: 'Tus cartas',
+      rivalCards: 'Cartas del rival',
+      rivalHidden: 'El rival no las mostró.',
+      envido: 'Envido',
+      envidoNames: { envido: 'Envido', real: 'Real envido', falta: 'Falta envido' },
+      envidoOf: (names: string) => `Se cantó: ${names}`,
+      yourTanto: 'Vos',
+      rivalTanto: 'Rival',
+      envidoWin: (iWon: boolean, points: number, tied: boolean) =>
+        `${iWon ? `Ganaste el envido: +${points}` : `Ganó el rival el envido: +${points}`}${tied ? ' (empataron y gana el mano)' : ''}`,
+      envidoDeclinedYes: (points: number) => `No quiso el envido: sumás ${points}.`,
+      envidoDeclinedNo: (points: number) => `No quisiste el envido: suma ${points} el rival.`,
+      tricks: 'Bazas',
+      trick: (n: number) => `Baza ${n}`,
+      trickWon: 'ganaste',
+      trickLost: 'ganó el rival',
+      trickTie: 'parda',
+      stakeNames: ['Mano', 'Truco', 'Retruco', 'Vale cuatro'],
+      handLine: (stake: string, points: number, iWon: boolean, reason: string) =>
+        `${stake}${reason ? ` (${reason})` : ''}: ${iWon ? `sumás ${points}` : `suma ${points} el rival`}`,
+      reasonFoldMine: 'te fuiste al mazo',
+      reasonFoldRival: 'el rival se fue al mazo',
+      reasonNoMine: 'no quisiste',
+      reasonNoRival: 'el rival no quiso',
+      reasonTricks: 'por las bazas',
+      total: (mine: number, rival: number) => `Esta mano: vos +${mine} · rival +${rival}`,
+      cheer: ['¡La próxima es tuya!', 'Se juega hasta el final, ¡vamos!', '¡Con el mate se da vuelta!'],
+    },
+  },
+  pwa: {
+    newVersion: 'Hay una versión nueva',
+    update: 'Actualizar',
   },
   racing: {
     title: 'Miga Racers',
@@ -387,9 +638,8 @@ export const es = {
     title: 'Ranking',
     subtitle: 'Los mejores puntajes de la comunidad. Solo cuentan las partidas oficiales.',
     back: 'Volver a los juegos',
-    tabs: { survivors: 'Sobreviví', skate: 'Skate', points: 'Puntos' },
+    tabs: { survivors: 'Sobreviví', points: 'Puntos' },
     stageLabel: 'Nivel',
-    skateNote: 'Circuito completo: más puntos cuanto más limpio y rápido.',
     pointsNote: 'Quién más puntos acumuló comprando y jugando.',
     empty: 'Todavía nadie entró al ranking. ¡Sé el primero!',
     loading: 'Cargando el ranking…',
@@ -417,14 +667,17 @@ export const es = {
         name: 'Sobreviví a las migas',
         body: 'Seis niveles, poderes y una Reina hormiga.',
       },
-      skate: { name: 'Skate de Miga', body: 'Rampas, trucos y turbo. Mejor en horizontal.' },
+      migaskate: {
+        name: 'Miga Skate',
+        body: 'Patinás con los dedos en un parque 3D: ollies, flips, grinds y manuales en cinco spots.',
+      },
       sokoban: {
         name: 'Entregas de Miga',
         body: 'Empujá cajas hasta su entrega. 12 niveles, con auto, moto, lancha y helicóptero.',
       },
-      skatepark: {
-        name: 'Skate Spot',
-        body: 'Trucos, combos, grinds y cinco niveles de parque. Mejor en horizontal.',
+      ninja: {
+        name: 'Miga Ninja',
+        body: 'Cortá sándwiches, medialunas y cafés al vuelo. 10 niveles, combos y una hormiga gigante.',
       },
       truco: { name: 'Truco', body: 'Cartas, envido y mate en la mesa. Contra tres rivales.' },
       racing: {
@@ -843,14 +1096,34 @@ export const es = {
     points: 'puntos',
     balanceLabel: 'Tu saldo',
   },
+  account: {
+    saveTitle: 'Guardá tu progreso',
+    saveBody:
+      'Ahora sos invitado: tu cuenta vive en este celular. Vinculá tu Google y tus puntos quedan guardados, también si cambiás de celular.',
+    saveButton: 'Guardar mi progreso con Google',
+    saveNote:
+      'Es la misma cuenta: no perdés ningún punto, moneda, mejora ni premio. Los récords de práctica de la sala de juegos quedan solo en este celular.',
+    saveError: 'Uy, no pudimos conectar con Google. Probá de nuevo en un ratito; tu progreso sigue acá.',
+    panelHint: 'Estás como invitado: guardá tu progreso con Google',
+    conflictTitle: 'Ese Google ya tiene su propio progreso',
+    conflictBody:
+      'Ya habías usado esa cuenta de Google en la app, así que no podemos mezclar los puntos de invitado con los de esa cuenta. No se borró nada: cada cuenta conserva lo suyo.',
+    conflictEnter: 'Entrar con esa cuenta de Google',
+    conflictEnterNote:
+      'Vas a ver los puntos de esa cuenta. La de invitado de este celular queda guardada, pero no vas a poder volver a abrirla.',
+    conflictStay: 'Seguir como invitado',
+    failedTitle: 'No pudimos guardar tu progreso',
+    failedBody: 'No se perdió nada: seguís con tu cuenta de invitado. Probá de nuevo cuando quieras.',
+    failedClose: 'Entendido',
+  },
   profile: {
     title: 'Tu perfil',
     nameLabel: 'Nombre',
     promoConsent: 'Recibir novedades y promos',
     save: 'Guardar cambios',
-    signOutGuest: 'Salir (se pierden mis puntos de prueba)',
+    signOutGuest: 'Salir (no voy a poder volver a esta cuenta)',
     guestWarning:
-      'Estás usando la versión de prueba como invitado: si salís, esta cuenta y sus puntos no se pueden recuperar.',
+      'Sos invitado: si salís sin guardar tu progreso con Google, no vas a poder volver a abrir esta cuenta (los datos no se borran, pero quedan inaccesibles).',
     sound: 'Sonidos en las celebraciones',
     saved: 'Listo, guardado.',
     signOut: 'Cerrar sesión',

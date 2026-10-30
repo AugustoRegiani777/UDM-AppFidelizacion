@@ -35,6 +35,8 @@ export interface EnvidoResult {
   /** Puntos que se lleva el ganador. */
   won: number
   accepted: boolean
+  /** Los cantos de la cadena (envido, real envido…) tal como se dijeron. */
+  chain: EnvidoCall[]
 }
 
 export interface HandResult {
@@ -295,7 +297,7 @@ function resolveEnvido(s: TrucoState, pending: PendingEnvido, accepted: boolean)
   }
   award(s, winner, won)
   s.envidoDone = true
-  s.envidoResult = { points, winner, won, accepted }
+  s.envidoResult = { points, winner, won, accepted, chain: [...pending.chain] }
   s.events.push({ t: 'envido', result: s.envidoResult })
 
   const suspended = pending.suspended

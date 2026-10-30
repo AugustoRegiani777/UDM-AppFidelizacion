@@ -10,6 +10,9 @@ Deno.serve(async (req) => {
   try {
     if (req.method !== 'POST') throw new HttpError(405, 'method_not_allowed')
     const user = await requireUser(req)
+    // Borrar es irreversible: hace falta confirmarlo explícitamente (una llamada suelta no alcanza).
+    const body = await req.json().catch(() => ({}))
+    if (body?.confirm !== true) throw new HttpError(400, 'confirmation_required')
     const { error } = await adminClient().auth.admin.deleteUser(user.id)
     if (error) throw error
     return json({ deleted: true })

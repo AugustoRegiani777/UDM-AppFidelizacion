@@ -11,17 +11,13 @@ import {
 } from '@/features/chest/chestApi'
 import { useDashboard } from '@/features/dashboard/useDashboard'
 import type { GameConfig } from '@engine/config.ts'
-import type { SkateConfig } from '@skate/config.ts'
 import type { GameOutcome, GameSession } from '@/games/outcome'
-import { SkateGame } from '@/games/skate/SkateGame'
 import { SurvivorsGame } from '@/games/survivors/SurvivorsGame'
 import { Celebration } from '@/motion/Celebration'
 import { copy } from '@/copy'
 import { ChestIllustration } from './ChestIllustration'
 
-type Playing =
-  | { game: 'survivors'; session: GameSession<GameConfig> }
-  | { game: 'skate'; session: GameSession<SkateConfig> }
+type Playing = { game: 'survivors'; session: GameSession<GameConfig> }
 
 type Phase =
   | { name: 'intro' }
@@ -54,10 +50,7 @@ export function ChestScreen() {
       setPhase({
         name: 'playing',
         sessionId: started.session_id,
-        play:
-          started.game === 'skate'
-            ? { game: 'skate', session: { ...base, config: started.config } }
-            : { game: 'survivors', session: { ...base, config: started.config } },
+        play: { game: 'survivors', session: { ...base, config: started.config } },
       })
     } catch (error) {
       setPhase({
@@ -86,11 +79,7 @@ export function ChestScreen() {
   if (phase.name === 'playing') {
     const onEnd = (outcome: GameOutcome) => void verify(phase.sessionId, outcome)
     const onExit = () => setPhase({ name: 'intro' })
-    return phase.play.game === 'skate' ? (
-      <SkateGame session={phase.play.session} onEnd={onEnd} onExit={onExit} />
-    ) : (
-      <SurvivorsGame session={phase.play.session} onEnd={onEnd} onExit={onExit} />
-    )
+    return <SurvivorsGame session={phase.play.session} onEnd={onEnd} onExit={onExit} />
   }
 
   return (

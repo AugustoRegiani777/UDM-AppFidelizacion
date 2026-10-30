@@ -161,7 +161,7 @@ export async function configureChest(
 export const setChestOverrides = (overrides: Record<string, unknown>) =>
   configureChest('survivors', overrides)
 
-/** Vuelve a la configuración normal: todos los juegos, reglas por defecto. */
+/** Vuelve a la configuración normal: el cofre solo sortea Sobreviví a las migas (el skate está retirado), reglas por defecto. */
 export async function resetChestConfig(): Promise<void> {
   const { data, error } = await admin
     .from('settings')
@@ -172,7 +172,7 @@ export async function resetChestConfig(): Promise<void> {
   await admin
     .from('settings')
     .update({
-      value: { ...(data.value as object), games: ['survivors', 'skate'], overrides: {} } as never,
+      value: { ...(data.value as object), games: ['survivors'], overrides: {} } as never,
     })
     .eq('key', 'chest_game')
 }

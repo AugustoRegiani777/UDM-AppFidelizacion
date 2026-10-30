@@ -9,7 +9,12 @@ import { copy } from '@/copy'
 
 type View = { name: 'menu' } | { name: 'playing'; profile: Profile; seed: number }
 
-const newSeed = () => (crypto.getRandomValues(new Uint32Array(1))[0] ?? 1) >>> 0
+/** El reparto sale al azar; la dirección con ?trucoSeed=N lo fija (práctica sin premio: sirve para las pruebas). */
+const newSeed = () => {
+  const fixed = Number(new URLSearchParams(window.location.search).get('trucoSeed'))
+  if (Number.isInteger(fixed) && fixed > 0) return fixed >>> 0
+  return (crypto.getRandomValues(new Uint32Array(1))[0] ?? 1) >>> 0
+}
 
 /** Truco en la sala de juegos: elegís rival y jugás todas las partidas que quieras. */
 export function TrucoArcade({ onBack }: { onBack: () => void }) {

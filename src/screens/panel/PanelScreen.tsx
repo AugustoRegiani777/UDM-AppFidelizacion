@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { Button } from '@/components/Button'
+import { SaveProgressHint } from '@/features/auth/SaveProgress'
 import { ResetSession } from '@/features/auth/ResetSession'
 import { Screen } from '@/components/Screen'
 import { useDashboard, type Dashboard } from '@/features/dashboard/useDashboard'
@@ -40,6 +41,8 @@ function PanelContent({ data }: { data: Dashboard }) {
           {copy.panel.profile}
         </Link>
       </header>
+
+      <SaveProgressHint />
 
       <BalanceHero
         balance={data.balance}

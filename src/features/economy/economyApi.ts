@@ -3,14 +3,17 @@
 
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import type { GameConfig } from '@engine/config.ts'
-import type { SkateConfig } from '@skate/config.ts'
 import { supabase } from '@/lib/supabase'
 
-export type RankedGame = 'survivors' | 'skate'
+export type RankedGame = 'survivors'
 
-export type StartRunResult = { run_id: string; stage: number; seed: number } & (
-  { game: 'survivors'; config: GameConfig } | { game: 'skate'; config: SkateConfig }
-)
+export interface StartRunResult {
+  run_id: string
+  stage: number
+  seed: number
+  game: 'survivors'
+  config: GameConfig
+}
 
 export interface FinishRunResult {
   won: boolean

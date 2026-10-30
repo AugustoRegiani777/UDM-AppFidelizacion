@@ -5,14 +5,15 @@ import { Checkbox } from '@/components/Checkbox'
 import { FullScreenLoader } from '@/components/FullScreenLoader'
 import { Screen } from '@/components/Screen'
 import { TextField } from '@/components/TextField'
+import { SaveProgress } from '@/features/auth/SaveProgress'
 import { signOut } from '@/features/auth/signIn'
+import { useIsGuest } from '@/features/auth/useIsGuest'
 import { deleteAccount, updateProfile } from '@/features/profile/profileApi'
 import { useInvalidateProfile, useProfile } from '@/features/profile/useProfile'
 import { setSoundEnabled, useSoundEnabled } from '@/motion/preferences'
 import { Sheet } from '@/motion/Sheet'
 import { useIsAdmin } from '@/features/admin/adminApi'
 import { copy } from '@/copy'
-import { env } from '@/lib/env'
 
 export function ProfileScreen() {
   const profile = useProfile()
@@ -26,6 +27,7 @@ function ProfileForm({ name: initialName, promo }: { name: string; promo: boolea
   const [name, setName] = useState(initialName)
   const [promoConsent, setPromoConsent] = useState(promo)
   const [saved, setSaved] = useState(false)
+  const isGuest = useIsGuest()
 
   async function handleSave(event: FormEvent) {
     event.preventDefault()
@@ -69,12 +71,13 @@ function ProfileForm({ name: initialName, promo }: { name: string; promo: boolea
           </p>
         )}
       </form>
+      <SaveProgress />
       <AdminLink />
       <SoundToggle />
       <Button variant="ghost" onClick={() => signOut()}>
-        {env.guestMode ? copy.profile.signOutGuest : copy.profile.signOut}
+        {isGuest ? copy.profile.signOutGuest : copy.profile.signOut}
       </Button>
-      {env.guestMode && <p className="text-muted text-sm">{copy.profile.guestWarning}</p>}
+      {isGuest && <p className="text-muted text-sm">{copy.profile.guestWarning}</p>}
       <DeleteAccount />
     </Screen>
   )

@@ -61,3 +61,12 @@ select public.schedule_reconcile('https://<REF>.supabase.co/functions/v1/reconci
 ## Después de publicar: verificación
 
 Seguir `CHECKLIST-LANZAMIENTO.md`.
+
+## Cómo se actualizan los celulares
+
+Cada despliegue en Netlify genera un `sw.js` nuevo (siempre sin cache, ver `netlify.toml`). La app lo busca al abrirse, al volver a ella desde segundo plano y cada 30 minutos (`src/pwa/register.ts`). La versión nueva se descarga sola y:
+
+- Si no hay un juego, el escáner o la raspadita en pantalla, se aplica enseguida con una recarga.
+- Si hay un juego en curso, **no se corta la partida**: aparece un aviso discreto "Hay una versión nueva · Actualizar" y se aplica apenas se sale del juego (o al tocar el botón).
+- Hay que **subir los commits a GitHub** para que Netlify publique: sin push no hay versión nueva que descargar (`git status` muestra "ahead of origin/main").
+- Si un celular sigue viendo algo viejo: cerrar la app del todo y abrirla dos veces; como último recurso, borrar los datos del sitio. La lógica está en `src/pwa/updateGate.ts` (con tests).

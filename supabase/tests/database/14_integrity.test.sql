@@ -2,6 +2,9 @@
 begin;
 select plan(72);
 
+-- El lanzamiento deja welcome_points en 0 (20261031000002); estas pruebas usan invitados con puntos de entrada.
+update public.settings set value = '{"welcome_points": 1500}'::jsonb where key = 'demo';
+
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data) values
   ('aaaaaaaa-1400-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ana@test.com', '{"full_name": "Ana Pérez"}'),
   ('bbbbbbbb-1400-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'beto@test.com', '{"full_name": "Beto Gómez"}');

@@ -800,41 +800,53 @@ export type Database = {
       }
       profiles: {
         Row: {
+          adult_confirmed_at: string | null
           avatar_url: string | null
           created_at: string
           display_name: string
           google_name: string | null
           id: string
           is_admin: boolean
+          legal_version: string | null
+          privacy_accepted_at: string | null
           program_consent_at: string | null
           promo_consent: boolean
           promo_consent_at: string | null
           show_in_rankings: boolean
+          terms_accepted_at: string | null
         }
         ComputedFields: never
         Insert: {
+          adult_confirmed_at?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name: string
           google_name?: string | null
           id: string
           is_admin?: boolean
+          legal_version?: string | null
+          privacy_accepted_at?: string | null
           program_consent_at?: string | null
           promo_consent?: boolean
           promo_consent_at?: string | null
           show_in_rankings?: boolean
+          terms_accepted_at?: string | null
         }
         Update: {
+          adult_confirmed_at?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string
           google_name?: string | null
           id?: string
           is_admin?: boolean
+          legal_version?: string | null
+          privacy_accepted_at?: string | null
           program_consent_at?: string | null
           promo_consent?: boolean
           promo_consent_at?: string | null
           show_in_rankings?: boolean
+          terms_accepted_at?: string | null
         }
         Relationships: []
       }
@@ -1083,6 +1095,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_legal: {
+        Args: { p_adult: boolean; p_privacy: boolean; p_terms: boolean }
+        Returns: undefined
+      }
       add_comment: { Args: { p_body: string; p_place: string }; Returns: Json }
       admin_create_place: {
         Args: {
@@ -1125,7 +1141,13 @@ export type Database = {
       community_alias: { Args: { p_customer: string }; Returns: string }
       community_places: { Args: { p_category?: string }; Returns: Json }
       complete_onboarding: {
-        Args: { p_display_name: string; p_promo_consent: boolean }
+        Args: {
+          p_adult: boolean
+          p_display_name: string
+          p_privacy: boolean
+          p_promo_consent: boolean
+          p_terms: boolean
+        }
         Returns: undefined
       }
       customer_balance: { Args: { p_customer: string }; Returns: number }
@@ -1138,6 +1160,7 @@ export type Database = {
       ensure_profile: { Args: Record<PropertyKey, never>; Returns: boolean }
       expire_pending_claims: { Args: Record<PropertyKey, never>; Returns: number }
       expire_redemptions: { Args: { p_customer?: string }; Returns: number }
+      export_my_data: { Args: Record<PropertyKey, never>; Returns: Json }
       finish_chest: {
         Args: {
           p_customer: string

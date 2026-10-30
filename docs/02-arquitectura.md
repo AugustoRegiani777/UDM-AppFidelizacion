@@ -61,7 +61,7 @@ Usar las últimas versiones estables y verificar la API actual de cada librería
 
 ## Modelo de datos (Postgres, schema `public`)
 
-- **profiles** — `id` (= auth.users.id), `display_name`, `avatar_url`, `program_consent_at`, `promo_consent` (bool), `promo_consent_at`, `created_at`.
+- **profiles** — `id` (= auth.users.id), `display_name`, `avatar_url`, `program_consent_at`, `adult_confirmed_at`, `privacy_accepted_at`, `terms_accepted_at`, `legal_version` (prueba de la aceptación legal; solo las escriben `complete_onboarding` y `accept_legal`, versión vigente en `settings.legal`), `promo_consent` (bool), `promo_consent_at`, `created_at`.
 - **settings** — `key` (pk), `value` (jsonb). Reglas de negocio configurables.
 - **rewards** — `id`, `name`, `description`, `kind` (`points` | `purchases`), `threshold`, `active`, `sort_order`, `image_url`.
 - **claims** — una venta reclamada: `id`, `customer_id`, `sale_uuid` (**unique**), `status` (`pending` | `confirmed` | `rejected` | `reversed`), `reject_reason`, `sale_total_cents`, `sale_at`, `points`, `created_at`, `updated_at`.

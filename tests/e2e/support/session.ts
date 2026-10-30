@@ -1,13 +1,20 @@
 import { devices, expect, type Browser, type Page } from '@playwright/test'
 import { admin } from '../../integration/helpers'
 
+/** Marca las tres casillas obligatorias de la bienvenida (la de promos es opcional y queda desmarcada). */
+export async function acceptLegal(page: Page) {
+  await page.getByRole('checkbox', { name: /18 años o más/i }).check()
+  await page.getByRole('checkbox', { name: /política de privacidad/i }).check()
+  await page.getByRole('checkbox', { name: /bases del programa/i }).check()
+}
+
 /** Registra un cliente nuevo con el login por email de desarrollo y lo deja en su panel. */
 export async function signUp(page: Page, email = `e2e-${crypto.randomUUID()}@test.local`) {
   await page.goto('/')
   await page.getByLabel('Email').fill(email)
   await page.getByLabel('Contraseña').fill('secret-123456')
   await page.getByRole('button', { name: 'Entrar con email' }).click()
-  await page.getByRole('checkbox', { name: /reglas del programa/i }).check()
+  await acceptLegal(page)
   await page.getByRole('button', { name: 'Empezar a sumar' }).click()
   await expect(page.getByText('Tu primera compra suma puntos')).toBeVisible({ timeout: 20_000 })
   return email

@@ -6,6 +6,7 @@ import {
   resetChestConfig,
   setChestOverrides,
 } from '../integration/helpers'
+import { acceptLegal } from './support/session'
 
 // El juego real dura 50 s; para el e2e se usa una partida de 2 s sin enemigos (reglas en settings).
 test.beforeAll(() => setChestOverrides(QUICK_GAME))
@@ -18,7 +19,7 @@ test('compra grande: regalo, cofre con juego, código y validación en caja', as
   await page.getByLabel('Email').fill(`e2e-${crypto.randomUUID()}@test.local`)
   await page.getByLabel('Contraseña').fill('secret-123456')
   await page.getByRole('button', { name: 'Entrar con email' }).click()
-  await page.getByRole('checkbox', { name: /reglas del programa/i }).check()
+  await acceptLegal(page)
   await page.getByRole('button', { name: 'Empezar a sumar' }).click()
 
   await expect(page.getByText('¡Sumaste 400 puntos!')).toBeVisible({ timeout: 20_000 })

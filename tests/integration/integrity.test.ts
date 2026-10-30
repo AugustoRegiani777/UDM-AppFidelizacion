@@ -96,6 +96,8 @@ describe('integridad de los datos del cliente', { timeout: 60_000 }, () => {
   })
 
   it('un invitado que pasa a cuenta permanente conserva el mismo usuario y todos sus datos', async () => {
+    // El lanzamiento dejó los puntos de entrada en 0: se activan solo para probar que el invitado conserva sus datos.
+    await admin.from('settings').update({ value: { welcome_points: 1500 } as never }).eq('key', 'demo')
     const client = createClient<Database>(URL, ANON_KEY, { auth: { persistSession: false } })
     const guest = await client.auth.signInAnonymously()
     expect(guest.error).toBeNull()
@@ -105,6 +107,7 @@ describe('integridad de los datos del cliente', { timeout: 60_000 }, () => {
     const { data: before } = await client.rpc('customer_dashboard')
     const balanceBefore = (before as { balance: number }).balance
     expect(balanceBefore).toBeGreaterThan(0) // puntos de entrada del modo de prueba
+    await admin.from('settings').update({ value: { welcome_points: 0 } as never }).eq('key', 'demo')
 
     // En producción lo hace linkIdentity({ provider: 'google' }); acá se prueba el mismo cambio del lado
     // del servidor (la fila de auth.users pasa a no anónima) con email y contraseña.

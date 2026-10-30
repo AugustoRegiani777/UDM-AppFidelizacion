@@ -107,7 +107,9 @@ Los premios por **compras** cuentan compras confirmadas y no consumen puntos.
 
 - Datos mínimos: nombre, email y foto de Google; nada más es obligatorio.
 - Consentimiento del programa y de promos por separado, con fecha guardada.
-- Texto legal corto y claro (lo revisa la gestoría antes del lanzamiento).
+- Texto legal completo en `src/legal/` (aviso legal, privacidad, cookies, bases, normas), con los datos del titular en `src/legal/company.ts`; lo revisa la gestoría antes del lanzamiento (ver `docs/LEGAL-PENDIENTE.md`).
+- Bienvenida con tres casillas obligatorias sin premarcar (+18, privacidad, bases y normas) y una opcional de promos; el servidor guarda fecha y versión aceptadas. Si sube `settings.legal.version`, todos vuelven a aceptar sin perder datos.
+- Derechos en el perfil: descargar mis datos (`export_my_data`), borrar la cuenta y retirar el permiso de promos.
 - El cliente puede borrar su cuenta y todos sus datos desde el perfil.
 
 ## Nuevo alcance (octubre 2026)

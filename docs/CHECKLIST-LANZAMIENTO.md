@@ -4,7 +4,7 @@ Tildá cada punto antes de abrir la app a clientes. Lo que ya está resuelto en 
 
 ## Legal y marca
 
-- [ ] Texto de privacidad y reglas del programa revisados por la gestoría (hoy es provisorio, en `src/copy/es.ts`, sección `privacy`).
+- [ ] Textos legales (aviso legal, privacidad, cookies, bases y normas) revisados por la gestoría y datos del titular completados en `src/legal/company.ts`. Detalle en `docs/LEGAL-PENDIENTE.md`.
 - [ ] Reglas y probabilidades de los juegos revisadas (se muestran en "¿Cómo funciona?").
 - [ ] Brandbook cargado en `docs/marca/` y colores/tipografías ajustados (`src/styles/index.css`).
 - [ ] Íconos reales (hoy son provisorios en `public/`: `icon.svg`, `icon-*.png`, `apple-touch-icon.png`).

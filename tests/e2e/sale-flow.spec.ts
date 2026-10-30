@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { createMockSale } from '../integration/helpers'
+import { acceptLegal } from './support/session'
 
 /** Entra con el login por email de desarrollo (Supabase local crea el usuario si no existe). */
 async function signInDev(page: Page) {
@@ -11,7 +12,7 @@ async function signInDev(page: Page) {
 
 async function acceptWelcome(page: Page) {
   await expect(page.getByRole('heading', { name: /bienvenido a la miga/i })).toBeVisible()
-  await page.getByRole('checkbox', { name: /reglas del programa/i }).check()
+  await acceptLegal(page)
   await page.getByRole('button', { name: 'Empezar a sumar' }).click()
 }
 

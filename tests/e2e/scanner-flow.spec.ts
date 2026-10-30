@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import { join } from 'node:path'
 import { admin } from '../integration/helpers'
 import { writeQrVideo } from './support/fake-camera'
+import { acceptLegal } from './support/session'
 
 // uuid fijo: el QR de la cámara falsa se genera antes de abrir el navegador.
 const SALE_UUID = '00000000-0000-4000-8000-0000000000aa'
@@ -28,7 +29,7 @@ test('el escáner interno lee el QR de la caja y suma la compra', async ({ page 
   await page.getByLabel('Email').fill(`e2e-${crypto.randomUUID()}@test.local`)
   await page.getByLabel('Contraseña').fill('secret-123456')
   await page.getByRole('button', { name: 'Entrar con email' }).click()
-  await page.getByRole('checkbox', { name: /reglas del programa/i }).check()
+  await acceptLegal(page)
   await page.getByRole('button', { name: 'Empezar a sumar' }).click()
 
   await expect(page.getByText('Tu primera compra suma puntos')).toBeVisible()

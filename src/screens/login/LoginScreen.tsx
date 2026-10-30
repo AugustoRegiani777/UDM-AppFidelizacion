@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router'
+import { LegalFooter } from '@/components/LegalFooter'
 import { Screen } from '@/components/Screen'
 import { SignInOptions } from '@/features/auth/SignInOptions'
 import { useAuth } from '@/features/auth/useAuth'
@@ -27,6 +28,7 @@ export function LoginScreen() {
             : copy.login.subtitle}
       </p>
       <SignInOptions returnPath={returnPath} />
+      <LegalFooter />
     </Screen>
   )
 }

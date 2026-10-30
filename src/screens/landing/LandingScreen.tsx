@@ -1,4 +1,5 @@
-import { Link, Navigate } from 'react-router'
+import { Navigate } from 'react-router'
+import { LegalFooter } from '@/components/LegalFooter'
 import { Screen } from '@/components/Screen'
 import { SignInOptions } from '@/features/auth/SignInOptions'
 import { useAuth } from '@/features/auth/useAuth'
@@ -38,11 +39,7 @@ export function LandingScreen() {
         </ol>
       </section>
 
-      <footer className="mt-auto pt-6 text-center">
-        <Link to="/privacidad" className="text-muted text-sm underline">
-          {copy.landing.footerPrivacy}
-        </Link>
-      </footer>
+      <LegalFooter />
     </Screen>
   )
 }

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { expect, test } from '@playwright/test'
-import { signUp } from './support/session'
+import { acceptLegal, signUp } from './support/session'
 
 const URL = process.env.SUPABASE_URL ?? 'http://127.0.0.1:55321'
 const ANON_KEY =
@@ -23,7 +23,7 @@ test('un invitado ve "Guardar mi progreso con Google" y su sesión sobrevive a r
   )
 
   await page.goto('/panel')
-  await page.getByRole('checkbox', { name: /reglas del programa/i }).check()
+  await acceptLegal(page)
   await page.getByRole('button', { name: 'Empezar a sumar' }).click()
   await expect(page.getByRole('link', { name: /guardá tu progreso con google/i })).toBeVisible({
     timeout: 20_000,

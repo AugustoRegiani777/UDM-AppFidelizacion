@@ -2,6 +2,9 @@
 begin;
 select plan(10);
 
+-- El lanzamiento deja welcome_points en 0 (20261031000002); acá se vuelve a activar para probar el mecanismo.
+update public.settings set value = '{"welcome_points": 1500}'::jsonb where key = 'demo';
+
 insert into auth.users (id, instance_id, aud, role, email, is_anonymous, raw_user_meta_data) values
   ('a1a1a1a1-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', null, true, '{}'),
   ('b2b2b2b2-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ana@test.com', false, '{"full_name": "Ana Pérez"}');

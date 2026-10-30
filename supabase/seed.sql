@@ -46,7 +46,7 @@ values (
   'email', now(), now(), now()
 ) on conflict do nothing;
 
-update public.profiles set program_consent_at = now(), is_admin = true
+update public.profiles set program_consent_at = now(), adult_confirmed_at = now(), privacy_accepted_at = now(), terms_accepted_at = now(), legal_version = '2026-11-01', is_admin = true
  where id = 'dddddddd-0000-4000-8000-000000000001';
 
 select public.schedule_google_sync('http://kong:8000/functions/v1/sync-google-reviews', 'dev-secret-reconcile');

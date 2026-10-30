@@ -59,7 +59,7 @@ No hagas esto antes de que el POS real esté conectado (ver INFORME-FINAL.md): s
 
 ## 6. Textos legales
 
-Llevale a la gestoría el texto de privacidad (está en `src/copy/es.ts`, sección `privacy`) y las reglas de los juegos (pantalla "¿Cómo funciona?"). Pedile que te devuelva el texto final y pasámelo para cargarlo.
+Seguí `docs/LEGAL-PENDIENTE.md`: ahí está qué datos completar en `src/legal/company.ts` y qué le tenés que pedir a la gestoría que revise (las páginas legales están en `src/legal/`). Pedile que te devuelva el texto final y pasámelo para cargarlo.
 
 ## 7. Conectar el POS real
 

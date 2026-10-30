@@ -1,11 +1,12 @@
 import { expect, test, type Page } from '@playwright/test'
 import { createMockSale } from '../integration/helpers'
+import { acceptLegal } from './support/session'
 
 async function signUpAndAccept(page: Page) {
   await page.getByLabel('Email').fill(`e2e-${crypto.randomUUID()}@test.local`)
   await page.getByLabel('Contraseña').fill('secret-123456')
   await page.getByRole('button', { name: 'Entrar con email' }).click()
-  await page.getByRole('checkbox', { name: /reglas del programa/i }).check()
+  await acceptLegal(page)
   await page.getByRole('button', { name: 'Empezar a sumar' }).click()
 }
 

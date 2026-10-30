@@ -51,6 +51,30 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: '/aviso-legal',
+        lazy: async () => ({
+          Component: (await import('@/screens/legal/LegalScreens')).AvisoLegalScreen,
+        }),
+      },
+      {
+        path: '/cookies',
+        lazy: async () => ({
+          Component: (await import('@/screens/legal/LegalScreens')).CookiesScreen,
+        }),
+      },
+      {
+        path: '/bases',
+        lazy: async () => ({
+          Component: (await import('@/screens/legal/LegalScreens')).BasesScreen,
+        }),
+      },
+      {
+        path: '/normas',
+        lazy: async () => ({
+          Component: (await import('@/screens/legal/LegalScreens')).NormasScreen,
+        }),
+      },
+      {
         element: <RequireAuth />,
         children: [
           { path: '/bienvenida', element: <WelcomeScreen /> },

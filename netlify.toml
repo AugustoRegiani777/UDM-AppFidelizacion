@@ -6,8 +6,8 @@
   NODE_VERSION = "22"
   # La clave "anon" de Supabase y las direcciones son públicas por diseño (viajan dentro de la web).
   # Sin esto, el escáner de secretos de Netlify las encuentra en el resultado y corta el despliegue.
-  # Modo de prueba: cualquiera entra como invitado (sin Google). Borrar esta línea antes de abrir al público.
-  VITE_GUEST_MODE = "true"
+  # Lanzamiento: se entra solo con Google (el modo invitado quedó apagado; para volver a activarlo en pruebas,
+  # agregar VITE_GUEST_MODE = "true" y habilitar los inicios de sesión anónimos en Supabase).
   SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_APP_URL"
 
 # La app es una SPA: /s/:uuid, /panel, etc. caen siempre en index.html.

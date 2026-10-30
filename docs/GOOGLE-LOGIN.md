@@ -36,6 +36,9 @@ Esta versión trae la migración `20261030000002_integrity_hardening.sql` y camb
 5. En **Branding** (Marca) cargá, si querés, el logo, y estos datos:
    - **Página principal de la aplicación:** `https://udm-appfidelizacion.netlify.app`
    - **Política de privacidad:** `https://udm-appfidelizacion.netlify.app/privacidad`
+   - **Condiciones del servicio (Términos):** `https://udm-appfidelizacion.netlify.app/bases` (las bases del programa; las normas de la comunidad están en `/normas`)
+   - Otras páginas legales públicas, por si Google o la gestoría las piden: `https://udm-appfidelizacion.netlify.app/aviso-legal` y `https://udm-appfidelizacion.netlify.app/cookies`.
+   - Estas páginas abren **sin iniciar sesión** (Google las revisa sin cuenta) y también con la app instalada en frío: Netlify devuelve la app para cualquier ruta y el service worker las tiene precargadas. Antes de publicar la pantalla de consentimiento, completá los datos del titular en `src/legal/company.ts` (ver `docs/LEGAL-PENDIENTE.md`): Google rechaza páginas de privacidad que parecen borradores.
    - **Dominios autorizados:** `supabase.co` y `netlify.app`
 6. En **Acceso a los datos** (Data Access / Scopes) no hace falta agregar nada especial: los permisos básicos `openid`, `email` y `profile` ya vienen y son los únicos que usa la app.
 7. En **Público** (Audience), cuando termines las pruebas, tocá **Publicar la aplicación** (Publish app) y confirmá. Mientras esté en "Prueba", **solo pueden entrar los correos que agregues como usuarios de prueba**. Para clientes reales tiene que estar publicada. Con permisos básicos no hace falta pasar por una revisión de Google.

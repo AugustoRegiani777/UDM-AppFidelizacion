@@ -64,7 +64,7 @@ select throws_ok(
 
 -- Funciones propias.
 select is((public.customer_dashboard() ->> 'balance')::int, 62, 'el panel de Ana muestra 62 puntos');
-select lives_ok($$ select public.complete_onboarding('Ana M.', true) $$, 'la bienvenida funciona');
+select lives_ok($$ select public.complete_onboarding('Ana M.', true, true, true, true) $$, 'la bienvenida funciona');
 select isnt((select program_consent_at from public.profiles), null, 'quedó guardada la fecha de consentimiento');
 
 -- Un anónimo no ve nada de clientes.

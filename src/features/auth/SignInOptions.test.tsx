@@ -34,10 +34,10 @@ describe('opciones de ingreso', () => {
     expect(signInWithGoogle).toHaveBeenCalledWith('/panel')
   })
 
-  it('en modo de prueba entra como invitado, sin Google, y avisa que el avance queda en el celular', async () => {
+  it('en modo de prueba ofrece Google y también entrar como invitado, y avisa que el avance queda en el celular', async () => {
     state.guestMode = true
     render(<SignInOptions returnPath="/panel" />)
-    expect(screen.queryByRole('button', { name: 'Entrar con Google' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Entrar con Google' })).toBeVisible()
     expect(screen.getByText(/se guardan en este celular/i)).toBeVisible()
     await userEvent.click(screen.getByRole('button', { name: 'Probar la app' }))
     await waitFor(() => expect(signInAsGuest).toHaveBeenCalledTimes(1))

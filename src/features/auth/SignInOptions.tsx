@@ -24,17 +24,16 @@ export function SignInOptions({ returnPath }: { returnPath: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {env.guestMode ? (
+      <Button disabled={busy} onClick={() => run(() => signInWithGoogle(returnPath))}>
+        {copy.login.google}
+      </Button>
+      {env.guestMode && (
         <>
-          <Button disabled={busy} onClick={() => run(signInAsGuest)}>
+          <Button variant="ghost" disabled={busy} onClick={() => run(signInAsGuest)}>
             {copy.login.guest}
           </Button>
           <p className="text-muted text-sm">{copy.login.guestNote}</p>
         </>
-      ) : (
-        <Button disabled={busy} onClick={() => run(() => signInWithGoogle(returnPath))}>
-          {copy.login.google}
-        </Button>
       )}
       {error && (
         <p role="alert" className="text-muted text-sm">

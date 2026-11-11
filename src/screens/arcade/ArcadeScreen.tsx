@@ -7,18 +7,20 @@ import { copy } from '@/copy'
 import { useHoldUpdates } from '@/pwa/useHoldUpdates'
 import { NinjaArcade } from './NinjaArcade'
 import { RacingArcade } from './RacingArcade'
+import { RallyArcade } from './RallyArcade'
 import { MigaSkateArcade } from './MigaSkateArcade'
 import { SokobanArcade } from './SokobanArcade'
 import { SurvivorsArcade } from './SurvivorsArcade'
 import { TrucoArcade } from './TrucoArcade'
 import { WalletBar } from './WalletBar'
 
-type GameId = 'survivors' | 'migaskate' | 'racing' | 'truco' | 'sokoban' | 'ninja'
+type GameId = 'survivors' | 'migaskate' | 'racing' | 'rally' | 'truco' | 'sokoban' | 'ninja'
 
 const GAMES: { id: GameId; icon: string }[] = [
   { id: 'survivors', icon: '🥪' },
   { id: 'migaskate', icon: '🛹' },
   { id: 'racing', icon: '🏎️' },
+  { id: 'rally', icon: '🚙' },
   { id: 'truco', icon: '🃏' },
   { id: 'sokoban', icon: '📦' },
   { id: 'ninja', icon: '🥷' },
@@ -33,6 +35,7 @@ export function ArcadeScreen() {
   if (game === 'survivors') return <SurvivorsArcade onBack={() => setGame(null)} />
   if (game === 'migaskate') return <MigaSkateArcade onBack={() => setGame(null)} />
   if (game === 'racing') return <RacingArcade onBack={() => setGame(null)} />
+  if (game === 'rally') return <RallyArcade onBack={() => setGame(null)} />
   if (game === 'truco') return <TrucoArcade onBack={() => setGame(null)} />
   if (game === 'sokoban') return <SokobanArcade onBack={() => setGame(null)} />
   if (game === 'ninja') return <NinjaArcade onBack={() => setGame(null)} />

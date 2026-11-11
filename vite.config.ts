@@ -40,6 +40,8 @@ export default defineConfig({
       // /s/:uuid y las demás rutas de la SPA caen en index.html; /dev no se cachea offline.
       workbox: {
         navigateFallbackDenylist: [/^\/functions\//],
+        // Además de lo de siempre, las tipografías de Rally de Cocina (autoalojadas, ~150 KB) para que ande sin conexión.
+        globPatterns: ['**/*.{js,css,html}', 'assets/{bungee,chakra-petch,rubik}-*.woff2'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
       },

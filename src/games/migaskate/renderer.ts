@@ -36,18 +36,68 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three'
+import type { ParticleBurst } from './juice.ts'
 import { Mascot } from './mascot.ts'
-import {
-  heightAt,
-  profileHeight,
-  surfaceLength,
-  type Skater,
-  type Surface,
-  type WorldDef,
-} from './physics.ts'
+import { SkateCamera } from './skateCamera.ts'
+import type { SkaterView } from './skatePhysics.ts'
 import type { SpotTheme } from './spots.ts'
+import { heightAt, profileHeight, surfaceLength, type Surface, type WorldDef } from './world.ts'
 
-const MAX_PARTICLES = 48
+/** Un banco chico de particulas (un solo Points, posiciones en un Float32Array). Sin asignaciones por cuadro. */
+class ParticlePool {
+  readonly points: Points
+  private readonly positions: Float32Array
+  private readonly velocities: Float32Array
+  private readonly lives: Float32Array
+  private cursor = 0
+
+  constructor(
+    private readonly size: number,
+    material: PointsMaterial,
+    private readonly gravity: number,
+  ) {
+    this.positions = new Float32Array(size * 3).fill(-1000)
+    this.velocities = new Float32Array(size * 3)
+    this.lives = new Float32Array(size)
+    const geo = new BufferGeometry()
+    geo.setAttribute('position', new BufferAttribute(this.positions, 3))
+    this.points = new Points(geo, material)
+    this.points.frustumCulled = false
+  }
+
+  emit(x: number, y: number, z: number, speed: number, life: number, spread = 1) {
+    // Reusa la primera particula libre a partir del cursor (anillo): nunca recorre de mas.
+    for (let n = 0; n < this.size; n++) {
+      const i = (this.cursor + n) % this.size
+      if (this.lives[i]! > 0) continue
+      this.cursor = (i + 1) % this.size
+      this.lives[i] = life * (0.7 + Math.random() * 0.5)
+      this.positions[i * 3] = x
+      this.positions[i * 3 + 1] = y
+      this.positions[i * 3 + 2] = z
+      this.velocities[i * 3] = (Math.random() - 0.5) * speed * spread
+      this.velocities[i * 3 + 1] = Math.random() * speed
+      this.velocities[i * 3 + 2] = (Math.random() - 0.5) * speed * spread
+      return
+    }
+  }
+
+  step(dt: number) {
+    let any = false
+    for (let i = 0; i < this.size; i++) {
+      const life = this.lives[i]!
+      if (life <= 0) continue
+      any = true
+      this.lives[i] = life - dt
+      this.velocities[i * 3 + 1]! -= this.gravity * dt
+      this.positions[i * 3]! += this.velocities[i * 3]! * dt
+      this.positions[i * 3 + 1]! += this.velocities[i * 3 + 1]! * dt
+      this.positions[i * 3 + 2]! += this.velocities[i * 3 + 2]! * dt
+      if (this.lives[i]! <= 0) this.positions[i * 3 + 1] = -1000
+    }
+    if (any) this.points.geometry.attributes.position!.needsUpdate = true
+  }
+}
 
 function mulberry(seed: number) {
   let s = seed >>> 0
@@ -124,7 +174,6 @@ function profileShape(s: Surface): Shape {
 const concrete = new MeshLambertMaterial({ color: 0xc4bfb4 })
 const concreteDark = new MeshLambertMaterial({ color: 0xa9a49a })
 const bowlMat = new MeshLambertMaterial({ color: 0xa9b1c4 })
-const metal = new MeshPhongMaterial({ color: 0xdde2e8, specular: 0xffffff, shininess: 70 })
 const outline = new LineBasicMaterial({ color: 0x4a4036 })
 
 function addOutline(m: Mesh, parent: Group) {
@@ -134,27 +183,18 @@ function addOutline(m: Mesh, parent: Group) {
   parent.add(lines)
 }
 
-export interface SparkOptions {
-  x: number
-  y: number
-  z: number
-  count: number
-  speed: number
-}
-
 export class SkateRenderer {
   private readonly renderer: WebGLRenderer
   private readonly scene = new Scene()
   private readonly camera = new PerspectiveCamera(62, 1, 0.1, 120)
   private readonly mascot = new Mascot()
   private readonly blob: Mesh
-  private readonly points: Points
-  private readonly positions = new Float32Array(MAX_PARTICLES * 3)
-  private readonly velocities = new Float32Array(MAX_PARTICLES * 3)
-  private readonly lives = new Float32Array(MAX_PARTICLES)
-  private camHeading = 0
-  private camInit = false
-  private shake = 0
+  private readonly sparks: ParticlePool
+  private readonly dust: ParticlePool
+  private readonly trailPool: ParticlePool
+  private readonly skateCamera: SkateCamera
+  /** Un material por riel: el desgaste (brillo) de cada uno lo mueve SkateJuice. */
+  private readonly railMaterials: MeshPhongMaterial[] = []
   private last = 0
   private readonly disposables: { dispose(): void }[] = []
 
@@ -170,6 +210,7 @@ export class SkateRenderer {
       alpha: false,
       powerPreference: 'high-performance',
     })
+    this.skateCamera = new SkateCamera({ reduced, portrait: true })
     this.scene.background = new Color(theme.sky)
     this.scene.fog = new Fog(theme.fog, 22, 62)
     this.scene.add(new HemisphereLight(0xffffff, theme.ground, 1.15))
@@ -181,7 +222,7 @@ export class SkateRenderer {
     this.buildGround(theme)
     this.buildSurroundings(theme)
     this.buildObstacles()
-    this.scene.add(this.mascot.group)
+    this.scene.add(this.mascot.group, this.mascot.boardGroup)
 
     this.blob = new Mesh(
       new CircleGeometry(0.55, 14),
@@ -195,16 +236,34 @@ export class SkateRenderer {
     this.blob.rotation.x = -Math.PI / 2
     this.scene.add(this.blob)
 
-    const geo = new BufferGeometry()
-    geo.setAttribute('position', new BufferAttribute(this.positions, 3))
-    this.points = new Points(
-      geo,
+    this.sparks = new ParticlePool(
+      40,
       new PointsMaterial({ color: 0xffb347, size: 0.16, transparent: true, depthWrite: false }),
+      9,
     )
-    this.points.frustumCulled = false
-    this.positions.fill(-1000)
-    this.scene.add(this.points)
-    this.disposables.push(geo)
+    this.dust = new ParticlePool(
+      28,
+      new PointsMaterial({
+        color: 0xf3ead8,
+        size: 0.26,
+        transparent: true,
+        opacity: 0.65,
+        depthWrite: false,
+      }),
+      1.5,
+    )
+    this.trailPool = new ParticlePool(
+      24,
+      new PointsMaterial({
+        color: 0xffffff,
+        size: 0.13,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+      }),
+      0,
+    )
+    this.scene.add(this.sparks.points, this.dust.points, this.trailPool.points)
   }
 
   private buildGround(theme: SpotTheme) {
@@ -325,6 +384,8 @@ export class SkateRenderer {
     const b = new Vector3()
     const q = new Quaternion()
     for (const r of this.world.rails) {
+      const metal = new MeshPhongMaterial({ color: 0xdde2e8, specular: 0xffffff, shininess: 70 })
+      this.railMaterials.push(metal)
       if (r.ledge) {
         // La cornisa ya es un bloque: se le suma una tapa metalica fina.
         const cap = new Mesh(
@@ -359,6 +420,7 @@ export class SkateRenderer {
     this.renderer.setPixelRatio(dpr)
     this.renderer.setSize(width, height, true)
     this.camera.aspect = width / Math.max(1, height)
+    this.skateCamera.setOptions({ portrait: this.camera.aspect < 1 })
     // En vertical se abre un poco el campo para ver mas del costado.
     this.camera.fov = this.camera.aspect < 1 ? 66 : 58
     // La tabla tactil tapa parte de la pantalla (abajo en vertical, a la derecha en horizontal):
@@ -369,82 +431,73 @@ export class SkateRenderer {
     this.camera.updateProjectionMatrix()
   }
 
-  /** Chispas y polvo (se apagan solas). Con movimiento reducido no hace nada. */
-  burst({ x, y, z, count, speed }: SparkOptions) {
-    if (this.reduced) return
-    let made = 0
-    for (let i = 0; i < MAX_PARTICLES && made < count; i++) {
-      if (this.lives[i]! > 0) continue
-      this.lives[i] = 0.5 + Math.random() * 0.3
-      this.positions[i * 3] = x
-      this.positions[i * 3 + 1] = y
-      this.positions[i * 3 + 2] = z
-      this.velocities[i * 3] = (Math.random() - 0.5) * speed
-      this.velocities[i * 3 + 1] = Math.random() * speed
-      this.velocities[i * 3 + 2] = (Math.random() - 0.5) * speed
-      made++
+  /** Chispas y polvo (se apagan solas). Con movimiento reducido el polvo se achica y las chispas casi no salen. */
+  burst({ x, y, z, count, speed, kind }: ParticleBurst) {
+    const pool = kind === 'spark' ? this.sparks : this.dust
+    const n = this.reduced ? Math.min(count, 2) : count
+    for (let i = 0; i < n; i++) {
+      if (kind === 'spark') pool.emit(x, y, z, speed * 1.6, 0.45, 1)
+      else pool.emit(x, y, z, speed * 0.6, 0.55, 2.2)
     }
   }
 
-  addShake(amount: number) {
-    if (!this.reduced) this.shake = Math.min(0.5, this.shake + amount)
+  /** Estela corta detras de la tabla (no hace nada con movimiento reducido). */
+  trail(x: number, y: number, z: number) {
+    if (!this.reduced) this.trailPool.emit(x, y, z, 0.05, 0.35, 1)
   }
 
-  /** Dibuja un cuadro. `steer` es el giro del dedo (-1..1). */
-  render(sk: Skater, steer: number, now: number) {
+  addShake(amount: number) {
+    this.skateCamera.shake(amount)
+  }
+
+  /** Brillo de desgaste de cada riel (0..1): el metal se calienta mientras se patina encima. */
+  setRailWear(wear: Float32Array) {
+    for (let i = 0; i < this.railMaterials.length; i++) {
+      const w = wear[i] ?? 0
+      this.railMaterials[i]!.emissive.setRGB(0.55 * w, 0.22 * w, 0.04 * w)
+    }
+  }
+
+  get yawRate() {
+    return this.skateCamera.yawRate
+  }
+
+  get cameraYaw() {
+    return this.skateCamera.yaw
+  }
+
+  /** Dibuja un cuadro. `steer` es el giro del dedo (-1..1); `squash` viene de SkateJuice. */
+  render(view: SkaterView, steer: number, now: number, squash = 0) {
     const dt = Math.min(0.1, this.last ? (now - this.last) / 1000 : 0.016)
     this.last = now
-    this.mascot.update(sk, steer, now / 1000, dt)
+    this.mascot.update(view, steer, now / 1000, dt, squash)
+    const p = view.position
 
     // Mancha de sombra pegada al suelo, mas chica y suave cuanto mas alto.
-    const ground = heightAt(this.world, sk.x, sk.z)
-    const up = Math.max(0, sk.y - ground)
-    this.blob.position.set(sk.x, ground + 0.02, sk.z)
+    const ground = heightAt(this.world, p.x, p.z)
+    const up = Math.max(0, p.y - ground)
+    this.blob.position.set(p.x, ground + 0.02, p.z)
     const k = 1 / (1 + up * 0.7)
     this.blob.scale.setScalar(k)
     ;(this.blob.material as MeshBasicMaterial).opacity = 0.12 + 0.18 * k
 
-    // Camara: detras y un poco al costado del lado donde mira la mascota, siguiendo el rumbo con retraso.
-    if (!this.camInit) {
-      this.camHeading = sk.heading
-      this.camInit = true
+    // Camara desacoplada (SmoothDamp, solo yaw hacia la velocidad).
+    const pose = this.skateCamera.update(dt, {
+      position: p,
+      velocity: view.velocity,
+      state: view.state,
+    })
+    this.camera.position.set(pose.position.x, pose.position.y, pose.position.z)
+    if (Math.abs(this.camera.fov - pose.fov) > 0.05) {
+      this.camera.fov = pose.fov
+      this.camera.updateProjectionMatrix()
     }
-    let diff = sk.heading - this.camHeading
-    diff = Math.atan2(Math.sin(diff), Math.cos(diff))
-    this.camHeading += diff * Math.min(1, dt * (sk.mode === 'grind' ? 2 : 3.2))
-    const fx = Math.sin(this.camHeading)
-    const fz = Math.cos(this.camHeading)
-    const rx = -fz
-    const rz = fx
-    const back = this.camera.aspect < 1 ? 7.4 : 6
-    const side = 2.4
-    const camY = Math.max(1.4, ground + 2.9 + up * 0.35)
-    this.camera.position.set(sk.x - fx * back + rx * side, camY, sk.z - fz * back + rz * side)
-    if (this.shake > 0.001) {
-      this.camera.position.x += (Math.random() - 0.5) * this.shake
-      this.camera.position.y += (Math.random() - 0.5) * this.shake
-      this.shake *= Math.pow(0.002, dt)
-    }
-    this.camera.lookAt(sk.x + fx * 1.6, sk.y + 0.7 + up * 0.2, sk.z + fz * 1.6)
+    this.camera.lookAt(pose.lookAt.x, pose.lookAt.y, pose.lookAt.z)
 
-    this.stepParticles(dt)
+    this.sparks.step(dt)
+    this.dust.step(dt)
+    this.trailPool.step(dt)
     this.renderer.render(this.scene, this.camera)
-  }
-
-  private stepParticles(dt: number) {
-    let any = false
-    for (let i = 0; i < MAX_PARTICLES; i++) {
-      const life = this.lives[i]!
-      if (life <= 0) continue
-      any = true
-      this.lives[i] = life - dt
-      this.velocities[i * 3 + 1]! -= 9 * dt
-      this.positions[i * 3]! += this.velocities[i * 3]! * dt
-      this.positions[i * 3 + 1]! += this.velocities[i * 3 + 1]! * dt
-      this.positions[i * 3 + 2]! += this.velocities[i * 3 + 2]! * dt
-      if (this.lives[i]! <= 0) this.positions[i * 3 + 1] = -1000
-    }
-    if (any) this.points.geometry.attributes.position!.needsUpdate = true
   }
 
   get contextLost() {

@@ -1,4 +1,4 @@
-// Los spots de "Miga Skate": cada uno es un mapa (ver physics.ts) con tres objetivos. Cada objetivo
+// Los spots de "Miga Skate": cada uno es un mapa (ver world.ts) con tres objetivos. Cada objetivo
 // cumplido es una estrella. Los textos de los spots viven en src/copy/es.ts.
 
 import {
@@ -8,7 +8,7 @@ import {
   type Rail,
   type Surface,
   type WorldDef,
-} from './physics.ts'
+} from './world.ts'
 import type { TrickTag } from './tricks.ts'
 
 export type Objective =
@@ -252,7 +252,8 @@ function bowl(): SpotDef {
         quarter(12, 0, 16, h, 'px'),
         kicker(0, 0, 4, 3.4, 0.7, 'pz'),
       ],
-      rails: [],
+      // Un riel largo de 18 m cruzando la piscina: entrar alineado y mantener el equilibrio.
+      rails: [rail(-9, 4.5, 0.65, 9, 4.5, 0.65)],
     },
     objectives: [
       { kind: 'height', target: 2.2 },

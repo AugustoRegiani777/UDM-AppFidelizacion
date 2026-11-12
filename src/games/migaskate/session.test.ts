@@ -20,6 +20,7 @@ const base = {
   popped: true,
   airTime: 0.6,
   height: 0.8,
+  quality: 'clean' as const,
 }
 
 describe('nombres de trucos', () => {
@@ -94,7 +95,7 @@ describe('sesion de juego', () => {
     expect(events.some((e) => e.t === 'bail')).toBe(true)
     expect(session.stats.score).toBe(500)
     expect(session.comboCount).toBe(0)
-    expect(session.skater.mode).not.toBe('bail')
+    expect(session.physics.state).not.toBe('bailed')
   })
 
   it('al terminar el tiempo la sesion se cierra y cobra lo que quedaba', () => {
@@ -121,5 +122,26 @@ describe('sesion de juego', () => {
     collect(session, session.spot.seconds + 1)
     expect(session.finished).toBe(true)
     expect(session.timeLeft).toBe(0)
+  })
+})
+
+describe('aterrizaje torpe', () => {
+  it('el truco cuenta pero paga el 60 % y queda marcado', () => {
+    const clean = itemsFromLanding({ ...base, roll: 1 })[0]!
+    const sloppy = itemsFromLanding({ ...base, roll: 1, quality: 'sloppy' })[0]!
+    expect(sloppy.sloppy).toBe(true)
+    expect(sloppy.points).toBe(Math.round(clean.points * 0.6))
+    expect(sloppy.tags).toEqual(clean.tags)
+  })
+
+  it('una sesion de punta a punta con la fisica nueva: ollie limpio, flip y caida amable', () => {
+    const session = new SkateSession(spotAt(0))
+    collect(session, 0.5)
+    session.gesture({ k: 'flip', power: 0.5, dir: 1 })
+    session.gesture({ k: 'ollie', power: 1, nollie: false })
+    const events = collect(session, 1.4)
+    const trick = events.find((e) => e.t === 'trick')
+    expect(trick?.t === 'trick' && trick.item.key).toBe('kickflip')
+    expect(session.physics.state).toBe('grounded')
   })
 })

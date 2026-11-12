@@ -1,13 +1,17 @@
-// Controlador de "Miga Skate": une la sesion (fisica y combos), el reconocedor de gestos, el dibujo 3D y
-// el sonido. Es TypeScript puro (sin React): el lazo de animacion vive aca y React solo muestra menus,
-// HUD y la tabla tactil. three.js se carga recien al entrar al juego (import dinamico).
+// Controlador de "Miga Skate": une la sesion (fisica y combos), el control tactil multi-touch, el dibujo
+// 3D, el game feel (SkateJuice) y el tutorial. Es TypeScript puro (sin React): el lazo de animacion vive
+// aca y React solo muestra menus, HUD y la tabla tactil. three.js se carga recien al entrar al juego
+// (import dinamico).
 
 import { copy } from '@/copy'
 import { vibrate } from '@/motion/feedback'
 import { sfx, unlockAudio } from './audio.ts'
-import { GestureRecognizer, type Gesture } from './gestures.ts'
+import type { Gesture } from './gestures.ts'
+import { SkateJuice } from './juice.ts'
 import { objectiveValue, SkateSession, type SessionEvent } from './session.ts'
 import { spotAt } from './spots.ts'
+import { SkateTouchController } from './touchController.ts'
+import { Tutorial, tutorialSeen, type TutorialStep } from './tutorial.ts'
 import type { SkateRenderer } from './renderer.ts'
 
 export type SkatePhase = 'loading' | 'ready' | 'playing' | 'paused' | 'ended' | 'error'
@@ -25,6 +29,9 @@ export interface SkateHud {
   balance: number | null
   speed: number
   airborne: boolean
+  /** Estado de la maquina de estados de la tabla (para pruebas y para la ayuda en pantalla). */
+  state: string
+  tutorial: TutorialStep | null
 }
 
 export interface SkatePopup {
@@ -49,6 +56,10 @@ export interface SkateCallbacks {
   onEnd: (result: SkateResult) => void
 }
 
+export interface SkateOptions {
+  leftHanded?: boolean
+}
+
 const MAX_DPR = 2
 const SLOW_FRAME_MS = 22
 const FRAME_SAMPLES = 90
@@ -57,11 +68,11 @@ const HUD_EVERY_MS = 90
 /** Segundos de juego que se simulan como maximo por cuadro (si el celular se traba, no se acumula). */
 const MAX_ADVANCE = 0.1
 
-export function hudOf(session: SkateSession): SkateHud {
-  const s = session.skater
+export function hudOf(session: SkateSession, tutorial: TutorialStep | null = null): SkateHud {
+  const p = session.physics
   let balance: number | null = null
-  if (s.mode === 'grind' && s.grind) balance = s.grind.bal
-  else if (s.manual) balance = s.manual.bal
+  if (p.state === 'grinding' && p.grind) balance = p.grind.bal
+  else if (p.manual) balance = p.manual.bal
   return {
     score: session.stats.score,
     combo: session.comboPoints,
@@ -72,8 +83,10 @@ export function hudOf(session: SkateSession): SkateHud {
     done: [...session.done],
     progress: session.spot.objectives.map((o) => objectiveValue(o, session.stats)),
     balance,
-    speed: Math.abs(s.speed),
-    airborne: s.mode === 'air',
+    speed: p.horizontalSpeed,
+    airborne: p.airborne,
+    state: p.state,
+    tutorial,
   }
 }
 
@@ -90,14 +103,17 @@ export function resultOf(session: SkateSession): SkateResult {
 
 export class SkateController {
   readonly session: SkateSession
-  readonly recognizer: GestureRecognizer
+  readonly touch: SkateTouchController
+  private readonly tutorial: Tutorial
   private renderer: SkateRenderer | null = null
+  private juice: SkateJuice | null = null
   private phase: SkatePhase = 'loading'
   private raf = 0
   private last = 0
   private frame = 0
   private slowMs = 0
   private lastHud = 0
+  private hitStopMs = 0
   private dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
   private disposed = false
   private endTimer = 0
@@ -115,16 +131,38 @@ export class SkateController {
     private readonly container: HTMLElement,
     spotIndex: number,
     private readonly callbacks: SkateCallbacks,
+    options: SkateOptions = {},
   ) {
     this.session = new SkateSession(spotAt(spotIndex))
-    this.recognizer = new GestureRecognizer(() => ({
-      airborne: this.session.skater.mode === 'air',
+    this.tutorial = new Tutorial(spotIndex !== 0 || tutorialSeen())
+    this.touch = new SkateTouchController(() => ({
+      state: this.session.physics.state,
+      boardYaw: this.session.physics.boardYaw,
+      cameraYaw: this.renderer?.cameraYaw ?? this.session.physics.boardYaw,
     }))
+    this.touch.leftHanded = options.leftHanded ?? false
     this.resizeObserver = new ResizeObserver(() => this.layout())
     this.resizeObserver.observe(container)
     document.addEventListener('visibilitychange', this.onVisibility)
     this.bindKeys()
     void this.load()
+  }
+
+  get tutorialStep(): TutorialStep | null {
+    return this.tutorial.step
+  }
+
+  skipTutorial() {
+    this.tutorial.skip()
+    this.callbacks.onHud(this.hud())
+  }
+
+  setLeftHanded(on: boolean) {
+    this.touch.leftHanded = on
+  }
+
+  private hud() {
+    return hudOf(this.session, this.tutorial.step)
   }
 
   private async load() {
@@ -138,13 +176,45 @@ export class SkateController {
         this.reduced,
       )
       if (this.renderer.contextLost) throw new Error('webgl')
+      this.setupJuice(this.renderer)
       this.layout()
       this.drawFrame(performance.now())
       this.setPhase('ready')
-      this.callbacks.onHud(hudOf(this.session))
+      this.callbacks.onHud(this.hud())
     } catch {
       if (!this.disposed) this.setPhase('error')
     }
+  }
+
+  /** Conecta los hooks de la fisica con audio, particulas, haptica, camara y hit-stop. */
+  private setupJuice(renderer: SkateRenderer) {
+    this.juice = new SkateJuice(
+      this.session.physics,
+      {
+        sfx: {
+          pop: (power) => sfx.pop(power),
+          land: (intensity, sloppy) => sfx.land(intensity, sloppy),
+          flip: () => sfx.flip(),
+          grind: () => sfx.grind(),
+          grindLoop: (speed) => sfx.grindLoop(speed),
+          grab: () => sfx.grab(),
+          bump: () => sfx.bump(),
+          bail: () => sfx.bail(),
+          push: () => sfx.push(),
+          catch: () => sfx.catch(),
+        },
+        haptic: (pattern) => vibrate(pattern),
+        particles: {
+          burst: (b) => renderer.burst(b),
+          trail: (x, y, z) => renderer.trail(x, y, z),
+        },
+        shake: (amount) => renderer.addShake(amount),
+        hitStop: (ms) => {
+          this.hitStopMs = Math.max(this.hitStopMs, ms)
+        },
+      },
+      { reduced: this.reduced },
+    )
   }
 
   private layout() {
@@ -153,7 +223,10 @@ export class SkateController {
   }
 
   private drawFrame(now: number) {
-    this.renderer?.render(this.session.skater, this.recognizer.steer, now)
+    if (!this.renderer) return
+    const view = this.session.physics.view(this.session.alpha)
+    if (this.juice) this.renderer.setRailWear(this.juice.railWear)
+    this.renderer.render(view, this.touch.steer, now, this.juice?.squash ?? 0)
   }
 
   private setPhase(next: SkatePhase) {
@@ -163,47 +236,58 @@ export class SkateController {
 
   // --- Entradas -------------------------------------------------------------------------------
 
-  /** Un dedo de la tabla tactil (coordenadas del pad, ver gestures.ts). */
-  pointer(kind: 'down' | 'move' | 'up' | 'cancel', id: number, u: number, v: number) {
+  /**
+   * Un dedo de la tabla tactil (coordenadas del pad, ver touchController.ts). `t` es la marca de tiempo
+   * del evento: si el celular se traba dibujando, los toques conservan su tiempo real.
+   */
+  pointer(
+    kind: 'down' | 'move' | 'up' | 'cancel',
+    id: number,
+    u: number,
+    v: number,
+    t: number = performance.now(),
+  ) {
     if (this.phase !== 'playing') return
-    const t = performance.now()
-    if (kind === 'down') this.recognizer.down(id, u, v, t)
-    else if (kind === 'move') this.recognizer.move(id, u, v, t)
-    else if (kind === 'up') this.recognizer.up(id, u, v, t)
-    else this.recognizer.cancel(id)
+    if (kind === 'down') this.touch.down(id, u, v, t)
+    else if (kind === 'move') this.touch.move(id, u, v, t)
+    else if (kind === 'up') this.touch.up(id, u, v, t)
+    else this.touch.cancel(id)
   }
 
   /** Teclado para probar en la compu: las mismas acciones que los gestos. */
   private bindKeys() {
-    const map: Record<string, () => Gesture | null> = {
-      ' ': () => ({ k: 'ollie', power: 0.8, nollie: false }),
-      w: () => ({ k: 'ollie', power: 0.8, nollie: false }),
-      n: () => ({ k: 'ollie', power: 0.8, nollie: true }),
-      k: () => ({ k: 'flip', power: 0.5, dir: 1 }),
-      h: () => ({ k: 'flip', power: 0.5, dir: -1 }),
-      s: () => ({ k: 'popShuvit', power: 0.8, dir: 1, nollie: false }),
-      e: () => ({ k: 'spin', power: 0.5, dir: 1 }),
-      p: () => ({ k: 'push', power: 0.7 }),
+    const map: Record<string, Gesture> = {
+      ' ': { k: 'ollie', power: 0.8, nollie: false },
+      w: { k: 'ollie', power: 0.8, nollie: false },
+      n: { k: 'ollie', power: 0.8, nollie: true },
+      k: { k: 'flip', power: 0.5, dir: 1 },
+      h: { k: 'flip', power: 0.5, dir: -1 },
+      j: { k: 'shuvit', power: 0.5, dir: 1 },
+      s: { k: 'popShuvit', power: 0.8, dir: 1, nollie: false },
+      e: { k: 'spin', power: 0.5, dir: 1 },
+      p: { k: 'push', power: 0.7 },
+      g: { k: 'grab', name: 'indy' },
+      m: { k: 'manual', nose: false },
+      c: { k: 'catch' },
+    }
+    const release: Record<string, Gesture> = {
+      g: { k: 'grabEnd' },
+      m: { k: 'manualEnd' },
+      c: { k: 'catchEnd' },
     }
     const down = (e: KeyboardEvent) => {
       if (this.phase !== 'playing' || e.repeat) return
       const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
-      if (key === 'g') {
-        this.session.gesture({ k: 'grab', name: 'indy' })
-      } else if (key === 'm') {
-        this.session.gesture({ k: 'manual', nose: false })
-      } else {
-        const g = map[key]?.()
-        if (g) this.session.gesture(g)
-      }
+      const g = map[key]
+      if (g) this.session.gesture(g)
       if (key.startsWith('Arrow') || key === ' ') e.preventDefault()
       this.keys.add(key)
     }
     const up = (e: KeyboardEvent) => {
       const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
       this.keys.delete(key)
-      if (key === 'g') this.session.gesture({ k: 'grabEnd' })
-      if (key === 'm') this.session.gesture({ k: 'manualEnd' })
+      const g = release[key]
+      if (g && this.phase === 'playing') this.session.gesture(g)
     }
     window.addEventListener('keydown', down)
     window.addEventListener('keyup', up)
@@ -220,8 +304,8 @@ export class SkateController {
     const downKey = this.keys.has('ArrowDown')
     const clamp = (v: number) => Math.max(-1, Math.min(1, v))
     return {
-      steer: clamp(this.recognizer.steer + (right ? 1 : 0) - (left ? 1 : 0)),
-      balance: clamp(this.recognizer.balance + (upKey ? 1 : 0) - (downKey ? 1 : 0)),
+      steer: clamp(this.touch.steer + (right ? 1 : 0) - (left ? 1 : 0)),
+      balance: clamp(this.touch.balance + (upKey ? 1 : 0) - (downKey ? 1 : 0)),
     }
   }
 
@@ -232,7 +316,7 @@ export class SkateController {
     if (this.phase !== 'ready') return
     unlockAudio()
     this.resume()
-    if (!this.hintShown) {
+    if (!this.hintShown && !this.tutorial.step) {
       this.hintShown = true
       this.popup(copy.migaskate.hintFirst, 'hint')
     }
@@ -247,8 +331,9 @@ export class SkateController {
   pause() {
     if (this.phase !== 'playing') return
     cancelAnimationFrame(this.raf)
-    this.recognizer.clear()
+    this.touch.clear()
     this.session.gesture({ k: 'grabEnd' })
+    this.session.gesture({ k: 'catchEnd' })
     this.setPhase('paused')
   }
 
@@ -279,15 +364,20 @@ export class SkateController {
     this.adaptResolution(frameMs)
 
     const { session } = this
-    for (const g of this.recognizer.update(now)) session.gesture(g)
-    this.recognizer.grindingHint = session.skater.mode === 'grind'
-    session.update(Math.min(frameMs / 1000, MAX_ADVANCE), this.input())
+    for (const g of this.touch.update(now)) session.gesture(g)
+    if (this.hitStopMs > 0) {
+      // Hit-stop: un instante de congelamiento al caer fuerte (la imagen sigue dibujandose).
+      this.hitStopMs -= frameMs
+    } else {
+      session.update(Math.min(frameMs / 1000, MAX_ADVANCE), this.input())
+    }
     this.react(session.drain())
+    this.juice?.update(frameMs / 1000, session.physics.view(session.alpha))
     this.drawFrame(now)
 
     if (now - this.lastHud > HUD_EVERY_MS) {
       this.lastHud = now
-      this.callbacks.onHud(hudOf(session))
+      this.callbacks.onHud(this.hud())
     }
     if (session.finished) {
       this.beginEnd()
@@ -297,7 +387,7 @@ export class SkateController {
   }
 
   private beginEnd() {
-    this.callbacks.onHud(hudOf(this.session))
+    this.callbacks.onHud(this.hud())
     this.setPhase('ended')
     sfx.star()
     this.endTimer = window.setTimeout(
@@ -310,36 +400,19 @@ export class SkateController {
     this.callbacks.onPopup({ id: ++this.popupId, text, kind })
   }
 
+  /**
+   * Reacciona a los eventos de la sesion: carteles y los sonidos de puntaje. Los sonidos y efectos de
+   * la tabla (pop, land, grind, bump, bail, flip...) los dispara SkateJuice desde los hooks de la fisica.
+   */
   private react(events: readonly SessionEvent[]) {
-    const sk = this.session.skater
     for (const e of events) {
+      if (this.tutorial.onEvent(e)) {
+        this.callbacks.onHud(this.hud())
+        this.popup(copy.migaskate.tutorialNice, 'hint')
+      }
       switch (e.t) {
-        case 'push':
-          sfx.push()
-          break
-        case 'pop':
-          sfx.pop()
-          break
-        case 'flip':
-          sfx.flip()
-          break
         case 'land':
-          sfx.land()
-          if (e.hard) {
-            this.renderer?.addShake(0.15)
-            vibrate(15)
-          }
-          this.renderer?.burst({ x: sk.x, y: sk.y + 0.05, z: sk.z, count: 5, speed: 1.6 })
-          break
-        case 'grindStart':
-          sfx.grind()
-          break
-        case 'grabStart':
-          sfx.grab()
-          break
-        case 'bump':
-          sfx.bump()
-          this.renderer?.addShake(0.12)
+          if (e.quality === 'sloppy' && e.trick) this.popup(copy.migaskate.sloppy, 'hint')
           break
         case 'trick': {
           sfx.trick()
@@ -354,8 +427,6 @@ export class SkateController {
           this.popup(copy.migaskate.bank(e.points), 'bank')
           break
         case 'bail': {
-          sfx.bail()
-          this.renderer?.addShake(0.2)
           const text =
             e.reason === 'manual'
               ? copy.migaskate.bailManual
@@ -379,10 +450,6 @@ export class SkateController {
         default:
       }
     }
-    // Chispas mientras se patina sobre un riel.
-    if (sk.mode === 'grind' && this.frame % 3 === 0) {
-      this.renderer?.burst({ x: sk.x, y: sk.y, z: sk.z, count: 1, speed: 1.2 })
-    }
   }
 
   dispose() {
@@ -392,6 +459,7 @@ export class SkateController {
     this.resizeObserver.disconnect()
     document.removeEventListener('visibilitychange', this.onVisibility)
     for (const undo of this.cleanup) undo()
+    this.juice?.dispose()
     this.renderer?.dispose()
     this.renderer = null
   }

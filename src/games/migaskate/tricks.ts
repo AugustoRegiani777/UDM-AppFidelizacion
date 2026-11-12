@@ -3,7 +3,7 @@
 // src/copy/es.ts; aca solo hay claves.
 
 import type { GrabName } from './gestures.ts'
-import type { LandedTrick } from './physics.ts'
+import type { LandedTrick } from './skatePhysics.ts'
 
 export type TrickKey =
   | 'ollie'
@@ -53,6 +53,8 @@ export interface TrickItem {
   nollie: boolean
   points: number
   tags: TrickTag[]
+  /** Aterrizaje torpe: vale menos (el truco igual cuenta). */
+  sloppy?: boolean
 }
 
 export const GRAB_KEYS: Record<GrabName, TrickKey> = {
@@ -72,6 +74,7 @@ const item = (key: TrickKey, points: number, tags: TrickTag[], nollie = false): 
 /** Trucos que sumo un aterrizaje limpio. Vacio si fue un salto sin gracia (un escalon, una caidita). */
 export function itemsFromLanding(t: LandedTrick): TrickItem[] {
   const items: TrickItem[] = []
+  const sloppy = t.quality === 'sloppy'
   const r = Math.abs(t.roll)
   const y = Math.abs(t.yaw)
 
@@ -118,6 +121,12 @@ export function itemsFromLanding(t: LandedTrick): TrickItem[] {
   if (items.length === 0 && (t.height > 0.8 || t.airTime > 0.6)) {
     items.push(item('air', Math.round(t.height * 45), ['air']))
   }
+  if (sloppy) {
+    for (const i of items) {
+      i.points = Math.round(i.points * SLOPPY_FACTOR)
+      i.sloppy = true
+    }
+  }
   // Un salto con giros tambien cuenta como ollie para los objetivos.
   if (t.popped && !items.some((i) => i.tags.includes('ollie'))) {
     items[0]?.tags.push('ollie')
@@ -125,6 +134,8 @@ export function itemsFromLanding(t: LandedTrick): TrickItem[] {
   return items
 }
 
+/** Un aterrizaje torpe (la tabla llega algo torcida) paga el 60 %. */
+export const SLOPPY_FACTOR = 0.6
 export const GRIND_BASE = 100
 export const GRIND_PER_SECOND = 220
 export const BOARDSLIDE_FACTOR = 1.3

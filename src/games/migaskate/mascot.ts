@@ -8,6 +8,7 @@ import {
   CapsuleGeometry,
   CircleGeometry,
   Group,
+  Matrix4,
   Mesh,
   MeshLambertMaterial,
   MeshPhongMaterial,
@@ -18,10 +19,15 @@ import {
   type Material,
 } from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
-import type { Skater } from './physics.ts'
+import type { SkaterView } from './skatePhysics.ts'
 
 const UP = new Vector3(0, 1, 0)
 const Y_AXIS = new Vector3(0, 1, 0)
+const X_AXIS = new Vector3(1, 0, 0)
+const tmpUp = new Vector3()
+const tmpFwd = new Vector3()
+const tmpRight = new Vector3()
+const tmpM = new Matrix4()
 
 /** El pecho mira hacia la derecha y un poco atras: asi la cara se ve desde la camara. */
 const STANCE = -1.85
@@ -90,18 +96,18 @@ const easeOut = (t: number) => 1 - (1 - t) * (1 - t)
 
 export class Mascot {
   readonly group = new Group()
-  private readonly board = new Group()
+  /** La tabla va suelta en el mundo (pose fisica); el jinete tiene su propio marco (group). */
+  readonly boardGroup = new Group()
   private readonly body = new Group()
   private readonly mouth: Mesh
   private readonly arms: Limb[] = []
   private readonly legs: Limb[] = []
   private grabAmount = 0
-  private slideYaw = 0
   private crouch = 0
   private lean = 0
 
   constructor() {
-    this.group.add(this.board, this.body)
+    this.group.add(this.body)
     this.buildBoard()
     this.mouth = this.buildBody()
     for (let i = 0; i < 2; i++) {
@@ -112,19 +118,19 @@ export class Mascot {
 
   private buildBoard() {
     const d = new RoundedBoxGeometry(0.22, 0.03, 0.82, 2, 0.015)
-    mesh(d, deck, this.board).position.y = 0.0
+    mesh(d, deck, this.boardGroup).position.y = 0.0
     const grip = new BoxGeometry(0.2, 0.006, 0.78)
-    mesh(grip, deckTop, this.board).position.y = 0.018
+    mesh(grip, deckTop, this.boardGroup).position.y = 0.018
     // Nariz y cola levantadas.
     for (const z of [-0.43, 0.43]) {
-      const kick = mesh(new RoundedBoxGeometry(0.22, 0.03, 0.12, 2, 0.015), deck, this.board)
+      const kick = mesh(new RoundedBoxGeometry(0.22, 0.03, 0.12, 2, 0.015), deck, this.boardGroup)
       kick.position.set(0, 0.02, z)
       kick.rotation.x = z > 0 ? -0.35 : 0.35
     }
     const wheel = new SphereGeometry(0.05, 8, 6)
     for (const z of [-0.27, 0.27]) {
       for (const x of [-0.1, 0.1]) {
-        const w = mesh(wheel, wheelMat, this.board)
+        const w = mesh(wheel, wheelMat, this.boardGroup)
         w.position.set(x, -0.045, z)
         w.scale.set(0.6, 1, 1)
       }
@@ -190,48 +196,49 @@ export class Mascot {
     return { upper, lower, end, elbow: new Vector3() }
   }
 
-  /** Acomoda todo segun el estado de la fisica. `time` en segundos. */
-  update(sk: Skater, steer: number, time: number, dt: number) {
-    const { board, body } = this
-    const air = sk.mode === 'air'
-    const grind = sk.mode === 'grind'
-    const bail = sk.mode === 'bail'
-    const bailP = bail ? 1 - Math.max(0, sk.bailT) / 1.15 : 0
+  /**
+   * Acomoda todo segun la vista de la fisica. La tabla va en el mundo con la pose fisica (flips y
+   * shove-its incluidos); el jinete tiene su propio marco (rumbo + normal del suelo) y los pies se
+   * quedan en su lugar mientras la tabla gira por debajo. `squash` viene de SkateJuice (-1..1).
+   */
+  update(v: SkaterView, steer: number, time: number, dt: number, squash = 0) {
+    const { body } = this
+    const air = v.airborne
+    const grind = v.state === 'grinding'
+    const bail = v.state === 'bailed'
+    const bailP = v.bailProgress
 
-    this.group.position.set(sk.x, sk.y, sk.z)
-    this.group.rotation.set(0, sk.heading, 0)
+    // --- Tabla: pose fisica directa ---
+    this.boardGroup.position.set(v.position.x, v.position.y, v.position.z)
+    this.boardGroup.quaternion.set(v.rotation.x, v.rotation.y, v.rotation.z, v.rotation.w)
+
+    // --- Marco del jinete: sobre la normal del suelo, mirando hacia donde va ---
+    const up = tmpUp.set(v.rideUp.x, v.rideUp.y, v.rideUp.z).normalize()
+    const fwd = tmpFwd.set(Math.sin(v.riderYaw), 0, Math.cos(v.riderYaw))
+    fwd.addScaledVector(up, -fwd.dot(up)).normalize()
+    const right = tmpRight.crossVectors(up, fwd)
+    tmpM.makeBasis(right, up, fwd)
+    this.group.quaternion.setFromRotationMatrix(tmpM)
+    this.group.position.set(v.position.x, v.position.y, v.position.z).addScaledVector(up, -BOARD_Y)
+    // Cabeceo de la tabla respecto del jinete (para que los pies sigan a la tabla de pie).
+    tmpQ.copy(this.group.quaternion).invert().multiply(this.boardGroup.quaternion)
+    const noseRel = tmpA.set(0, 0, 1).applyQuaternion(tmpQ)
+    const pitch = Math.asin(Math.max(-1, Math.min(1, noseRel.y)))
     // Inclinacion al doblar.
     this.lean += (steer * 0.22 - this.lean) * Math.min(1, dt * 8)
-    this.group.rotation.z = bail ? 0 : -this.lean
-
-    // --- Tabla ---
-    let pitch = 0
-    if (sk.manual)
-      pitch = sk.manual.bal * 0.5 * (sk.manual.nose ? -1 : 1) + (sk.manual.nose ? 0.18 : -0.18)
-    else if (sk.popped && air) {
-      const t = Math.min(sk.popAge / 0.45, 1)
-      pitch = 0.5 * Math.sin(Math.PI * t) * (sk.nollie ? -1 : 1)
-    }
-    if (grind) pitch = 0.08
-    const slideTarget = grind && sk.grind?.kind === 'boardslide' ? Math.PI / 2 : 0
-    this.slideYaw += (slideTarget - this.slideYaw) * Math.min(1, dt * 14)
-    board.rotation.set(-pitch, sk.yaw + this.slideYaw, sk.roll, 'YXZ')
-    board.position.set(0, BOARD_Y + (air ? 0.02 : 0), 0)
-    if (bail) {
-      board.position.z = 0.9 * easeOut(bailP)
-      board.position.y = BOARD_Y + 0.05 * Math.sin(bailP * Math.PI)
-      board.rotation.set(0.3, bailP * 7, bailP * 4, 'YXZ')
-    }
+    this.group.rotateZ(bail ? 0 : -this.lean)
 
     // --- Cuerpo ---
-    const speed = Math.min(1, Math.abs(sk.speed) / 9)
-    const targetCrouch = air ? (sk.vy > 0 ? 0.25 : 0.5) : grind ? 0.45 : 0.25 + speed * 0.15
+    const speed = Math.min(1, v.speed / 9)
+    const targetCrouch = air ? (v.velocity.y > 0 ? 0.25 : 0.5) : grind ? 0.45 : 0.25 + speed * 0.15
     this.crouch += (targetCrouch - this.crouch) * Math.min(1, dt * 10)
     const hipY = HIP_Y - 0.12 * this.crouch
     const bodyY = hipY + 0.36
     body.position.set(0, bodyY, 0)
-    const tilt = sk.manual ? -sk.manual.bal * 0.25 : 0
-    body.rotation.set(0.12 + tilt + (air ? 0.05 : 0), STANCE + sk.spin, 0, 'YXZ')
+    const tilt = v.manual ? -v.manual.bal * 0.25 : 0
+    body.rotation.set(0.12 + tilt + (air ? 0.05 : 0), STANCE + v.spin, 0, 'YXZ')
+    // Squash y stretch: la mascota se estira al saltar y se aplasta al caer.
+    body.scale.set(1 - 0.14 * squash, 1 + 0.26 * squash, 1 - 0.14 * squash)
     // Cara contenta: la sonrisa se agranda en el aire y se achica un poco al caerse.
     this.mouth.scale.set(1, air || grind ? 1.45 : bail ? 0.7 : 1, 1)
 
@@ -253,7 +260,7 @@ export class Mascot {
     const footFront = new Vector3(0, footY, 0.22 - (grind ? 0.02 : 0))
     const footBack = new Vector3(0, footY, -0.22)
     if (pitch !== 0) {
-      for (const f of [footFront, footBack]) f.applyAxisAngle(new Vector3(1, 0, 0), -pitch)
+      for (const f of [footFront, footBack]) f.applyAxisAngle(X_AXIS, -pitch)
     }
     if (bail) {
       const spread = 0.35 * easeOut(bailP)
@@ -284,7 +291,7 @@ export class Mascot {
 
     // --- Manos ---
     const swing = Math.sin(time * 9) * 0.5 * speed
-    const grabbing = sk.grab !== null
+    const grabbing = v.grab !== null
     this.grabAmount += ((grabbing ? 1 : 0) - this.grabAmount) * Math.min(1, dt * 16)
     const shoulderY = bodyY + 0.16
     const shoulderBase = new Vector3()
@@ -293,12 +300,12 @@ export class Mascot {
     this.arms.forEach((limb, i) => {
       const side = i === 0 ? 1 : -1
       shoulderBase.set(0.36 * side, 0, 0).applyAxisAngle(Y_AXIS, body.rotation.y)
-      shoulderBase.y = shoulderY - 0.0
+      shoulderBase.y = shoulderY
       if (bail) shoulderBase.y = body.position.y + 0.16
       const shoulder = shoulderBase
       if (air) {
-        // Brazos arriba y abiertos para equilibrar.
-        rest.set(0.5 * side, shoulderY + 0.12, 0.05 + 0.1 * side)
+        // Brazos arriba y abiertos para equilibrar (un poco mas abiertos si ataja la tabla).
+        rest.set((v.catching ? 0.58 : 0.5) * side, shoulderY + 0.12, 0.05 + 0.1 * side)
       } else if (grind) {
         rest.set(0.46 * side, shoulderY - 0.1, 0.05 * side)
       } else {

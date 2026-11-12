@@ -2,15 +2,8 @@
 // TypeScript puro (sin three.js ni React): el controlador la avanza y muestra lo que pasa.
 
 import type { Gesture } from './gestures.ts'
-import {
-  advance,
-  applyGesture,
-  createSkater,
-  type SimEvent,
-  type SimInput,
-  type Skater,
-  type WorldDef,
-} from './physics.ts'
+import { SkatePhysics, type SimInput, type SkateEvent } from './skatePhysics.ts'
+import type { WorldDef } from './world.ts'
 import type { Objective, SpotDef } from './spots.ts'
 import {
   BOARDSLIDE_FACTOR,
@@ -40,7 +33,7 @@ export interface SessionStats {
 }
 
 export type SessionEvent =
-  | SimEvent
+  | SkateEvent
   | { t: 'trick'; item: TrickItem; combo: number; mult: number }
   | { t: 'bank'; points: number; count: number }
   | { t: 'lost'; points: number }
@@ -79,7 +72,9 @@ export const objectiveDone = (o: Objective, s: SessionStats) => {
 
 export class SkateSession {
   readonly world: WorldDef
-  readonly skater: Skater
+  readonly physics: SkatePhysics
+  /** Fraccion del paso fijo pendiente (para interpolar la pose al dibujar). */
+  alpha = 1
   readonly stats: SessionStats = {
     score: 0,
     bestCombo: 0,
@@ -101,7 +96,7 @@ export class SkateSession {
 
   constructor(readonly spot: SpotDef) {
     this.world = spot.world
-    this.skater = createSkater(spot.world)
+    this.physics = new SkatePhysics(spot.world)
   }
 
   get stars() {
@@ -135,13 +130,15 @@ export class SkateSession {
 
   gesture(g: Gesture) {
     if (this.finished) return
-    this.handle(applyGesture(this.skater, g))
+    this.handle(this.physics.applyGesture(g))
   }
 
   /** Avanza `seconds` segundos de juego. */
   update(seconds: number, input: SimInput) {
     if (this.finished) return
-    advance(this.world, this.skater, input, seconds, (events) => this.handle(events))
+    this.physics.steer = input.steer
+    this.physics.balance = input.balance
+    this.alpha = this.physics.advance(seconds, (events) => this.handle(events))
     this.time += seconds
     this.tickCombo(seconds)
     if (this.time >= this.spot.seconds) this.finish()
@@ -156,15 +153,17 @@ export class SkateSession {
     this.events.push({ t: 'end' })
   }
 
-  private handle(events: SimEvent[]) {
+  private handle(events: SkateEvent[]) {
     for (const e of events) {
+      // El raspado del riel llega 120 veces por segundo: lo usa la juice, no la cola de carteles.
+      if (e.t === 'grindStay') continue
       this.events.push(e)
       this.react(e)
     }
   }
 
-  private react(e: SimEvent) {
-    const s = this.skater
+  private react(e: SkateEvent) {
+    const s = this.physics
     switch (e.t) {
       case 'land': {
         this.stats.landed++
@@ -195,7 +194,7 @@ export class SkateSession {
       }
       case 'grindEnd': {
         this.stats.grindSeconds = Math.max(this.stats.grindSeconds, e.seconds)
-        if (this.live && this.live.tag === 'grind' && s.mode !== 'bail') {
+        if (this.live && this.live.tag === 'grind' && s.state !== 'bailed') {
           const boardslide = this.live.key === 'boardslide'
           this.closeLive()
           if (boardslide) this.addTag('boardslide')
@@ -209,7 +208,7 @@ export class SkateSession {
       case 'manualEnd': {
         this.stats.manualSeconds = Math.max(this.stats.manualSeconds, e.seconds)
         if (this.live?.tag === 'manual') {
-          if (e.seconds >= 0.6 && s.mode !== 'bail') {
+          if (e.seconds >= 0.6 && s.state !== 'bailed') {
             this.live.key = e.nose ? 'noseManual' : 'manual'
             this.closeLive()
           } else this.live = null
@@ -242,21 +241,21 @@ export class SkateSession {
   }
 
   private tickCombo(dt: number) {
-    const s = this.skater
+    const s = this.physics
     if (this.live) {
-      if (this.live.tag === 'grind' && s.mode === 'grind') {
+      if (this.live.tag === 'grind' && s.state === 'grinding') {
         const factor = this.live.key === 'boardslide' ? BOARDSLIDE_FACTOR : 1
         this.live.points += GRIND_PER_SECOND * factor * dt
       } else if (this.live.tag === 'manual' && s.manual) {
         this.live.points += MANUAL_PER_SECOND * dt
       }
     }
-    const busy = s.mode === 'air' || s.mode === 'grind' || s.manual !== null
+    const busy = s.airborne || s.state === 'grinding' || s.manual !== null
     if (busy) {
       this.idle = 0
     } else if (this.items.length > 0 || this.live) {
       this.idle += dt
-      if (s.mode === 'bail') this.idle = 0
+      if (s.state === 'bailed') this.idle = 0
       if (this.idle > COMBO_GRACE) this.bank()
     }
   }

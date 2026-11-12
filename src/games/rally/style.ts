@@ -149,6 +149,10 @@ export const RALLY_CSS = `
   .rdc.is-touch .minimap{width:128px;height:101px}
 }
 .rdc.is-touch .hud-br{display:none}
+/* Perfil táctil: el mapa pasa arriba a la izquierda para dejar libre el borde derecho (ítem y freno de mano). */
+.rdc.is-touch .hud-tr{position:static}
+.rdc.is-touch .times{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:calc(16px + env(safe-area-inset-right,0px))}
+.rdc.is-touch .minimap{position:absolute;left:calc(16px + env(safe-area-inset-left,0px));top:calc(122px + env(safe-area-inset-top,0px));width:112px;height:88px;opacity:.85}
 .rdc.is-touch .hud-tl{gap:4px}
 .rdc.is-touch .icon-btn{width:46px;height:46px}
 @media (orientation:landscape) and (max-height:520px){

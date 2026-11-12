@@ -2,6 +2,7 @@
 // Es el de la demo; solo cambia que los ids pasan a `data-r` para no chocar con la app.
 import { copy } from '@/copy'
 import { ICONS, ITEM_DESC, ITEM_KEYS, ITEM_NAMES, hex, type CarDef } from './data.ts'
+import { touchHelpHtml, touchOptionsHtml } from './touchLayer.ts'
 
 export function carSVG(def: CarDef) {
   const c = hex(def.color)
@@ -44,10 +45,7 @@ const controlsDesktop = `
           <li><kbd>R</kbd><span>Volver a la pista</span> <kbd>C</kbd><span>Cámara</span> <kbd>P</kbd><span>Pausa</span> <kbd>M</kbd><span>Sonido</span></li>
         </ul>`
 
-const controlsTouch = () => `
-        <ul class="keys">
-          ${copy.rally.touchHelp.map((line) => `<li><span style="margin-left:0">${line}</span></li>`).join('')}
-        </ul>`
+const controlsTouch = () => `<div data-r="touch-help">${touchHelpHtml()}</div>`
 
 export function buildTemplate(touch: boolean): string {
   const r = copy.rally
@@ -58,6 +56,7 @@ export function buildTemplate(touch: boolean): string {
   <div class="hud-tl">
     <div class="pos-big"><span data-r="hud-pos" data-testid="rally-pos">1</span><small>/<span data-r="hud-total">4</span></small></div>
     <div class="chip">VUELTA <span data-r="hud-lap" data-testid="rally-lap">1/3</span></div>
+    <div class="chip hud-track" data-r="hud-track" data-testid="rally-hud-track"></div>
   </div>
   <div class="hud-top">
     <button class="icon-btn" data-r="btn-pause" type="button" aria-label="${r.pause}">${PAUSE_ICON}</button>
@@ -90,7 +89,7 @@ export function buildTemplate(touch: boolean): string {
     <div class="menu-grid">
       <div class="col">
         <header>
-          <p class="eyebrow">Pista 1 · La Cocina · Escala 1:32</p>
+          <p class="eyebrow" data-r="eyebrow" data-testid="rally-eyebrow"></p>
           <h1 class="logo">Rally de Cocina</h1>
           <p class="tagline">Autitos a radiocontrol entre las patas de la mesa. Juntá cajas sorpresa, saltá las rampas y llegá primero a la meta.</p>
         </header>
@@ -120,7 +119,7 @@ export function buildTemplate(touch: boolean): string {
               ['normal', 'Normal'],
               ['hard', 'Difícil'],
             ])}</div>
-          </fieldset>
+          </fieldset>${touch ? touchOptionsHtml() : ''}
         </div>
         <div class="go-row">
           <button data-r="btn-start" data-testid="rally-start" class="btn-go" type="button">¡A correr!</button>
@@ -130,6 +129,11 @@ export function buildTemplate(touch: boolean): string {
         <div><button class="btn ghost" data-r="btn-exit" data-testid="rally-exit" type="button">${r.exit}</button></div>
       </div>
       <div class="col">
+        <section aria-labelledby="rdc-h-tracks">
+          <h2 id="rdc-h-tracks" class="sec-title">${r.tracks.title}</h2>
+          <div class="tracks" data-r="track-grid" data-testid="rally-tracks" role="radiogroup" aria-labelledby="rdc-h-tracks"></div>
+          <p class="track-hint" data-r="track-hint" aria-live="polite"></p>
+        </section>
         <section aria-labelledby="rdc-h-cars">
           <h2 id="rdc-h-cars" class="sec-title">Elegí tu auto</h2>
           <div class="cars" data-r="car-grid" role="radiogroup" aria-labelledby="rdc-h-cars"></div>
@@ -165,7 +169,7 @@ export function buildTemplate(touch: boolean): string {
 <div class="overlay" data-r="results" role="dialog" aria-modal="true" aria-label="${r.resultsTitle}" hidden>
   <div class="panel narrow results">
     <div class="res-head">
-      <p class="eyebrow">Resultados · La Cocina</p>
+      <p class="eyebrow" data-r="res-eyebrow" data-testid="rally-results-track"></p>
       <h2 class="title" data-r="res-title">¡Meta!</h2>
       <p class="sub" data-r="res-sub"></p>
     </div>

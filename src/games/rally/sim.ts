@@ -3,12 +3,11 @@
 import {
   CAR_R,
   CARS,
+  DEFAULT_TRACK_ID,
   FLIP_T,
   GRAV,
-  HW,
   ITEM_KEYS,
   ITEM_NAMES,
-  N,
   PULSE_R,
   ZERO,
   clamp,
@@ -21,7 +20,11 @@ import {
   type ItemKey,
   type RallySettings,
 } from './data.ts'
-import { NRM, TAN, TP, groundAt, idxBack, nearestIdx, pickupSpots } from './track.ts'
+import { getTrack } from './tracks/index.ts'
+import type { TrackRuntime } from './tracks/runtime.ts'
+
+/** Cuánto acelera la gravedad al auto sobre una pendiente (m/s² por unidad de pendiente). */
+export const SLOPE_ACC = 30
 
 export type SfxName =
   | 'beep'
@@ -102,6 +105,7 @@ export interface Car {
   resetCD: number
   bumpCD: number
   newRecord: boolean
+  newRaceRecord: boolean
 }
 
 export interface Rocket {
@@ -126,6 +130,8 @@ export interface Oil {
 export interface Pickup {
   x: number
   z: number
+  /** Altura del asfalto bajo la caja. */
+  y: number
   active: boolean
   respawn: number
   phase: number
@@ -159,6 +165,10 @@ export interface SimHooks {
   onOilRemove(o: Oil): void
   /** Guarda la mejor vuelta; devuelve true si es récord personal. */
   saveBest(carId: string, lap: number): boolean
+  /** Guarda el tiempo total de la carrera; devuelve true si es récord personal. */
+  saveRace(carId: string, time: number, laps: number): boolean
+  /** El jugador cruzó la meta (ya con la posición y los récords guardados). */
+  onPlayerFinish(player: Car): void
 }
 
 export const NOOP_HOOKS: SimHooks = {
@@ -175,6 +185,8 @@ export const NOOP_HOOKS: SimHooks = {
   onOilSpawn() {},
   onOilRemove() {},
   saveBest: () => false,
+  saveRace: () => false,
+  onPlayerFinish() {},
 }
 
 export function makeCar(def: CarDef, isPlayer: boolean): Car {
@@ -238,6 +250,7 @@ export function makeCar(def: CarDef, isPlayer: boolean): Car {
     resetCD: 0,
     bumpCD: 0,
     newRecord: false,
+    newRaceRecord: false,
   }
 }
 
@@ -258,25 +271,42 @@ export class RallySim {
   time = 0
   readonly rockets: Rocket[] = []
   readonly oils: Oil[] = []
-  readonly pickups: Pickup[] = pickupSpots.map((p) => ({
-    x: p.x,
-    z: p.z,
-    active: true,
-    respawn: 0,
-    phase: random() * 6,
-    pop: 0,
-  }))
+  pickups: Pickup[] = []
   settings: RallySettings
+  track: TrackRuntime
 
   constructor(
     private readonly hooks: SimHooks,
     settings: RallySettings,
+    track?: TrackRuntime,
   ) {
     this.settings = { ...settings }
+    this.track = track ?? getTrack(settings.track ?? DEFAULT_TRACK_ID)
+    this.pickups = this.makePickups()
+  }
+
+  private makePickups(): Pickup[] {
+    return this.track.pickupSpots.map((p) => ({
+      x: p.x,
+      z: p.z,
+      y: p.y,
+      active: true,
+      respawn: 0,
+      phase: random() * 6,
+      pop: 0,
+    }))
+  }
+
+  /** Cambia de pista. Hay que llamarlo antes de `startRace`: borra la carrera en curso. */
+  setTrack(track: TrackRuntime) {
+    if (track === this.track) return
+    this.clearRace()
+    this.track = track
+    this.pickups = this.makePickups()
   }
 
   progress(c: Car) {
-    return c.lapsDone * N + c.idx
+    return c.lapsDone * this.track.n + c.idx
   }
 
   /* ---------- carrera ---------- */
@@ -312,20 +342,16 @@ export class RallySim {
     // Vos salís al final de la parrilla.
     const order = isAttract ? defs : [...defs.slice(1), defs[0]!]
     const diffMult = DIFF_MULT[this.settings.diff] || 0.93
+    const HW = this.track.hw
     order.forEach((def, k) => {
-      const row = Math.floor(k / 2)
-      const col = k % 2
-      const i = idxBack(6 + row * 7)
-      const p = TP[i]!
-      const n = NRM[i]!
-      const t = TAN[i]!
-      const lat = (col ? -1 : 1) * 2.4
+      const slot = this.track.gridSlot(k)
       const car = makeCar(def, !isAttract && def === defs[0])
-      car.x = p.x + n.x * lat
-      car.z = p.z + n.z * lat
-      car.heading = Math.atan2(t.x, t.z)
-      car.idx = i
-      car.lane = clamp(lat * 0.5 + rand(-1.2, 1.2), -(HW - 1.6), HW - 1.6)
+      car.x = slot.x
+      car.z = slot.z
+      car.y = this.track.groundAt(slot.x, slot.z, slot.idx)
+      car.heading = slot.heading
+      car.idx = slot.idx
+      car.lane = clamp(slot.lat * 0.5 + rand(-1.2, 1.2), -(HW - 1.6), HW - 1.6)
       car.baseMult = car.speedMult = car.isPlayer
         ? 1
         : isAttract
@@ -419,6 +445,7 @@ export class RallySim {
 
   /* ---------- física ---------- */
   stepCar(c: Car, h: number, ctrl: Control) {
+    if (!(h > 0)) return // un cuadro de duración cero no mueve nada (y dividiría por cero)
     const d = c.def
     const fx_ = Math.sin(c.heading)
     const fz_ = Math.cos(c.heading)
@@ -438,12 +465,24 @@ export class RallySim {
     c.steer += (st - c.steer) * Math.min(1, h * 9)
     c.thrVis = thr
     let turn = 0
+    const trk = this.track
     if (!c.airborne) {
       let maxS = d.maxSpeed * c.speedMult
       let acc = d.accel
       if (c.turbo > 0) {
         maxS *= 1.42
         acc *= 1.9
+      }
+      const zone = trk.zones.length ? trk.zoneAt(c.idx, trk.latOf(c.x, c.z, c.idx)) : null
+      if (zone === 'sand') {
+        maxS *= 0.62
+        acc *= 0.7
+        vf -= vf * 1.6 * h
+      }
+      if (!trk.flat) {
+        // La gravedad en la subida y la bajada (solo a lo largo del eje de la pista).
+        const tg = trk.TAN[c.idx]!
+        vf -= SLOPE_ACC * trk.SLOPE[c.idx]! * (fx_ * tg.x + fz_ * tg.z) * h
       }
       if (thr > 0) {
         if (vf < 0) vf += 38 * thr * h
@@ -458,6 +497,7 @@ export class RallySim {
       let grip = d.grip
       if (ctrl.handbrake) grip *= 0.22
       if (c.slip > 0) grip *= 0.12
+      if (zone === 'slick') grip *= 0.2
       vl *= Math.exp(-grip * h)
       if (ctrl.handbrake) vf -= vf * 0.6 * h
       const av = Math.abs(vf)
@@ -472,27 +512,30 @@ export class RallySim {
       c.spinVel *= Math.exp(-2.4 * h)
       if (Math.abs(c.spinVel) < 0.08) c.spinVel = 0
     }
-    const gOld = groundAt(c.x, c.z)
+    const gOld = trk.groundAt(c.x, c.z, c.idx)
     c.x += c.vx * h
     c.z += c.vz * h
-    const gNew = groundAt(c.x, c.z)
+    const gNew = trk.groundAt(c.x, c.z, c.idx)
+    const gRate = (gNew - gOld) / h
     if (c.airborne) {
       c.vy -= GRAV * h
       c.y += c.vy * h
       if (c.y <= gNew) {
-        if (c.vy < -7) {
+        if (c.vy - gRate < -7) {
           c.squash = 0.25
           this.landDust(c)
           if (c.isPlayer) this.hooks.sfx('land')
         }
         c.y = gNew
-        c.vy = 0
+        c.vy = Math.min(gRate, 14)
         c.airborne = false
       }
-    } else if (gNew >= gOld - 1e-4) {
-      c.vy = Math.min((gNew - gOld) / h, 14)
+    } else if (gNew + 1e-4 >= c.y + c.vy * h - 0.5 * GRAV * h * h) {
+      // El suelo sigue al auto: sube, baja suave o está plano.
+      c.vy = Math.min(gRate, 14)
       c.y = gNew
     } else {
+      // El suelo se aleja más rápido de lo que cae el auto (cresta con velocidad o borde de rampa).
       c.airborne = true
       c.vy -= GRAV * h
       c.y += c.vy * h
@@ -520,7 +563,8 @@ export class RallySim {
   }
 
   private trackCollide(c: Car) {
-    const ni = nearestIdx(c.x, c.z, c.idx)
+    const { n: N, TP, NRM, hw: HW } = this.track
+    const ni = this.track.nearestIdx(c.x, c.z, c.idx)
     const dl = ni - c.idx
     if (dl < -N / 2) this.onCross(c, 1)
     else if (dl > N / 2) this.onCross(c, -1)
@@ -601,6 +645,8 @@ export class RallySim {
     this.resultsTimer = 2.6
     if (isFinite(player.bestLap))
       player.newRecord = this.hooks.saveBest(player.def.id, player.bestLap)
+    player.newRaceRecord = this.hooks.saveRace(player.def.id, player.finishTime, this.totalLaps)
+    this.hooks.onPlayerFinish(player)
   }
 
   collideCars() {
@@ -643,11 +689,11 @@ export class RallySim {
 
   resetCar(c: Car) {
     const i = c.idx
-    const p = TP[i]!
-    const t = TAN[i]!
+    const p = this.track.TP[i]!
+    const t = this.track.TAN[i]!
     c.x = p.x
     c.z = p.z
-    c.y = groundAt(p.x, p.z)
+    c.y = this.track.groundAt(p.x, p.z, i)
     c.vx = c.vz = c.vy = 0
     c.vf = 0
     c.heading = Math.atan2(t.x, t.z)
@@ -677,6 +723,9 @@ export class RallySim {
 
   /* ---------- IA ---------- */
   aiControl(c: Car, h: number): Control {
+    const trk = this.track
+    const { n: N, TP, NRM, TAN, SLOPE, hw: HW } = trk
+    const ai = trk.def.ai
     const spd = Math.hypot(c.vx, c.vz)
     if (c.reverseT > 0) {
       c.reverseT -= h
@@ -703,8 +752,22 @@ export class RallySim {
       if (Math.abs(side) < 2.4) avoidTarget = side > 0 ? -3 : 3
     }
     c.avoid += (avoidTarget - c.avoid) * Math.min(1, h * 3)
-    const lane = clamp(c.lane + Math.sin(c.laneT) * 1.3 + c.avoid, -(HW - 1.3), HW - 1.3)
-    const ti = (c.idx + Math.round(8 + spd * 0.5)) % N
+    let lane = clamp(c.lane + Math.sin(c.laneT) * 1.3 + c.avoid, -(HW - 1.3), HW - 1.3)
+    // Las manchas resbaladizas se esquivan por el lado con más lugar.
+    for (const zn of trk.zones) {
+      if (zn.kind !== 'slick') continue
+      const dI = (zn.i0 + zn.count - c.idx + N) % N
+      if (dI > zn.count + 40) continue
+      const zc = (zn.lat0 + zn.lat1) / 2
+      const half = (zn.lat1 - zn.lat0) / 2
+      if (Math.abs(lane - zc) < half + 1.5) {
+        const roomL = HW - 1.3 - (zc + half)
+        const roomR = zc - half + (HW - 1.3)
+        lane = roomL >= roomR ? zc + half + 1.5 : zc - half - 1.5
+        lane = clamp(lane, -(HW - 1.3), HW - 1.3)
+      }
+    }
+    const ti = (c.idx + Math.round(ai.lookahead + spd * 0.5)) % N
     const tx = TP[ti]!.x + NRM[ti]!.x * lane
     const tz = TP[ti]!.z + NRM[ti]!.z * lane
     const diff = wrapA(Math.atan2(tx - c.x, tz - c.z) - c.heading)
@@ -717,7 +780,16 @@ export class RallySim {
       c.def.maxSpeed *
       c.speedMult *
       (c.turbo > 0 ? 1.4 : 1) *
-      (1 - clamp(turnAmt / 1.8, 0, 1) * 0.45)
+      (1 - clamp(turnAmt / 1.8, 0, 1) * ai.cornerBrake) *
+      ai.speed
+    if (!trk.flat && ai.slopeCare > 0) {
+      // Anticipa el relieve: levanta el pie antes de una cresta y de una bajada que termina en curva.
+      const gHere = SLOPE[c.idx]!
+      const gAhead = SLOPE[(c.idx + Math.round(10 + spd * 1.1)) % N]!
+      const crest = clamp(gHere - gAhead, 0, 0.4)
+      target *= 1 - crest * 1.2 * ai.slopeCare
+      if (gAhead < -0.05 && turnAmt > 0.45) target *= 1 - 0.12 * ai.slopeCare
+    }
     if (Math.abs(diff) > 1.2) target = Math.min(target, 10)
     let thr = 1
     let brk = 0
@@ -771,7 +843,8 @@ export class RallySim {
   private aiItems(c: Car) {
     if (!c.item || c.itemDelay > 0) return
     let use = false
-    if (c.item === 'turbo') use = c.turnAhead < 0.3 && c.stun <= 0
+    if (c.item === 'turbo')
+      use = c.turnAhead < 0.3 && c.stun <= 0 && this.track.SLOPE[c.idx]! > -0.06
     else if (c.item === 'rocket') {
       const t = this.targetFor(c)
       use = !!t && Math.hypot(t.x - c.x, t.z - c.z) < 45
@@ -816,7 +889,7 @@ export class RallySim {
     for (let i = 0; i < 12; i++)
       this.hooks.emit(
         p.x,
-        1,
+        p.y + 1,
         p.z,
         rand(-4, 4),
         rand(2, 6),
@@ -884,12 +957,11 @@ export class RallySim {
   }
 
   private latOf(c: Car) {
-    const p = TP[c.idx]!
-    const n = NRM[c.idx]!
-    return (c.x - p.x) * n.x + (c.z - p.z) * n.z
+    return this.track.latOf(c.x, c.z, c.idx)
   }
 
   private updateRockets(h: number) {
+    const { n: N, TP, NRM, hw: HW } = this.track
     for (let k = this.rockets.length - 1; k >= 0; k--) {
       const r = this.rockets[k]!
       r.life -= h
@@ -916,8 +988,8 @@ export class RallySim {
       r.heading += clamp(df, -5 * h, 5 * h)
       r.x += Math.sin(r.heading) * r.speed * h
       r.z += Math.cos(r.heading) * r.speed * h
-      r.y += (groundAt(r.x, r.z) + 0.55 - r.y) * Math.min(1, h * 10)
-      r.idx = nearestIdx(r.x, r.z, r.idx)
+      r.idx = this.track.nearestIdx(r.x, r.z, r.idx)
+      r.y += (this.track.groundAt(r.x, r.z, r.idx) + 0.55 - r.y) * Math.min(1, h * 10)
       const p = TP[r.idx]!
       const n = NRM[r.idx]!
       const lat = (r.x - p.x) * n.x + (r.z - p.z) * n.z
@@ -1064,8 +1136,8 @@ export class RallySim {
   }
 
   private checkPickups(c: Car) {
-    if (c.y > 2.5) return
     for (const p of this.pickups) {
+      if (c.y - p.y > 2.5) continue
       if (p.active && (c.x - p.x) ** 2 + (c.z - p.z) ** 2 < 3.4) this.collect(c, p)
     }
   }
@@ -1089,7 +1161,7 @@ export class RallySim {
       const a = random() * 6.28
       this.hooks.emit(
         c.x + Math.cos(a) * 0.6,
-        0.2,
+        c.y + 0.2,
         c.z + Math.sin(a) * 0.6,
         Math.cos(a) * 3,
         rand(0.5, 2),
@@ -1130,7 +1202,7 @@ export class RallySim {
         const wz = rz - Math.sin(c.heading) * 0.5 * s
         this.hooks.emit(
           wx,
-          0.2,
+          c.y + 0.2,
           wz,
           rand(-1, 1),
           rand(1, 2.4),

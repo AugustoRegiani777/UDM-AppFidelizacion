@@ -11,7 +11,6 @@ import { enterLandscape } from '../shared/landscape.ts'
 import { RallyAudio } from './audio.ts'
 import {
   CARS,
-  HW,
   ICONS,
   ITEM_KEYS,
   ITEM_NAMES,
@@ -33,9 +32,29 @@ import {
 } from './quality.ts'
 import { RallySim, type SimHooks } from './sim.ts'
 import { RALLY_CSS } from './style.ts'
-import { DIST, LEN, NRM, TAN, TP, trackCheck } from './track.ts'
-import { createTouchLayer } from './touchLayer.ts'
-import { EMPTY_TOUCH } from './touchModel.ts'
+import {
+  earnsPodium,
+  getLapRecord,
+  getRaceRecord,
+  isUnlocked,
+  markPodium,
+  migrateRecords,
+  recordLap,
+  recordRace,
+  unlockedIds,
+} from './records.ts'
+import { OPEN_TRACKS, TRACKS, getTrack, getTrackDef } from './tracks/index.ts'
+import type { TrackRuntime } from './tracks/runtime.ts'
+import { computeMetrics } from './tracks/validate.ts'
+import { LOCK_SVG, TRACK_CSS, trackThumbSVG } from './trackMenu.ts'
+import {
+  SENSITIVITIES,
+  createTouchLayer,
+  loadTouchPrefs,
+  touchHelpHtml,
+  type TouchPrefs,
+} from './touchLayer.ts'
+import { EMPTY_TOUCH, withIdleBrake } from './touchModel.ts'
 import { buildTemplate, carSVG } from './ui.ts'
 import { createWorld, type RallyWorld } from './world.ts'
 
@@ -72,7 +91,7 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
   root.setAttribute('data-testid', 'rally-root')
   root.dataset.state = 'menu'
   const style = document.createElement('style')
-  style.textContent = RALLY_CSS
+  style.textContent = RALLY_CSS + TRACK_CSS
   root.appendChild(style)
   const body = document.createElement('div')
   body.style.display = 'contents'
@@ -108,7 +127,17 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
   const audio = new RallyAudio(!soundOn())
 
   /* ---------- simulación + mundo ---------- */
+  // Los récords de cuando había una sola pista pasan a la Cocina (sin perder nada).
+  migrateRecords(
+    store,
+    CARS.map((c) => c.id),
+  )
+  const trackIds = TRACKS.map((t) => t.id)
   const settings: RallySettings = loadSettings()
+  {
+    const saved = getTrackDef(settings.track ?? '').id
+    settings.track = isUnlocked(store, trackIds, saved, OPEN_TRACKS) ? saved : trackIds[0]!
+  }
   let hudCache: Record<string, string | boolean> = {}
   let wrongT = 0
   let statsT = 0
@@ -142,17 +171,16 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
     onRocketRemove: (r) => world?.hooks.onRocketRemove(r),
     onOilSpawn: (o) => world?.hooks.onOilSpawn(o),
     onOilRemove: (o) => world?.hooks.onOilRemove(o),
-    saveBest(carId, lap) {
-      const key = 'best:' + carId
-      const prev = store.get<number | null>(key, null)
-      if (prev == null || lap < prev) {
-        store.set(key, lap)
-        return true
-      }
-      return false
+    saveBest: (carId, lap) => recordLap(store, sim.track.id, carId, lap),
+    saveRace: (carId, time, laps) => recordRace(store, sim.track.id, carId, time, laps),
+    onPlayerFinish(player) {
+      unlockedNow = null
+      if (earnsPodium(player.place, sim.cars.length))
+        unlockedNow = markPodium(store, trackIds, sim.track.id, OPEN_TRACKS)
     },
   }
-  const sim = new RallySim(hooks, settings)
+  let unlockedNow: string | null = null
+  const sim = new RallySim(hooks, settings, getTrack(settings.track!))
 
   try {
     world = createWorld(stage, sim, q, store.get<number>('cam', 0) ? 1 : 0)
@@ -173,18 +201,11 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
   const w3d = world
 
   /* ---------- capa táctil ---------- */
+  const touchPrefs: TouchPrefs = loadTouchPrefs()
   const layer = touch
     ? createTouchLayer(root, {
-        labels: {
-          up: copy.rally.touch.up,
-          down: copy.rally.touch.down,
-          left: copy.rally.touch.left,
-          right: copy.rally.touch.right,
-          item: copy.rally.touch.item,
-          handbrake: copy.rally.touch.handbrake,
-          itemEmpty: copy.rally.touch.itemEmpty,
-          itemRolling: copy.rally.touch.itemRolling,
-        },
+        labels: copy.rally.touch,
+        prefs: touchPrefs,
         onPress: (b) => {
           if (b === 'item') sim.tryUseItem()
         },
@@ -239,6 +260,7 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
   let mapX: (x: number) => number
   let mapZ: (z: number) => number
   function buildMinimap() {
+    const { TP, NRM, hw: HW } = sim.track
     mm.width = MM_W * MDPR
     mm.height = MM_H * MDPR
     let x0 = 1e9,
@@ -309,6 +331,7 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
   }
   function updateHUD(dt: number) {
     const p = sim.player!
+    setT('hud-track', sim.track.name)
     setT('hud-pos', String(p.pos))
     setT('hud-total', String(sim.cars.length))
     setT(
@@ -329,7 +352,7 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
       $('hud-turbo').style.width = tw
     }
     updateItemHUD()
-    const t = TAN[p.idx]!
+    const t = sim.track.TAN[p.idx]!
     const dot = Math.sin(p.heading) * t.x + Math.cos(p.heading) * t.z
     const sp = Math.hypot(p.vx, p.vz)
     if (sim.state === 'race' && dot < -0.3 && sp > 2.5) wrongT += dt
@@ -392,9 +415,16 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
           `<tr class="${c.isPlayer ? 'me' : ''}"><td>${c.pos}º</td><td><span class="dot" style="background:${hex(c.def.color)}"></span>${c.def.name}${c.isPlayer ? ' (vos)' : ''}</td><td>${c.finished ? fmt(c.finishTime) : 'en carrera'}</td><td>${isFinite(c.bestLap) ? fmt(c.bestLap) : '--:--.--'}</td></tr>`,
       )
       .join('')
+    const tr = copy.rally.tracks
+    $('res-eyebrow').textContent = tr.resultsEyebrow(sim.track.name)
     $('res-title').textContent = player.place === 1 ? '¡Ganaste!' : `Llegaste ${player.place}º`
+    const flags = [
+      player.newRecord ? tr.newLapRecord : '',
+      player.newRaceRecord ? tr.newRaceRecord : '',
+    ].filter(Boolean)
+    const unlocked = unlockedNow ? ' ' + tr.unlocked(getTrackDef(unlockedNow).name) : ''
     $('res-sub').textContent =
-      `${sim.totalLaps} ${sim.totalLaps === 1 ? 'vuelta' : 'vueltas'} con ${player.def.name}. Tu mejor vuelta: ${fmt(player.bestLap)}${player.newRecord ? ' (récord personal)' : ''}.`
+      `${sim.totalLaps} ${sim.totalLaps === 1 ? 'vuelta' : 'vueltas'} con ${player.def.name} en ${sim.track.name}. Tu mejor vuelta: ${fmt(player.bestLap)}${flags.length ? ' (' + flags.join(', ') + ')' : ''}.${unlocked}`
   }
   function showResults() {
     statsT = 0.5
@@ -405,10 +435,14 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
   }
   function updateRecord() {
     const def = CARS.find((c) => c.id === settings.car) ?? CARS[0]!
-    const b = store.get<number | null>('best:' + def.id, null)
+    const tr = copy.rally.tracks
+    const track = sim.track
+    const b = getLapRecord(store, track.id, def.id)
+    const r = getRaceRecord(store, track.id, def.id, settings.laps)
     $('record-line').textContent = b
-      ? `Tu mejor vuelta con ${def.name}: ${fmt(b)}`
-      : `Todavía no tenés récord con ${def.name}.`
+      ? tr.lapRecord(def.name, track.name, fmt(b)) +
+        (r ? ' · ' + tr.raceRecord(settings.laps, fmt(r)) : '')
+      : tr.noRecord(def.name, track.name)
   }
   function showMenu() {
     hudEl.hidden = true
@@ -417,6 +451,8 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
     menuEl.hidden = false
     layer?.setVisible(false)
     audio.resume()
+    buildTrackGrid()
+    paintEyebrow()
     updateRecord()
     sim.startRace(true)
     setState()
@@ -436,6 +472,72 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
     setState()
     // En el celular: pantalla completa y horizontal (si el navegador lo permite).
     if (touch) void enterLandscape()
+  }
+
+  /* ---------- pistas ---------- */
+  const trackGrid = $('track-grid')
+  function paintEyebrow() {
+    const i = trackIds.indexOf(sim.track.id)
+    $('eyebrow').textContent = copy.rally.tracks.eyebrow(i + 1, sim.track.name)
+  }
+  function buildTrackGrid() {
+    const tr = copy.rally.tracks
+    const open = unlockedIds(store, trackIds, OPEN_TRACKS)
+    trackGrid.innerHTML = ''
+    TRACKS.forEach((def, i) => {
+      const locked = !open.includes(def.id)
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.className = 'track-card'
+      b.dataset.track = def.id
+      b.disabled = locked
+      b.setAttribute('data-testid', 'rally-track-' + def.id)
+      b.setAttribute('role', 'radio')
+      b.setAttribute('aria-checked', String(def.id === settings.track))
+      const stars = '★'.repeat(def.difficulty) + '☆'.repeat(5 - def.difficulty)
+      const hasRelief = getTrack(def.id).maxY > 0.2
+      const prev = TRACKS[i - 1]
+      b.setAttribute(
+        'aria-label',
+        def.name +
+          ', ' +
+          tr.difficulty[def.difficulty - 1] +
+          (locked && prev ? '. ' + tr.lockedHint(prev.name) : ''),
+      )
+      b.innerHTML = `${trackThumbSVG(getTrack(def.id))}${locked ? `<span class="track-lock" title="${tr.locked}">${LOCK_SVG}</span>` : ''}<div class="track-name">${def.name}</div><div class="track-meta"><span class="track-stars" aria-hidden="true">${stars}</span><span>${tr.difficulty[def.difficulty - 1]}</span>${hasRelief ? `<span>${tr.relief}</span>` : ''}</div>`
+      const hint = () => {
+        $('track-hint').textContent = locked && prev ? tr.lockedHint(prev.name) : def.description
+      }
+      on(b, 'click', () => selectTrack(def.id))
+      on(b, 'mouseenter', hint)
+      on(b, 'focus', hint)
+      trackGrid.appendChild(b)
+    })
+    $('track-hint').textContent = getTrackDef(settings.track ?? '').description
+  }
+  function selectTrack(id: string) {
+    if (!isUnlocked(store, trackIds, id, OPEN_TRACKS)) return
+    settings.track = id
+    store.set('track', id)
+    trackGrid
+      .querySelectorAll('.track-card')
+      .forEach((x) =>
+        x.setAttribute('aria-checked', String((x as HTMLElement).dataset.track === id)),
+      )
+    $('track-hint').textContent = getTrackDef(id).description
+    applyTrack(getTrack(id))
+  }
+  /** Cambia la pista del mundo (decorado, luz, minimapa) y reinicia la demo del menú. */
+  function applyTrack(rt: TrackRuntime) {
+    if (rt !== sim.track) {
+      sim.setTrack(rt)
+      w3d.setTrack(rt)
+      buildMinimap()
+      hudCache = {}
+      sim.startRace(true)
+    }
+    paintEyebrow()
+    updateRecord()
   }
 
   /* ---------- menú ---------- */
@@ -471,11 +573,42 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
         on(r, 'change', () => {
           settings[name] = parse(r.value)
           store.set(name, settings[name])
+          if (name === 'laps') updateRecord()
         })
       })
+    buildTrackGrid()
     bind('laps', Number)
     bind('rivals', Number)
     bind('diff', (v) => (v === 'easy' || v === 'hard' ? v : 'normal'))
+    if (touch) {
+      // Ajustes del control táctil (esquema y sensibilidad): se guardan en el celular y valen al instante.
+      const sensName = (v: number) =>
+        (Object.keys(SENSITIVITIES) as (keyof typeof SENSITIVITIES)[]).find(
+          (k) => SENSITIVITIES[k] === v,
+        ) ?? 'normal'
+      const apply = () => {
+        layer?.setPrefs(touchPrefs)
+        const help = root.querySelector<HTMLElement>('[data-r="touch-help"]')
+        if (help) help.innerHTML = touchHelpHtml(touchPrefs.scheme)
+      }
+      root.querySelectorAll<HTMLInputElement>('input[name="rdc-scheme"]').forEach((r) => {
+        r.checked = r.value === touchPrefs.scheme
+        on(r, 'change', () => {
+          touchPrefs.scheme = r.value === 'two' ? 'two' : 'one'
+          store.set('scheme', touchPrefs.scheme)
+          apply()
+        })
+      })
+      root.querySelectorAll<HTMLInputElement>('input[name="rdc-sens"]').forEach((r) => {
+        r.checked = r.value === sensName(touchPrefs.sensitivity)
+        on(r, 'change', () => {
+          touchPrefs.sensitivity =
+            SENSITIVITIES[r.value as keyof typeof SENSITIVITIES] ?? SENSITIVITIES.normal
+          store.set('sens', touchPrefs.sensitivity)
+          apply()
+        })
+      })
+    }
     on($('btn-start'), 'click', startGame)
     on($('btn-exit'), 'click', exit)
     on($('btn-exit-pause'), 'click', exit)
@@ -577,7 +710,10 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
 
   /* ---------- bucle ---------- */
   function update(dt: number) {
-    const pin = input.read(layer ? layer.state() : EMPTY_TOUCH)
+    const touchState = layer ? layer.state(dt) : EMPTY_TOUCH
+    let pin = input.read(touchState)
+    // Punto muerto en el celular (ningún pedal tocado): frenado suave mientras el auto avanza.
+    if (layer && sim.player) pin = withIdleBrake(pin, touchState, sim.player.vf)
     sim.update(dt, pin)
     w3d.update(dt)
     if (sim.player && !sim.attract) updateHUD(dt)
@@ -639,11 +775,31 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
       get sim() {
         return sim
       },
-      trackCheck,
-      len: LEN,
-      dist: DIST,
-      tp: TP,
-      tan: TAN,
+      get track() {
+        return sim.track
+      },
+      get trackId() {
+        return sim.track.id
+      },
+      get stats() {
+        return w3d.stats()
+      },
+      get trackCheck() {
+        const m = computeMetrics(sim.track)
+        return { length: m.length, minSep: m.minSep, minRadius: m.minRadius }
+      },
+      get len() {
+        return sim.track.len
+      },
+      get dist() {
+        return sim.track.DIST
+      },
+      get tp() {
+        return sim.track.TP
+      },
+      get tan() {
+        return sim.track.TAN
+      },
       quality: q,
       get pixelRatio() {
         return w3d.getPixelRatio()

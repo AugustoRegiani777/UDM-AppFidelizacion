@@ -1,6 +1,8 @@
 // Rally de Cocina: constantes, datos de los autos, ítems e utilidades sin dependencias de three ni del DOM.
 
+/** Mitad del ancho de la pista original (cada pista trae el suyo en `TrackDef.halfWidth`). */
 export const HW = 5.2
+export const DEFAULT_TRACK_ID = 'cocina'
 export const CAR_R = 0.62
 export const GRAV = 38
 export const N = 700
@@ -144,8 +146,16 @@ export interface RallySettings {
   laps: number
   rivals: number
   diff: Difficulty
+  /** Id de la pista (si falta, la Cocina). */
+  track?: string
 }
-export const DEFAULT_SETTINGS: RallySettings = { car: 'chispa', laps: 3, rivals: 3, diff: 'normal' }
+export const DEFAULT_SETTINGS: RallySettings = {
+  car: 'chispa',
+  laps: 3,
+  rivals: 3,
+  diff: 'normal',
+  track: DEFAULT_TRACK_ID,
+}
 
 /* ============ utilidades ============ */
 
@@ -200,5 +210,6 @@ export function loadSettings(): RallySettings {
     laps: [1, 3, 5].includes(laps) ? laps : DEFAULT_SETTINGS.laps,
     rivals: rivals >= 1 && rivals <= 5 ? Math.round(rivals) : DEFAULT_SETTINGS.rivals,
     diff: diff === 'easy' || diff === 'hard' ? diff : 'normal',
+    track: store.get<string>('track', DEFAULT_TRACK_ID),
   }
 }

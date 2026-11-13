@@ -224,3 +224,8 @@
 - **Sobreviví a las migas**: cada nivel transcurre en un lugar del local; un minuto de hormigas y después la Reina (más puntos cuanto más rápido cae); poderes en burbujas que se sueltan a mano; finales amables con puntaje; mejor puntaje por nivel.
 - **Economía** (ver `docs/06-economia-de-puntos.md`): escala de la tarjeta (10 puntos por euro), saldo gastable, monedas de juego, partidas oficiales validadas en el servidor, pases de desafío, tienda (mejoras y premios del local con código para la caja), rankings con y sin mejoras, y el costo de los premios sobre las ventas en el panel de administración.
 - **Pruebas**: 232 unitarias, 55 de integración, pgTAP completo (la base) y 20 flujos de navegador.
+
+## Noviembre 2026 · hosting y panel de resumen
+
+- **Hosting**: la web se publica en Vercel (`vercel.json`), en https://app.unodemigavalencia.com; ya no se usa Netlify (las menciones anteriores a Netlify son históricas). Las funciones `dev-mock-sale` y `dev-pos-redeem` siguen publicadas en producción.
+- **Admin**: nuevo panel "Resumen" (clientes, activos, puntos en circulación, series por día, ranking, partidas por juego), con la función SQL `admin_overview` (migración `20261101000001`, pendiente de `db push`).

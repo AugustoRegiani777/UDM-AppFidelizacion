@@ -3,6 +3,7 @@ import { FullScreenLoader } from '@/components/FullScreenLoader'
 import { Screen } from '@/components/Screen'
 import { useIsAdmin } from '@/features/admin/adminApi'
 import { copy } from '@/copy'
+import { OverviewSection } from './OverviewSection'
 import {
   CreatePlace,
   EconomyStats,
@@ -25,6 +26,7 @@ export function AdminScreen() {
         {copy.admin.back}
       </Link>
       <h1 className="font-display text-5xl leading-none">{copy.admin.title}</h1>
+      <OverviewSection />
       <EconomyStats />
       <MissionsReview />
       <PlacesReview />

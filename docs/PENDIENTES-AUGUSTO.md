@@ -52,8 +52,8 @@ No hagas esto antes de que el POS real esté conectado (ver INFORME-FINAL.md): s
 5. **Tarea automática cada 5 minutos:** en Supabase → SQL Editor, pegá y ejecutá (con tu REF y CLAVE3):
    `select public.schedule_reconcile('https://REF.supabase.co/functions/v1/reconcile', 'CLAVE3');`
 6. **Login con Google de producción:** repetí el punto 3 de este archivo, pero en la pantalla de Google agregá la dirección `https://REF.supabase.co/auth/v1/callback`; después en Supabase → Authentication → Providers → Google pegá el ID y el secreto. En Providers → Email, **desactivalo**. En Authentication → URL Configuration poné tu dominio real como "Site URL" y `https://TU-DOMINIO/**` en "Redirect URLs".
-7. **Netlify (la web):** en https://app.netlify.com → "Add new site" → "Import from Git" y elegí el repo. En Site settings → Environment variables cargá `VITE_SUPABASE_URL` (Project URL), `VITE_SUPABASE_ANON_KEY` (clave anon) y `VITE_APP_URL` (tu dominio con https://). Tocá "Deploy".
-8. **Dominio:** en Netlify → Domain management, agregá tu dominio y seguí los pasos que muestra.
+7. **Vercel (la web, ya publicada en https://app.unodemigavalencia.com):** el hosting es Vercel (config en `vercel.json`), ya no Netlify. En Vercel → Project → Settings → Environment Variables cargá `VITE_SUPABASE_URL` (Project URL), `VITE_SUPABASE_ANON_KEY` (clave anon) y `VITE_APP_URL` (tu dominio con https://). Cada push a `main` redespliega solo.
+8. **Dominio:** en Vercel → Project → Settings → Domains (ya configurado: app.unodemigavalencia.com).
 9. **QR fijo y NFC del mostrador:** generá un QR y un sticker NFC que abran la dirección de tu dominio (la portada). Cualquier app gratuita de "QR generator" / "NFC Tools" sirve.
 10. **Pruebas en celulares:** seguí `docs/CHECKLIST-LANZAMIENTO.md`.
 
@@ -129,3 +129,9 @@ Si algún día querés volver a los puertos de antes: abrí PowerShell **como ad
 - [ ] Avisar al equipo del mostrador: la caja ahora puede recibir códigos de la tienda (mismo formato MIGA-XXXX); la respuesta trae `reward.kind = "shop"`.
 - [ ] Los puntos de entrada del modo de prueba (1500) ahora valen 3 cafés y casi 2 sanguches; bajar `settings.demo.welcome_points` antes de abrir al público.
 - [ ] Consulta legal antes de cualquier apuesta entre usuarios, aunque sea con monedas de juego (ver sección 11).
+
+
+## 14. Panel de resumen general
+
+- [ ] Aplicar la migración nueva `20261101000001_admin_overview` (función `admin_overview`): `node node_modules/supabase/dist/supabase.js db push`. No hay funciones nuevas que publicar ni secretos nuevos. Nota: no existe tabla de escaneos de QR, así que `qr_scans_by_day` viene vacío.
+- [ ] Funciones de desarrollo `dev-mock-sale` y `dev-pos-redeem`: siguen publicadas en producción; borrarlas con `functions delete` antes de abrir al público.

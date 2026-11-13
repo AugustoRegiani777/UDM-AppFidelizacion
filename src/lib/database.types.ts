@@ -1111,6 +1111,7 @@ export type Database = {
         Returns: string
       }
       admin_economy_stats: { Args: { p_days?: number }; Returns: Json }
+      admin_overview: { Args: { p_days?: number }; Returns: Json }
       admin_pending_missions: {
         Args: Record<PropertyKey, never>
         Returns: {

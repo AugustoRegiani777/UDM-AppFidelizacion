@@ -6,6 +6,8 @@
  * ANTES de lanzar la app al público. Ver docs/LEGAL-PENDIENTE.md.
  */
 
+import { appUrl } from '@/lib/appUrl'
+
 /** Marca de los datos que todavía no se conocen. Los tests y el aviso de la gestoría buscan este prefijo. */
 export const PENDING_PREFIX = 'PENDIENTE'
 
@@ -28,7 +30,7 @@ export const company = {
   commercialRegistry:
     'PENDIENTE: completar datos del Registro Mercantil (solo si es sociedad) o dejar vacío',
   /** Dirección web de la app. */
-  website: 'https://udm-appfidelizacion.netlify.app',
+  website: appUrl,
   /** Delegado de protección de datos, solo si la gestoría indica que hace falta nombrarlo; si no, dejar vacío. */
   dpo: '',
 } as const

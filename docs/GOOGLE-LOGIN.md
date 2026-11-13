@@ -2,6 +2,8 @@
 
 Para qué sirve: hoy la versión de prueba entra como **invitado** (sin cuenta). Con Google, cada cliente tiene su cuenta, sus puntos quedan guardados en el servidor y los recupera desde cualquier celular. Esta guía te lleva de cero a "funciona", sin tocar código. Te lleva unos 30 minutos.
 
+> Si la app se muda a `app.unodemigavalencia.com`, mirá `docs/DOMINIO.md`: ahí está qué direcciones cambiar en Google y Supabase.
+
 Datos fijos de este proyecto (los vas a copiar y pegar):
 
 | Qué                                 | Valor                                                               |

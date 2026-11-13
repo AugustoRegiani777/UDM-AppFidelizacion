@@ -17,3 +17,7 @@ src/games/sokoban/tools/out/
 # Credenciales de Google (OAuth): nunca al repositorio
 client_secret*.json
 *client_secret*.json
+
+# Material de herramientas de asistencia (local, nunca se versiona)
+.claude/
+CLAUDE.md

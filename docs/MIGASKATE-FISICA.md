@@ -4,7 +4,7 @@ Este documento acompaña el rehacer del núcleo de `src/games/migaskate/`. La es
 para Unity/C# (`SkatePhysics`, `SkateTouchController`, `SkateCamera`, `SkateJuice`); acá se traduce, punto por
 punto, a TypeScript + three.js conservando los nombres y los conceptos.
 
-Reglas que no cambian (ver `CLAUDE.md`): el cliente nunca decide puntos ni premios (Miga Skate es práctica sin
+Reglas que no cambian: el cliente nunca decide puntos ni premios (Miga Skate es práctica sin
 premio y su puntaje es solo de juego); animaciones solo con `transform` y `opacity` en la UI; `prefers-reduced-motion`
 respetado; nada de patrones engañosos (las caídas son siempre amables: "¡Casi!").
 
@@ -48,7 +48,7 @@ Todos en `src/games/migaskate/` salvo que se indique otra ruta.
 
 ## (b) Stack confirmado y traducción de conceptos
 
-Stack del repositorio (confirmado en `package.json` y `CLAUDE.md`): React 19 + Vite + TypeScript estricto + Tailwind +
+Stack del repositorio (confirmado en `package.json`): React 19 + Vite + TypeScript estricto + Tailwind +
 three.js 0.170.0 (carga dinámica: el paquete inicial no cambia) + Vitest + Playwright. No se agregó ninguna dependencia.
 
 **Por qué no rapier ni cannon-es.** El problema es chico y muy específico: un cuerpo (la tabla), 4 resortes de

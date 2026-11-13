@@ -85,7 +85,7 @@ interface PosAdapter {
 
 ## Trabajo a hacer en el repo del POS (más adelante)
 
-Cuando la app de fidelización esté lista, abrir el repo del POS en VS Code y pasarle a Claude este prompt:
+Cuando la app de fidelización esté lista, abrir el repo del POS en VS Code y pasarle este encargo al equipo de desarrollo del POS:
 
 ```
 Vamos a conectar este POS con la app de fidelización de Uno de Miga, que es un proyecto aparte con su propio Supabase. Te paso el contrato de integración (pegar aquí la sección "El contrato" de docs/03-integracion-pos.md).

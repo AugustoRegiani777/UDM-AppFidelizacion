@@ -39,7 +39,7 @@ Usar las últimas versiones estables y verificar la API actual de cada librería
 
 ```
 /
-├─ CLAUDE.md · PROMPTS.md · docs/
+├─ docs/
 ├─ src/
 │  ├─ app/            # router, providers, layout
 │  ├─ screens/        # una carpeta por pantalla

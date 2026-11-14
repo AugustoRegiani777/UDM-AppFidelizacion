@@ -18,18 +18,18 @@ interface Target extends Spec {
 }
 
 const TARGETS: Target[] = [
-  { w: 6, h: 5, boxes: 1, blocks: 1, steps: 8, want: 5, seconds: 8, limit: 60_000 },
-  { w: 7, h: 6, boxes: 2, blocks: 2, steps: 8, want: 9, seconds: 20, limit: 100_000 },
-  { w: 7, h: 7, boxes: 2, blocks: 3, steps: 10, want: 12, seconds: 25, limit: 150_000 },
-  { w: 8, h: 7, boxes: 3, blocks: 3, steps: 10, want: 14, seconds: 40, limit: 250_000 },
-  { w: 8, h: 8, boxes: 3, blocks: 4, steps: 12, want: 17, seconds: 50, limit: 300_000 },
-  { w: 9, h: 7, boxes: 4, blocks: 4, steps: 12, want: 18, seconds: 70, limit: 400_000 },
-  { w: 9, h: 8, boxes: 4, blocks: 5, steps: 14, want: 22, seconds: 80, limit: 500_000 },
-  { w: 9, h: 9, boxes: 4, blocks: 6, steps: 16, want: 26, seconds: 90, limit: 500_000 },
-  { w: 10, h: 8, boxes: 5, blocks: 6, steps: 16, want: 24, seconds: 100, limit: 600_000 },
-  { w: 10, h: 9, boxes: 5, blocks: 7, steps: 18, want: 28, seconds: 110, limit: 600_000 },
-  { w: 10, h: 10, boxes: 5, blocks: 8, steps: 20, want: 32, seconds: 120, limit: 700_000 },
-  { w: 11, h: 10, boxes: 6, blocks: 9, steps: 22, want: 34, seconds: 140, limit: 700_000 },
+  { w: 7, h: 5, boxes: 1, blocks: 2, steps: 25, want: 7, seconds: 10, limit: 100000 },
+  { w: 7, h: 6, boxes: 2, blocks: 2, steps: 25, want: 13, seconds: 30, limit: 150000 },
+  { w: 7, h: 7, boxes: 3, blocks: 3, steps: 30, want: 18, seconds: 40, limit: 300000 },
+  { w: 8, h: 7, boxes: 3, blocks: 3, steps: 30, want: 22, seconds: 60, limit: 400000 },
+  { w: 8, h: 8, boxes: 4, blocks: 4, steps: 35, want: 26, seconds: 80, limit: 400000 },
+  { w: 9, h: 7, boxes: 4, blocks: 4, steps: 35, want: 28, seconds: 100, limit: 400000 },
+  { w: 9, h: 8, boxes: 5, blocks: 5, steps: 40, want: 34, seconds: 120, limit: 400000 },
+  { w: 9, h: 9, boxes: 5, blocks: 6, steps: 45, want: 38, seconds: 420, limit: 600000 },
+  { w: 10, h: 8, boxes: 6, blocks: 6, steps: 45, want: 40, seconds: 420, limit: 600000 },
+  { w: 10, h: 9, boxes: 6, blocks: 7, steps: 50, want: 46, seconds: 420, limit: 600000 },
+  { w: 10, h: 10, boxes: 7, blocks: 8, steps: 55, want: 52, seconds: 420, limit: 600000 },
+  { w: 11, h: 10, boxes: 7, blocks: 9, steps: 60, want: 60, seconds: 420, limit: 600000 },
 ]
 
 const OUT = new URL('./out/', import.meta.url)

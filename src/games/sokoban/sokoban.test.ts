@@ -182,6 +182,21 @@ describe('niveles', { timeout: 60_000 }, () => {
       expect(solve(level.layout)!.pushes).toBe(level.pushes)
     }
   })
+
+  it('los niveles de hasta 4 cajas son resolubles según el resolvedor (los demás, por reproducir su solución)', () => {
+    for (const level of LEVELS.filter((l) => l.layout.startBoxes.length <= 4)) {
+      const solution = solve(level.layout, 300_000)
+      expect(solution, 'nivel ' + level.id).not.toBeNull()
+      expect(solution!.pushes).toBe(level.pushes)
+    }
+  })
+
+  it('los niveles son exigentes: empujes mínimos por tramo de dificultad', () => {
+    const pushes = LEVELS.map((l) => l.pushes)
+    expect(Math.min(...pushes.slice(0, 3))).toBeGreaterThanOrEqual(6)
+    expect(Math.min(...pushes.slice(3, 8))).toBeGreaterThanOrEqual(18)
+    expect(Math.min(...pushes.slice(8))).toBeGreaterThanOrEqual(24)
+  })
 })
 
 describe('escenarios y vehículos', () => {

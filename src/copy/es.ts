@@ -779,6 +779,10 @@ export const es = {
         name: 'Sobreviví a las migas',
         body: 'Seis niveles, poderes y una Reina hormiga.',
       },
+      skatepark: {
+        name: 'Miga Skate',
+        body: 'Trucos, combos, grinds y cinco niveles de parque. Mejor en horizontal.',
+      },
       migaskate: {
         name: 'Miga Skate',
         body: 'Patinás con los dedos en un parque 3D: ollies, flips, grinds y manuales en cinco spots.',

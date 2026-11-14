@@ -86,11 +86,13 @@ test('Truco: el envido muestra las cartas y la cuenta, y la mano termina con su 
 
   // Envido: el Pibe quiere y se muestran los dos tantos con las cartas que los forman.
   await page.getByRole('button', { name: 'Envido', exact: true }).click()
-  const reveal = page.getByRole('dialog', { name: 'Se muestran los tantos' })
+  const reveal = page.getByRole('dialog', { name: 'Se cantan los tantos' })
   await expect(reveal).toBeVisible({ timeout: 8000 })
-  const formulas = reveal.getByTestId('envido-formula')
-  await expect(formulas.nth(0)).toHaveText('32 de oro: 5 de oro + 7 de oro + 20')
-  await expect(formulas.nth(1)).toHaveText('27 de basto: 7 de basto + 11 de basto (0) + 20')
+  await expect(reveal.getByTestId('envido-formula')).toHaveText(
+    '32 de oro: 5 de oro + 7 de oro + 20',
+  )
+  // Del rival solo el número, nunca sus cartas.
+  await expect(reveal.getByTestId('envido-rival-tanto')).toHaveText('27')
   await expect(reveal.getByText('Ganaste el envido: +2')).toBeVisible()
   await reveal.getByRole('button', { name: 'Seguir' }).click()
   await expect(reveal).toBeHidden()
@@ -122,11 +124,22 @@ test('Truco: el envido muestra las cartas y la cuenta, y la mano termina con su 
   const detail = summary.getByTestId('hand-summary')
   // Con el envido quiso, el resumen trae los dos tantos con sus cartas, y las bazas.
   await expect(detail.getByText('Ganaste el envido: +2')).toBeVisible()
-  await expect(detail.getByTestId('envido-formula').nth(1)).toContainText('27 de basto')
+  await expect(detail.getByTestId('envido-rival-tanto')).toHaveText('27')
   await expect(detail.getByText('Baza 1')).toBeVisible()
-  await expect(detail.getByTestId('envido-formula').first()).toHaveText(
+  await expect(detail.getByTestId('envido-formula')).toHaveText(
     '32 de oro: 5 de oro + 7 de oro + 20',
   )
   await expect(detail.getByText(/Esta mano: vos \+\d+ · rival \+\d+/)).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('truco-resumen.png') })
+})
+
+test('Miga Skate (2D): niveles bloqueados y el nivel 1 abre el parque con su canvas', async ({
+  page,
+}) => {
+  await signUp(page)
+  await page.goto('/juegos')
+  await page.getByRole('button', { name: /Miga Skate/ }).click()
+  await expect(page.getByText('Sacá una estrella en el nivel anterior para abrirlo')).toHaveCount(4)
+  await page.getByRole('button', { name: /La plaza/ }).click()
+  await expect(page.getByRole('img', { name: 'Skate Spot' })).toBeVisible({ timeout: 30_000 })
 })

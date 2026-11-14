@@ -8,17 +8,17 @@ import { useHoldUpdates } from '@/pwa/useHoldUpdates'
 import { NinjaArcade } from './NinjaArcade'
 import { RacingArcade } from './RacingArcade'
 import { RallyArcade } from './RallyArcade'
-import { MigaSkateArcade } from './MigaSkateArcade'
+import { SkateParkArcade } from './SkateParkArcade'
 import { SokobanArcade } from './SokobanArcade'
 import { SurvivorsArcade } from './SurvivorsArcade'
 import { TrucoArcade } from './TrucoArcade'
 import { WalletBar } from './WalletBar'
 
-type GameId = 'survivors' | 'migaskate' | 'racing' | 'rally' | 'truco' | 'sokoban' | 'ninja'
+type GameId = 'survivors' | 'skatepark' | 'racing' | 'rally' | 'truco' | 'sokoban' | 'ninja'
 
 const GAMES: { id: GameId; icon: string }[] = [
   { id: 'survivors', icon: '🥪' },
-  { id: 'migaskate', icon: '🛹' },
+  { id: 'skatepark', icon: '🛹' },
   { id: 'racing', icon: '🏎️' },
   { id: 'rally', icon: '🚙' },
   { id: 'truco', icon: '🃏' },
@@ -29,11 +29,12 @@ const GAMES: { id: GameId; icon: string }[] = [
 /** Sala de juegos: elegís el juego y jugás todo lo que quieras, sin puntos ni premios. */
 export function ArcadeScreen() {
   const [game, setGame] = useState<GameId | null>(null)
+  // Miga Skate 3D (src/games/migaskate, MigaSkateArcade) queda fuera del menu por decision del dueno.
   // Con un juego en pantalla, una versión nueva de la app espera a que salgas.
   useHoldUpdates(game !== null)
 
   if (game === 'survivors') return <SurvivorsArcade onBack={() => setGame(null)} />
-  if (game === 'migaskate') return <MigaSkateArcade onBack={() => setGame(null)} />
+  if (game === 'skatepark') return <SkateParkArcade onBack={() => setGame(null)} />
   if (game === 'racing') return <RacingArcade onBack={() => setGame(null)} />
   if (game === 'rally') return <RallyArcade onBack={() => setGame(null)} />
   if (game === 'truco') return <TrucoArcade onBack={() => setGame(null)} />

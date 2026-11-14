@@ -7,7 +7,8 @@ test.setTimeout(240_000)
 // Pantalla chica y sin densidad extra: el dibujo por software es mucho mas liviano.
 test.use({ viewport: { width: 360, height: 640 }, deviceScaleFactor: 1 })
 
-test('Miga Skate: spots bloqueados, canvas WebGL, tutorial, un ollie con el dedo y se puede salir', async ({
+// Version 3D fuera del menu de la sala de juegos (se conserva el codigo). Reactivar al volver a mostrarla.
+test.skip('Miga Skate 3D: spots bloqueados, canvas WebGL, tutorial, un ollie con el dedo y se puede salir', async ({
   page,
 }) => {
   await signUp(page)

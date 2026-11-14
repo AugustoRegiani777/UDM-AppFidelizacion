@@ -26,10 +26,10 @@ create temp table stats as select public.admin_economy_stats(30) as s;
 select is((select (s ->> 'revenue_cents')::int from stats), 10000, 'las ventas del período suman 100 €');
 select is((select (s ->> 'purchases')::int from stats), 1, 'es una compra');
 select is((select (s -> 'rewards' -> 0 ->> 'name') from stats), 'Un café', 'se lista el café entregado');
-select is((select (s -> 'rewards' -> 0 ->> 'total_cents')::int from stats), 40, 'a 0,40 € de costo');
+select is((select (s -> 'rewards' -> 0 ->> 'total_cents')::int from stats), 100, 'a 1,00 € de costo (estimado)');
 select is((select (s -> 'shop' -> 0 ->> 'total_cents')::int from stats), 30, 'y el chipá de la tienda a 0,30 €');
-select is((select (s ->> 'cost_cents')::int from stats), 70, 'el costo total es de 0,70 €');
-select is((select (s ->> 'cost_percent')::numeric from stats), 0.70, 'o sea 0,7 % de las ventas');
+select is((select (s ->> 'cost_cents')::int from stats), 130, 'el costo total es de 1,30 €');
+select is((select (s ->> 'cost_percent')::numeric from stats), 1.30, 'o sea 1,3 % de las ventas');
 select is((select (s ->> 'players')::int from stats), 0, 'nadie jugó partidas oficiales todavía');
 
 select * from finish();

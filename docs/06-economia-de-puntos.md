@@ -1,6 +1,6 @@
 # Economía de puntos (propuesta para aprobar)
 
-Estado: **implementado hasta el paso 8** (ver «Qué quedó hecho» al final). Pendiente: decisiones de negocio, el online y las apuestas. Reemplaza los números de `docs/01-producto.md` (1 punto por euro, café a 150, sanguche a 300) cuando se apruebe.
+Estado: **implementado hasta el paso 8** (ver «Qué quedó hecho» al final). Pendiente: decisiones de negocio, el online y las apuestas. Los números vigentes son los de la sección «Ajuste de noviembre»; `docs/01-producto.md` ya los refleja.
 
 ## Punto de partida: la tarjeta que hay hoy en el local
 
@@ -37,7 +37,7 @@ La app tiene que dar **lo mismo o un poco más** que la tarjeta de papel. Si da 
 | ☕ Café | 400 | ~5 compras de 8 € |
 | 🥪 Sanguche de miga | 800 | ~10 compras de 8 € |
 
-Costo para el local (supuesto: café 0,40 €, sanguche 3 €): en 80 € de ventas se regalan 2 cafés + 1 sanguche = 3,80 € → **4,75 % de las ventas.** Igual que la tarjeta de hoy.
+Costo para el local (estimado: café 1,00 €, sanguche 1,20 €, un tercio del precio de carta de 3 € y 3,5 €): en 80 € de ventas se regalan 2 cafés + 1 sanguche = 3,20 € → **4 % de las ventas.** Igual que la tarjeta de hoy.
 
 ### Cosas que se pagan con saldo gastable
 
@@ -45,7 +45,7 @@ Costo para el local (supuesto: café 0,40 €, sanguche 3 €): en 80 € de ven
 |---|---|
 | Mejoras de personaje (nivel 1 → 3 por juego) | 100 / 250 / 500 |
 | Cosméticos (colores, vehículos, estelas) | 50 a 300 |
-| Merch (gorra, sticker, taza) | 800 a 2500 |
+| Merch (gorra, sticker, taza) | 800 a 4000 |
 | Extras de comida (una salsa, un topping) | 150 |
 
 Los precios son **orientativos** y van en la tabla `settings`/`rewards`, no en el código.
@@ -56,6 +56,43 @@ Los precios son **orientativos** y van en la tabla `settings`/`rewards`, no en e
 - **Pase de desafío:** si el cliente ya superó el desafío de un premio, se guarda un pase (**máximo 3 guardados**). Cuando el premio se abre, usa el pase y canjea al instante.
 - Sin pase, juega el desafío en el momento. Intentos ilimitados. Después de 2 derrotas se ofrece el modo relajado (el premio es el mismo).
 - Desafíos: café → "Sobreviví a las migas". Sanguche → "Entregas de Miga" (nivel a definir).
+
+## Ajuste de noviembre (vigente)
+
+Datos del dueño: carta café con leche 3 €, sanguche 3,5 €. La tarjeta de papel da 1 café cada 5 compras y 1 sanguche cada 10; con ticket de 8 € eso es un café cada 400 puntos y un sanguche cada 800. Migración `20261104000001_economy_adjustment.sql`.
+
+### Reglas finales
+
+1. **La escalera de café y sanguche cuenta solo compras** (movimientos `purchase` y sus `reversal`). Los puntos de ruleta, raspadita, comunidad, misiones y ajustes manuales siguen sumando al saldo total y gastable (tienda), pero no abren cafés ni sanguches. El ranking de puntos usa la misma regla.
+2. **Máximo 2 canjes por día** (`settings.redeem_daily_limit`). Cuentan los códigos vigentes y usados del día local; uno vencido sin usar no cuenta. Aplica al abrir el cofre, al usar un pase, al ganar el desafío y al renovar un código.
+3. **Ticket mínimo de 5 €** para la raspadita (`settings.games.scratch.min_total_cents` = 500) y para que una compra cuente en «cada N compras», como la docena de migas (`settings.purchase_count_min_cents` = 500). Las compras menores igual suman puntos.
+4. **Presupuesto diario de juegos:** la raspadita ya no lo usa (está atada a una compra con ticket mínimo); la ruleta lo conserva y sube a 2000 (`settings.games.daily_points_budget`).
+5. **Gorra de la escalera desactivada** (`rewards.active = false`): queda solo en la tienda.
+6. El panel del cliente (`customer_dashboard`) agrega `ladder_points` (puntos de compra); `balance` sigue siendo el total del libro. El frontend debería mostrar el progreso de la escalera con `ladder_points` y el saldo de la tienda con `my_wallet().spendable`.
+
+### Tabla de costos y precios
+
+| Premio | Costo para el local | Dónde |
+|---|---|---|
+| Café (cada 400 pts de compra) | 1,00 € **(estimado)** | `reward_costs` |
+| Sanguche de miga (cada 800) | 1,20 € **(estimado)** | `reward_costs` |
+| Media docena de migas (cada 50 compras de 5 € o más) | 9,00 € (supuesto) | `reward_costs` |
+| Chipá | 0,30 € (supuesto) | tienda: 200 pts |
+| Alfajor | 0,40 € (supuesto) | tienda: 280 pts |
+| Medialuna | 0,80 € (supuesto) | tienda: 500 pts |
+| Dulce de leche | 3,50 € (supuesto) | tienda: 2400 pts |
+| Gorra | 6,00 € (supuesto) | tienda: 4000 pts |
+
+Mejoras de juego sin cambio (corazón 300, zapatillas 250, imán 200 por nivel). Los costos marcados como estimado o supuesto hay que reemplazarlos por los reales.
+
+### Efecto sobre clientes existentes
+
+- Un cliente cuyos puntos de ruleta, raspadita, misiones, comunidad o ajustes le daban cafés o sanguches disponibles **los pierde**: la cuenta pasa a `floor(puntos de compra / umbral) - canjes usados o vigentes`, con piso 0. Los canjes ya hechos (usados o con código vigente) no se tocan ni se revierten, pero siguen restando del total nuevo, así que esa persona puede tardar más en su próximo premio.
+- Las compras de menos de 5 € dejan de contar para la docena de migas: quien ya tenía un premio de ese tipo disponible puede perderlo.
+- No hay datos de producción en este repositorio para medirlo. Antes de aplicar la migración conviene consultar cuántos clientes tienen puntos de `kind` distinto de `purchase`/`reversal` y premios disponibles hoy. Si hubiera que compensar, se puede cargar un movimiento `purchase` manual.
+- Los puntos de entrada del modo de prueba (`demo.welcome_points`, ajuste) ya no abren la escalera, solo la tienda.
+- El saldo gastable no cambia (los puntos de juego siguen valiendo en la tienda).
+- Nota histórica: el comentario de `20261029000003_shop_perks.sql` que habla del «2 por mil» es incorrecto, pero esa migración ya está aplicada y no se modifica; los precios vigentes son los de esta tabla.
 
 ## Reglas de justicia
 
@@ -103,8 +140,8 @@ Antes de lanzar al público: consulta legal sobre el desafío como condición de
 Valores por defecto (todos editables en `settings`, sin tocar código):
 
 - `economy`: 15 monedas por ganar, 2 por jugar, hasta 40 extra por puntaje, tope de 150 monedas por día, máximo 3 pases guardados y 3 por día, un pase cuesta 80 monedas.
-- `reward_costs` (centavos): café 40, sanguche 300, gorra 600, chipá 30, alfajor 40, medialuna 80, dulce de leche 350. **Son supuestos**: hay que cargar los costos reales.
-- Precios de la tienda: chipá 150, alfajor 130, medialuna 250, dulce de leche 1200, gorra 3000; mejoras 200 a 300 por nivel (el nivel N cuesta N veces el precio base).
+- `reward_costs` (centavos): café 100 y sanguche 120 (estimados, ver «Ajuste de noviembre»), gorra 600, chipá 30, alfajor 40, medialuna 80, dulce de leche 350 (supuestos).
+- Precios de la tienda: chipá 200, alfajor 280, medialuna 500, dulce de leche 2400, gorra 4000; mejoras 200 a 300 por nivel (el nivel N cuesta N veces el precio base).
 
 Reglas que se mantienen: el servidor decide todo; no se vende nada con dinero; las mejoras no son imprescindibles (todos los desafíos se pueden pasar sin ellas); las partidas con mejoras tienen su propio ranking; las monedas no se convierten en comida.
 
@@ -117,7 +154,7 @@ Reglas que se mantienen: el servidor decide todo; no se vende nada con dinero; l
 
 ## Decisiones de negocio que siguen abiertas
 
-1. Costo real de un café y de cada sanguche (hoy: supuestos).
+1. Costo real de un café y de cada sanguche (hoy: estimados en 1,00 € y 1,20 €).
 2. Qué sanguche es el premio (o un tope de precio), porque en la carta van de 7 a 22 EUR.
 3. Merch real que se quiere ofrecer y su costo.
 4. Si los precios de la tienda se quedan como están o se ajustan con las primeras semanas de datos.

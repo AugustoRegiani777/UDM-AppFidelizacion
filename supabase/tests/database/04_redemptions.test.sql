@@ -21,7 +21,7 @@ select throws_ok(
   'P0001', 'reward_not_reached', 'sin puntos no se puede abrir el cofre');
 
 insert into public.point_movements (customer_id, kind, points) values
-  ('aaaaaaaa-0000-4000-8000-000000000001', 'adjustment', 160);
+  ('aaaaaaaa-0000-4000-8000-000000000001', 'purchase', 160);
 select is(public.reward_tickets('aaaaaaaa-0000-4000-8000-000000000001', (select id from reward_ids where name = 'Un café')), 1, 'con 160 puntos hay 1 ticket de café');
 select is(public.reward_tickets('aaaaaaaa-0000-4000-8000-000000000001', (select id from reward_ids where name = 'Un sanguche de miga')), 0, 'y 0 de sanguche (300)');
 
@@ -61,7 +61,7 @@ select is(public.validate_redemption('MIGA-ZZZZ') ->> 'reason', 'not_found', 'c�
 select is(public.reward_tickets('aaaaaaaa-0000-4000-8000-000000000001', (select id from reward_ids where name = 'Un café')), 0, 'el ticket se consumió: el próximo café es a los 300');
 
 -- Escalón repetible: con 310 puntos hay otro ticket.
-insert into public.point_movements (customer_id, kind, points) values ('aaaaaaaa-0000-4000-8000-000000000001', 'adjustment', 150);
+insert into public.point_movements (customer_id, kind, points) values ('aaaaaaaa-0000-4000-8000-000000000001', 'purchase', 150);
 select is(public.reward_tickets('aaaaaaaa-0000-4000-8000-000000000001', (select id from reward_ids where name = 'Un café')), 1, 'cada 150 puntos acumulados, un café más');
 
 -- Perder no cuesta nada, y tras dos derrotas se ofrece el modo relajado.
@@ -94,7 +94,7 @@ select isnt(
 
 -- Premio por compras: cada 50, sin consumir puntos.
 insert into public.claims (customer_id, sale_uuid, status, sale_total_cents, points)
-select 'bbbbbbbb-0000-4000-8000-000000000002', gen_random_uuid(), 'confirmed', 100, 0 from generate_series(1, 50);
+select 'bbbbbbbb-0000-4000-8000-000000000002', gen_random_uuid(), 'confirmed', 500, 0 from generate_series(1, 50);
 select is(public.reward_tickets('bbbbbbbb-0000-4000-8000-000000000002', (select id from reward_ids where name = 'Media docena de migas')), 1, 'con 50 compras hay 1 ticket de media docena');
 
 -- La API y el cliente no pueden llamar a estas funciones.

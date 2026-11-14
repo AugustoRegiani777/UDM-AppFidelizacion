@@ -137,3 +137,14 @@ Si algún día querés volver a los puertos de antes: abrí PowerShell **como ad
 - [ ] Funciones de desarrollo `dev-mock-sale` y `dev-pos-redeem`: siguen publicadas en producción; borrarlas con `functions delete` antes de abrir al público.
 
 - [ ] Aplicar las migraciones nuevas `20261102000001_casual_rankings` y `20261103000001_export_game_scores` (en ese orden; la segunda hace que `export_my_data` incluya `game_scores`): `node node_modules/supabase/dist/supabase.js db push`. Sin funciones nuevas que publicar ni secretos nuevos.
+
+## 15. Ajuste de economía (migración 20261104000001)
+
+Orden de publicación (nada se ejecutó en producción):
+
+1. `node node_modules/supabase/dist/supabase.js db push` (aplica `20261104000001_economy_adjustment`, después de `20261103000001_export_game_scores`).
+2. `node node_modules/supabase/dist/supabase.js functions deploy claim-sale start-chest finish-chest start-run finish-run renew-redemption validate-redemption play-game delete-account reconcile sync-google-reviews` (solo cambiaron `start-chest`, `finish-chest` y `renew-redemption`: ahora traducen el error `daily_redeem_limit`; sin esto el cliente vería un error 500 al pasarse del tope). Primero la migración, después las funciones.
+
+- Sin secretos ni variables nuevas.
+- Los costos del café (1,00 €) y del sanguche (1,20 €) en `settings.reward_costs` son ESTIMADOS (un tercio del precio de carta: 3 € y 3,5 €); cargá los reales cuando los tengas.
+- Efecto en clientes que ya existen: ver `docs/06-economia-de-puntos.md` (sección «Ajuste de noviembre»). Antes de aplicar en producción conviene mirar si hay clientes con puntos de juego, misiones o ajustes que hoy les dan un café o sanguche disponible: lo perderían.

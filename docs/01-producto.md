@@ -114,7 +114,7 @@ Los premios por **compras** cuentan compras confirmadas y no consumen puntos.
 
 ## Nuevo alcance (octubre 2026)
 
-- **Puntos que no se gastan.** El saldo es un total acumulado que solo sube. Cada premio es un escalón repetible: el café se desbloquea cada 150 puntos acumulados, el sanguche cada 300 (reemplaza la regla anterior de "descontar al validar"). Canjear no mueve el saldo.
+- **Puntos que no se gastan.** El saldo es un total acumulado que solo sube. Cada premio es un escalón repetible: el café se desbloquea cada 400 puntos de compra, el sanguche cada 800 (10 puntos por euro; con un ticket de 8 € son ~5 y ~10 compras, como la tarjeta de papel). Solo cuentan los puntos de compras y sus reversiones: ruleta, raspadita, comunidad y misiones dan puntos solo para la tienda. Máximo 2 canjes por día. Detalle en `docs/06-economia-de-puntos.md`. Canjear no mueve el saldo.
 - **Cofre con juego.** Para canjear un premio desbloqueado hay que pasar un juego corto ("Sobreviví a las migas"). Intentos ilimitados; tras 2 derrotas se ofrece un modo relajado. El juego es la ceremonia: el premio lo habilitan los puntos.
 - **Misiones de puntos extra:** seguir a Uno de Miga en Instagram (una vez, sin verificar) y reseña en Google Maps (una vez, aprobación manual).
 - **Comunidad:** recomendaciones de lugares de Valencia (pizzerías argentinas, medialunas, cafés, helados). Se suman puntos por proponer un lugar, comentar y dar like; los likes son anónimos; todo se modera desde un panel de administración.

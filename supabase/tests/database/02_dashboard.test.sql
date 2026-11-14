@@ -17,7 +17,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}', true);
 
 select is((public.customer_dashboard() ->> 'balance')::int, 0, 'cliente nuevo: saldo 0');
-select is(jsonb_array_length(public.customer_dashboard() -> 'rewards'), 4, 've los 4 premios');
+select is(jsonb_array_length(public.customer_dashboard() -> 'rewards'), 3, 've los 3 premios activos (la gorra quedó solo en la tienda)');
 select is((public.customer_dashboard() -> 'rewards' -> 0 ->> 'remaining')::int, 150, 'al café le faltan 150');
 select is((public.customer_dashboard() -> 'rewards' -> 0 ->> 'unlocked')::boolean, false, 'café bloqueado');
 select is((public.customer_dashboard() ->> 'streak_weeks')::int, 0, 'sin racha');

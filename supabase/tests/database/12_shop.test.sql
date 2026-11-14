@@ -30,7 +30,7 @@ select throws_ok($$ select public.buy_item((select id from ids where slug = 'cor
 select is((public.my_wallet() -> 'perks' -> 'survivors' ->> 'hp')::int, 2, 'las mejoras suman: dos corazones');
 
 -- 3. Premios del local con código para la caja ---------------------------------------------------------------------
-select throws_ok($$ select public.buy_item((select id from ids where slug = 'chipa')) $$, 'P0001', 'not_enough_points', 'con 100 no alcanza para un chipá de 150');
+select throws_ok($$ select public.buy_item((select id from ids where slug = 'chipa')) $$, 'P0001', 'not_enough_points', 'con 100 no alcanza para un chipá de 200');
 reset role;
 select public.claim_sale_apply('aaaaaaaa-0000-4000-8000-000000000001', 'd0000000-0000-4000-8000-000000000002',
   jsonb_build_object('total_cents', 5000, 'sold_at', now(), 'voided', false, 'channel', 'local'));
@@ -39,7 +39,7 @@ select set_config('request.jwt.claims', '{"sub": "aaaaaaaa-0000-4000-8000-000000
 create temp table bought as select public.buy_item((select id from ids where slug = 'chipa')) as r;
 select is((select r ->> 'kind' from bought), 'voucher', 'comprar un chipá da un código');
 select matches((select r ->> 'code' from bought), '^MIGA-', 'con el formato de los códigos del local');
-select is((public.my_wallet() ->> 'spendable')::int, 450, '600 de saldo menos 150');
+select is((public.my_wallet() ->> 'spendable')::int, 400, '600 de saldo menos 200 (chipá)');
 select is(jsonb_array_length(public.my_shop_orders()), 1, 'el pedido queda en la lista del cliente');
 select throws_ok($$ select public.buy_item(gen_random_uuid()) $$, 'P0002', 'item_not_found', 'un artículo que no existe se rechaza');
 

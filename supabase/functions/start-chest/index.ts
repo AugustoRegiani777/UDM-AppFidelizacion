@@ -30,6 +30,7 @@ Deno.serve(async (req) => {
     const { data, error } = await db.rpc('start_chest', { p_customer: user.id, p_reward: rewardId })
     if (error?.message === 'reward_not_found') throw new HttpError(404, 'reward_not_found')
     if (error?.message === 'reward_not_reached') throw new HttpError(409, 'reward_not_reached')
+    if (error?.message === 'daily_redeem_limit') throw new HttpError(409, 'daily_redeem_limit')
     if (error) throw error
     if (data.already_unlocked) return json(data)
 

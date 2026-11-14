@@ -31,6 +31,7 @@ Deno.serve(async (req) => {
     })
     if (error?.message === 'not_renewable') throw new HttpError(409, 'not_renewable')
     if (error?.message === 'reward_not_reached') throw new HttpError(409, 'reward_not_reached')
+    if (error?.message === 'daily_redeem_limit') throw new HttpError(409, 'daily_redeem_limit')
     if (error) throw error
     return json(data)
   } catch (error) {

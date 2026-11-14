@@ -17,11 +17,11 @@ select is(
   (select count(*)::int from public.point_movements where customer_id = 'a1a1a1a1-0000-4000-8000-000000000001' and kind = 'adjustment' and ref_table = 'demo'),
   1, 'queda un solo movimiento de ajuste en el libro');
 
--- Los 1500 puntos desbloquean los escalones de los premios (el saldo no se gasta).
+-- Los puntos de entrada son un ajuste: valen en la tienda pero NO abren la escalera de comida (solo compras).
 select set_config('request.jwt.claims', '{"sub": "a1a1a1a1-0000-4000-8000-000000000001", "role": "authenticated"}', true);
 set local role authenticated;
 select is((public.customer_dashboard() ->> 'balance')::int, 1500, 'el panel muestra el saldo de entrada');
-select is((public.customer_dashboard() -> 'rewards' -> 0 ->> 'unlocked')::boolean, true, 'el café ya está desbloqueado');
+select is((public.customer_dashboard() -> 'rewards' -> 0 ->> 'unlocked')::boolean, false, 'el café no se desbloquea con puntos de entrada');
 reset role;
 
 -- Con el modo de prueba apagado no se regalan puntos.

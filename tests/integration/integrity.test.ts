@@ -55,18 +55,18 @@ describe('integridad de los datos del cliente', { timeout: 60_000 }, () => {
 
   it('doble gasto: diez compras a la vez con saldo para una sola dejan una sola', async () => {
     const ana = await createCustomer('ana')
-    await giveSalePoints(ana, 200)
+    await giveSalePoints(ana, 300)
     const { data: catalog } = await ana.client.rpc('shop_catalog')
     const chipa = (catalog as unknown as { items: { id: string; slug: string }[] }).items.find(
       (i) => i.slug === 'chipa',
-    )!.id // cuesta 150: con 200 alcanza para una
+    )!.id // cuesta 200: con 300 alcanza para una
 
     const results = await Promise.all(
       Array.from({ length: 10 }, () => ana.client.rpc('buy_item', { p_item: chipa })),
     )
     expect(results.filter((r) => !r.error)).toHaveLength(1)
     const { data: wallet } = await ana.client.rpc('my_wallet')
-    expect(wallet).toMatchObject({ balance: 200, spendable: 50 })
+    expect(wallet).toMatchObject({ balance: 300, spendable: 100 })
     const { count } = await admin
       .from('shop_orders')
       .select('id', { count: 'exact', head: true })

@@ -26,11 +26,11 @@ describe('tienda', { timeout: 60_000 }, () => {
     const { data, error } = await ana.client.rpc('buy_item', { p_item: chipa })
     expect(error).toBeNull()
     const bought = data as unknown as { kind: string; code: string; spendable: number }
-    expect(bought).toMatchObject({ kind: 'voucher', spendable: 250 })
+    expect(bought).toMatchObject({ kind: 'voucher', spendable: 200 })
 
     // Los escalones de comida no se atrasan: el total ganado sigue en 400.
     const { data: wallet } = await ana.client.rpc('my_wallet')
-    expect(wallet).toMatchObject({ balance: 400, spendable: 250 })
+    expect(wallet).toMatchObject({ balance: 400, spendable: 200 })
 
     const first = await validateAsPos(bought.code)
     expect(first.body).toMatchObject({ valid: true, reward: { name: 'Un chipá', kind: 'shop' } })

@@ -12,6 +12,7 @@ const BUSINESS_ERRORS: Record<string, HttpError> = {
   session_expired: new HttpError(410, 'session_expired'),
   too_fast: new HttpError(409, 'too_fast'),
   reward_not_reached: new HttpError(409, 'reward_not_reached'),
+  daily_redeem_limit: new HttpError(409, 'daily_redeem_limit'),
 }
 
 Deno.serve(async (req) => {

@@ -27,7 +27,7 @@ select is((select count(*)::int from public.profiles), 1, 'Ana solo ve su perfil
 select is((select count(*)::int from public.claims), 1, 'Ana solo ve sus claims');
 select is((select count(*)::int from public.point_movements), 1, 'Ana solo ve sus movimientos');
 select is((select count(*)::int from public.claims where customer_id = 'bbbbbbbb-0000-4000-8000-000000000002'), 0, 'Ana no ve claims de Beto');
-select is((select count(*)::int from public.rewards), 4, 'los premios son públicos');
+select is((select count(*)::int from public.rewards), 3, 'los premios son públicos');
 select is((select count(*)::int from public.settings where key = 'excluded_channels'), 0, 'settings no públicos quedan ocultos');
 select is((select count(*)::int from public.settings where key = 'points_per_euro'), 1, 'settings públicos visibles');
 

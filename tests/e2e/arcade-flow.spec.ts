@@ -34,7 +34,7 @@ test('Miga Racers: cuenta regresiva, la carrera arranca y se puede pausar', asyn
 
   // 3, 2, 1 y ¡YA!
   await expect(page.getByText('¡YA!')).toBeVisible({ timeout: 8000 })
-  await expect(page.getByText(/Vuelta 1\/3/)).toBeVisible()
+  await expect(page.getByText(/Vuelta 1\/5/)).toBeVisible()
 
   await page.getByRole('button', { name: 'Pausar' }).click()
   const pause = page.getByRole('dialog', { name: 'Pausa' })

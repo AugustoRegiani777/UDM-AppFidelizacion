@@ -1,5 +1,6 @@
 import { devices, expect, type Browser, type Page } from '@playwright/test'
 import { admin } from '../../integration/helpers'
+/** Origen del frontend bajo prueba (cada agente puede usar su propio puerto). */export const E2E_BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:5173'
 
 /** Marca las tres casillas obligatorias de la bienvenida (la de promos es opcional y queda desmarcada). */
 export async function acceptLegal(page: Page) {
@@ -31,7 +32,7 @@ export async function makeAdmin(email: string) {
 export async function openAdminSession(browser: Browser) {
   const context = await browser.newContext({
     ...devices['Pixel 5'],
-    baseURL: 'http://localhost:5173',
+    baseURL: E2E_BASE_URL,
   })
   const page = await context.newPage()
   const email = await signUp(page)

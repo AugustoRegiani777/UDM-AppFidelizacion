@@ -52,7 +52,7 @@ test('Rally de Cocina: elegir otra pista, correr, ver su nombre en el HUD y en l
     if (localStorage.getItem('rdc:e2e-seeded')) return
     localStorage.setItem('rdc:e2e-seeded', '1')
     localStorage.setItem('rdc:best:chispa', '21.5')
-    localStorage.setItem('rdc:laps', '1')
+    localStorage.setItem('rdc:laps', '3')
     localStorage.setItem('rdc:rivals', '2')
   })
   const menu = await openRally(page)
@@ -90,7 +90,7 @@ test('Rally de Cocina: elegir otra pista, correr, ver su nombre en el HUD y en l
   await expect(root).toHaveAttribute('data-state', 'countdown', { timeout: 60_000 })
   await expect(root).toHaveAttribute('data-state', 'race', { timeout: 180_000 })
   await expect(page.getByTestId('rally-hud-track')).toHaveText('La Terraza')
-  await expect(page.getByTestId('rally-lap')).toHaveText('1/1')
+  await expect(page.getByTestId('rally-lap')).toHaveText('1/3')
   const info = await page.evaluate(() => ({
     id: (window as unknown as W).__rally.sim.track.id,
     calls: (window as unknown as W).__rally.stats.calls,

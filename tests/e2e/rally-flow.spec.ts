@@ -3,7 +3,7 @@ import { signUp } from './support/session'
 
 // El navegador de las pruebas no tiene GPU: el 3D corre a pocos cuadros por segundo. Márgenes largos
 // y esperas por condición, nunca por tiempo fijo.
-test.setTimeout(300_000)
+test.setTimeout(600_000)
 test.use({
   viewport: { width: 844, height: 390 },
   hasTouch: true,
@@ -125,10 +125,10 @@ test('Rally de Cocina: menú, cuenta regresiva, controles táctiles con varios d
   )
   expect(external.filter((u) => /fonts\.g|jsdelivr|unpkg|cdnjs/.test(u))).toEqual([])
 
-  // Elegir auto, 1 vuelta y 2 rivales (para que el resultado salga rápido).
+  // Elegir auto, 3 vueltas y 2 rivales (para que el resultado salga rápido).
   await menu.getByTestId('rally-car-grillo').click()
   await expect(menu.getByTestId('rally-car-grillo')).toHaveAttribute('aria-checked', 'true')
-  await menu.locator('label[for="rdc-laps-1"]').click()
+  await menu.locator('label[for="rdc-laps-3"]').click()
   await menu.locator('label[for="rdc-rivals-2"]').click()
   await expect(menu.getByText(/Todavía no tenés récord con Grillo/)).toBeVisible()
   await menu.getByTestId('rally-start').click()
@@ -137,7 +137,7 @@ test('Rally de Cocina: menú, cuenta regresiva, controles táctiles con varios d
   const root = page.getByTestId('rally-root')
   await expect(root).toHaveAttribute('data-state', 'countdown', { timeout: 30_000 })
   await expect(root).toHaveAttribute('data-state', 'race', { timeout: 120_000 })
-  await expect(page.getByTestId('rally-lap')).toHaveText('1/1')
+  await expect(page.getByTestId('rally-lap')).toHaveText('1/3')
 
   // Controles táctiles "Un pulgar": mitad izquierda = una superficie con pedales por altura;
   // a la derecha, el ítem y el freno de mano (grandes y separados).
@@ -257,7 +257,7 @@ test('Rally de Cocina: menú, cuenta regresiva, controles táctiles con varios d
   const again = page.getByRole('dialog', { name: 'Rally de Cocina' })
   await expect(again.getByTestId('rally-start')).toBeVisible({ timeout: 90_000 })
   await expect(again.getByTestId('rally-car-grillo')).toHaveAttribute('aria-checked', 'true')
-  await expect(again.locator('#rdc-laps-1')).toBeChecked()
+  await expect(again.locator('#rdc-laps-3')).toBeChecked()
   await expect(page.getByTestId('rally-root')).toHaveCount(1) // StrictMode no deja duplicados
   await again.getByTestId('rally-exit').click()
   await expect(page.getByRole('heading', { name: 'Sala de juegos' })).toBeVisible()
@@ -277,7 +277,7 @@ test('Rally de Cocina: "Dos pulgares" (izquierda dirección, derecha pedales) se
 }) => {
   const menu = await openRally(page)
   await menu.locator('label[for="rdc-scheme-two"]').click()
-  await menu.locator('label[for="rdc-laps-1"]').click()
+  await menu.locator('label[for="rdc-laps-3"]').click()
   await menu.getByTestId('rally-start').click()
   const root = page.getByTestId('rally-root')
   await expect(root).toHaveAttribute('data-state', 'race', { timeout: 120_000 })

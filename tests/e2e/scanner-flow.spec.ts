@@ -2,12 +2,12 @@ import { expect, test } from '@playwright/test'
 import { join } from 'node:path'
 import { admin } from '../integration/helpers'
 import { writeQrVideo } from './support/fake-camera'
-import { acceptLegal } from './support/session'
+import { acceptLegal, E2E_BASE_URL } from './support/session'
 
 // uuid fijo: el QR de la cámara falsa se genera antes de abrir el navegador.
 const SALE_UUID = '00000000-0000-4000-8000-0000000000aa'
 const VIDEO = join(import.meta.dirname, '.fake-camera', 'sale-qr.y4m')
-writeQrVideo(VIDEO, `http://localhost:5173/s/${SALE_UUID}`)
+writeQrVideo(VIDEO, `${E2E_BASE_URL}/s/${SALE_UUID}`)
 
 test.use({
   permissions: ['camera'],

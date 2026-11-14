@@ -9,7 +9,7 @@ test('ranking: un selector con todos los juegos, progreso no oficial, y Volver l
   const { data } = await admin.auth.admin.listUsers({ perPage: 200 })
   const id = data.users.find((u) => u.email === email)!.id
   await admin.from('game_scores').upsert({ customer_id: id, game: 'ninja', score: 17 })
-  await admin.from('point_movements').insert({ customer_id: id, kind: 'adjustment', points: 700 })
+  await admin.from('point_movements').insert({ customer_id: id, kind: 'purchase', points: 700 })
 
   await page.goto('/ranking')
   for (const name of ['Sobreviví', 'Racers', 'Skate Spot', 'Entregas', 'Ninja', 'Puntos']) {
@@ -37,8 +37,8 @@ test('tienda: Volver lleva al menú, explica qué se paga con qué y avisa lo qu
   await admin.from('point_movements').insert({ customer_id: id, kind: 'adjustment', points: 200 })
 
   await page.goto('/tienda')
-  await expect(page.getByText('200 puntos para gastar')).toBeVisible({ timeout: 15_000 })
-  await expect(page.getByText(/Puntos de compra: los ganás comprando/)).toBeVisible()
+  await expect(page.getByText(/Tenés 200 para gastar, de \d+ acumulados/)).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText(/Puntos de tienda: los ganás con tus compras/)).toBeVisible()
   await expect(page.getByText(/Te faltan 100 puntos/)).toBeVisible()
   await page.screenshot({ path: 'tmp-shots/after-tienda.png', fullPage: true })
 

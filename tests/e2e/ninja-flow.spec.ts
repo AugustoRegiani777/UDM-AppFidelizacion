@@ -13,7 +13,7 @@ test('Miga Ninja: se abre el nivel 1, un tajo con el mouse suma puntos, pausa y 
   await page.getByRole('button', { name: /El mostrador/ }).click()
 
   const intro = page.getByRole('dialog', { name: 'El mostrador' })
-  await expect(intro.getByText('Objetivo: 150 puntos')).toBeVisible()
+  await expect(intro.getByText('Objetivo: 150 de puntaje')).toBeVisible()
   await intro.getByRole('button', { name: '¡A cortar!' }).click()
 
   const score = page.getByRole('status')

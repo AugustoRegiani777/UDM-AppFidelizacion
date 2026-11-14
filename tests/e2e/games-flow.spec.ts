@@ -10,7 +10,7 @@ async function signUpAndAccept(page: Page) {
   await page.getByRole('button', { name: 'Empezar a sumar' }).click()
 }
 
-const OUTCOME = /¡Ganaste \d+ puntos!|Esta vez no hubo premio/
+const OUTCOME = /¡Ganaste \d+ puntos de tienda!|Esta vez no hubo premio/
 
 test('raspadita y ruleta: el servidor decide, se juega una vez y se explican las probabilidades', async ({
   page,

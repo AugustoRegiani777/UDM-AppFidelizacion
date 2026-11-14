@@ -149,9 +149,11 @@ export interface RallySettings {
   /** Id de la pista (si falta, la Cocina). */
   track?: string
 }
+/** Cantidades de vueltas que se pueden elegir en el menú (por defecto 5). */
+export const LAP_OPTIONS: readonly number[] = [3, 5, 7]
 export const DEFAULT_SETTINGS: RallySettings = {
   car: 'chispa',
-  laps: 3,
+  laps: 5,
   rivals: 3,
   diff: 'normal',
   track: DEFAULT_TRACK_ID,
@@ -207,7 +209,7 @@ export function loadSettings(): RallySettings {
   const diff = store.get<string>('diff', DEFAULT_SETTINGS.diff)
   return {
     car: CARS.some((c) => c.id === car) ? car : DEFAULT_SETTINGS.car,
-    laps: [1, 3, 5].includes(laps) ? laps : DEFAULT_SETTINGS.laps,
+    laps: LAP_OPTIONS.includes(laps) ? laps : DEFAULT_SETTINGS.laps,
     rivals: rivals >= 1 && rivals <= 5 ? Math.round(rivals) : DEFAULT_SETTINGS.rivals,
     diff: diff === 'easy' || diff === 'hard' ? diff : 'normal',
     track: store.get<string>('track', DEFAULT_TRACK_ID),

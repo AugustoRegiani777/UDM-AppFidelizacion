@@ -126,6 +126,8 @@ export interface Oil {
   life: number
   age: number
   owner: Car
+  /** Progreso del dueño al soltarla: la mancha se va cuando él recorre una vuelta más. */
+  spawnProgress: number
 }
 export interface Pickup {
   x: number
@@ -1034,13 +1036,23 @@ export class RallySim {
 
   private spawnOil(c: Car) {
     const f = { x: Math.sin(c.heading), z: Math.cos(c.heading) }
-    const o: Oil = { x: c.x - f.x * 2.2, z: c.z - f.z * 2.2, life: 22, age: 0, owner: c }
+    // A lo sumo una mancha activa por auto: al soltar una nueva se borra la anterior.
+    for (let k = this.oils.length - 1; k >= 0; k--) {
+      const old = this.oils[k]!
+      if (old.owner !== c) continue
+      this.hooks.onOilRemove(old)
+      this.oils.splice(k, 1)
+    }
+    const o: Oil = {
+      x: c.x - f.x * 2.2,
+      z: c.z - f.z * 2.2,
+      life: 120, // tope de seguridad; lo normal es que dure una vuelta del dueño
+      age: 0,
+      owner: c,
+      spawnProgress: this.progress(c),
+    }
     this.oils.push(o)
     this.hooks.onOilSpawn(o)
-    if (this.oils.length > 10) {
-      const old = this.oils.shift()!
-      this.hooks.onOilRemove(old)
-    }
     this.hooks.sfx('drop', c.x, c.z)
   }
 
@@ -1049,7 +1061,7 @@ export class RallySim {
       const o = this.oils[k]!
       o.age += dt
       o.life -= dt
-      if (o.life <= 0) {
+      if (o.life <= 0 || this.progress(o.owner) - o.spawnProgress >= this.track.n) {
         this.hooks.onOilRemove(o)
         this.oils.splice(k, 1)
       }

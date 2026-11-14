@@ -97,9 +97,9 @@ export function buildTemplate(touch: boolean): string {
           <fieldset class="seg">
             <legend>Vueltas</legend>
             <div class="seg-row">${radioRow('laps', [
-              ['1', '1'],
               ['3', '3'],
               ['5', '5'],
+              ['7', '7'],
             ])}</div>
           </fieldset>
           <fieldset class="seg">

@@ -110,6 +110,20 @@ describe('carrera e ítems', () => {
     expect(sim.oils).toHaveLength(1)
   })
 
+  it('una sola mancha por auto, y dura una vuelta del dueño', () => {
+    const { sim, car } = race()
+    car.item = 'oil'
+    sim.tryUseItem()
+    const first = sim.oils[0]!
+    car.item = 'oil'
+    sim.tryUseItem()
+    expect(sim.oils).toHaveLength(1)
+    expect(sim.oils[0]).not.toBe(first)
+    car.lapsDone++ // una vuelta más
+    sim.update(1 / 60, ZERO)
+    expect(sim.oils).toHaveLength(0)
+  })
+
   it('un cohete sale y persigue; el aceite hace patinar', () => {
     const { sim, car } = race()
     car.item = 'rocket'

@@ -1,7 +1,7 @@
 // Simulación de "Miga Racers": autitos vistos desde arriba. Paso fijo de 1/60 s, azar con semilla.
 // Es práctica sin premio, así que no se valida en el servidor; igual es pura para poder probarla.
 
-import { SPACING, trackAt, type Track } from './tracks.ts'
+import { DEFAULT_LAPS, LAP_OPTIONS, SPACING, trackAt, type Track } from './tracks.ts'
 
 export const TICKS_PER_SECOND = 60
 const DT = 1 / TICKS_PER_SECOND
@@ -69,6 +69,8 @@ export type RaceStatus = 'countdown' | 'racing' | 'finished'
 
 export interface RaceState {
   track: Track
+  /** Vueltas de esta carrera (las elige el jugador antes de largar). */
+  laps: number
   tick: number
   raceTick: number
   status: RaceStatus
@@ -91,7 +93,11 @@ function rng(seed: number) {
   }
 }
 
-export function createRace(trackIndex: number, seed: number): RaceState {
+export function createRace(
+  trackIndex: number,
+  seed: number,
+  laps: number = DEFAULT_LAPS,
+): RaceState {
   const track = trackAt(trackIndex)
   const random = rng(seed)
   const cars: Car[] = []
@@ -127,7 +133,17 @@ export function createRace(trackIndex: number, seed: number): RaceState {
       inZone: false,
     })
   }
-  return { track, tick: 0, raceTick: 0, status: 'countdown', cars, position: 0, events: [], seed }
+  return {
+    track,
+    laps: LAP_OPTIONS.includes(laps) ? laps : DEFAULT_LAPS,
+    tick: 0,
+    raceTick: 0,
+    status: 'countdown',
+    cars,
+    position: 0,
+    events: [],
+    seed,
+  }
 }
 
 export function playerOf(state: RaceState): Car {
@@ -136,7 +152,7 @@ export function playerOf(state: RaceState): Car {
 
 export function lapOf(state: RaceState, car: Car): number {
   return Math.min(
-    state.track.def.laps,
+    state.laps,
     Math.max(0, Math.floor(car.progress / state.track.length)) + 1,
   )
 }
@@ -369,7 +385,7 @@ export function stepRace(state: RaceState, input: Controls): void {
 
   state.raceTick++
   const player = playerOf(state)
-  const laps = state.track.def.laps
+  const laps = state.laps
   for (const car of state.cars) {
     if (car.finished) {
       stepCar(state, car, IDLE)

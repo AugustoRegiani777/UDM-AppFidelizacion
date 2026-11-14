@@ -628,7 +628,12 @@ export const es = {
   },
   racing: {
     title: 'Miga Racers',
-    subtitle: 'Autitos por el local de Uno de Miga. Tres vueltas contra tres rivales.',
+    subtitle:
+      'Autitos, lanchas, motos y helicópteros por el local de Uno de Miga. Elegís las vueltas y corrés contra tres rivales.',
+    lapsTitle: '¿Cuántas vueltas?',
+    lapsOption: (n: number) => `${n} vueltas`,
+    vehicleName: (n: number) =>
+      ['Autito', 'Lancha', 'Moto', 'Helicóptero', 'Autito'][n - 1] ?? 'Vehículo',
     trackLabel: (n: number) => `Pista ${n}`,
     trackName: (n: number) =>
       [
@@ -649,7 +654,7 @@ export const es = {
     locked: 'Terminá 1º o 2º en la pista anterior para abrirla',
     howTo: [
       { icon: '👈', text: 'Tocá la mitad izquierda o derecha de la pantalla para doblar' },
-      { icon: '🚗', text: 'El auto acelera solo: dos dedos a la vez van derecho' },
+      { icon: '🚗', text: 'Tu vehículo acelera solo: dos dedos a la vez van derecho' },
       { icon: '🌀', text: 'Mantené "Derrapar" en las curvas cerradas' },
       { icon: '⚡', text: 'Los parches amarillos te dan turbo' },
       { icon: '🫗', text: 'Los charcos te frenan y los obstáculos te hacen rebotar' },
@@ -793,7 +798,7 @@ export const es = {
       },
       racing: {
         name: 'Miga Racers',
-        body: 'Carreras de autitos por el local: vitrina, obrador, cafetera, bollería y fiambrera.',
+        body: 'Carreras en autito, lancha, moto y helicóptero por el local: vitrina, obrador, cafetera, bollería y fiambrera.',
       },
     },
     survivorsTitle: 'Sobreviví a las migas',

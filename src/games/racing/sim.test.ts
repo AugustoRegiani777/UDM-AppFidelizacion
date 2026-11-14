@@ -2,8 +2,14 @@
 import { TRACK_COUNT, TRACK_DEFS, trackAt } from './tracks.ts'
 import { CAR_RADIUS, autopilot, createRace, playerOf, stepRace, type RaceState } from './sim.ts'
 
-function drive(trackIndex: number, seed: number, skill: number, maxSeconds = 240): RaceState {
-  const state = createRace(trackIndex, seed)
+function drive(
+  trackIndex: number,
+  seed: number,
+  skill: number,
+  maxSeconds = 240,
+  laps = 3,
+): RaceState {
+  const state = createRace(trackIndex, seed, laps)
   for (let i = 0; i < maxSeconds * 60 && state.status !== 'finished'; i++) {
     stepRace(state, skill > 0 ? autopilot(state, skill) : { steer: 0, brake: false })
   }
@@ -41,6 +47,28 @@ describe('pistas', () => {
     expect(TRACK_COUNT).toBe(5)
     expect(new Set(TRACK_DEFS.map((d) => d.scene)).size).toBe(5)
   })
+
+  it('hay autitos, lanchas, motos y helicópteros, y la mesa del obrador usa lanchas', () => {
+    expect(new Set(TRACK_DEFS.map((d) => d.vehicle))).toEqual(
+      new Set(['car', 'boat', 'bike', 'copter']),
+    )
+    expect(TRACK_DEFS.find((d) => d.id === 'obrador')!.vehicle).toBe('boat')
+  })
+
+  it.each(TRACK_DEFS.map((d, i) => [d.id, i + 1] as const))(
+    '%s: tiene buenas rectas (la mitad o más del trazado casi sin curva)',
+    (_, index) => {
+      const track = trackAt(index)
+      const step = 12 // 120 unidades de eje
+      let straight = 0
+      for (let i = 0; i < track.count; i++) {
+        const j = (i + step) % track.count
+        const dot = track.tx[i]! * track.tx[j]! + track.ty[i]! * track.ty[j]!
+        if (dot > Math.cos(0.2)) straight++
+      }
+      expect(straight / track.count).toBeGreaterThanOrEqual(0.5)
+    },
+  )
 
   it.each(TRACK_DEFS.map((d, i) => [d.id, i + 1] as const))(
     '%s: los obstáculos dejan un corredor libre y no tapan la largada',
@@ -82,6 +110,24 @@ describe('carrera', () => {
     expect(state.status).toBe('racing')
   })
 
+  it('por defecto son 5 vueltas y solo se aceptan 3, 5 o 7', () => {
+    expect(createRace(1, 1).laps).toBe(5)
+    expect(createRace(1, 1, 7).laps).toBe(7)
+    expect(createRace(1, 1, 3).laps).toBe(3)
+    expect(createRace(1, 1, 4).laps).toBe(5)
+  })
+
+  it('la carrera dura tantas vueltas como se eligieron', () => {
+    const short = drive(1, 4, 0.97, 400, 3)
+    const long = drive(1, 4, 0.97, 400, 5)
+    expect(short.status).toBe('finished')
+    expect(long.status).toBe('finished')
+    expect(playerOf(short).progress).toBeGreaterThanOrEqual(3 * short.track.length)
+    expect(playerOf(short).progress).toBeLessThan(4 * short.track.length)
+    expect(playerOf(long).progress).toBeGreaterThanOrEqual(5 * long.track.length)
+    expect(long.raceTick).toBeGreaterThan(short.raceTick * 1.4)
+  })
+
   it('quedarse quieto no termina la carrera', () => {
     const state = drive(1, 7, 0, 60)
     expect(state.status).not.toBe('finished')
@@ -95,13 +141,13 @@ describe('carrera', () => {
   })
 
   it.each([1, 2, 3, 4, 5])('en la pista %i ningún rival se queda trabado', (index) => {
-    const state = createRace(index, 21)
+    const state = createRace(index, 21, 3)
     for (let i = 0; i < 300 * 60 && state.status !== 'finished'; i++) {
       stepRace(state, autopilot(state, 0.97))
     }
     // Un rato más para que los rivales terminen.
     for (let i = 0; i < 40 * 60; i++) stepRace(state, { steer: 0, brake: false })
-    const total = state.track.def.laps * state.track.length
+    const total = state.laps * state.track.length
     for (const car of state.cars) expect(car.progress).toBeGreaterThan(total * 0.85)
   })
 

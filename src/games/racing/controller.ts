@@ -51,7 +51,7 @@ export function raceHudOf(state: RaceState): RaceHud {
     position: rankOf(state, player),
     cars: state.cars.length,
     lap: lapOf(state, player),
-    laps: state.track.def.laps,
+    laps: state.laps,
     seconds: state.raceTick / TICKS_PER_SECOND,
   }
 }
@@ -115,9 +115,10 @@ export class RacingController {
     private readonly container: HTMLElement,
     trackIndex: number,
     seed: number,
+    laps: number,
     private readonly callbacks: RacingCallbacks,
   ) {
-    this.state = createRace(trackIndex, seed)
+    this.state = createRace(trackIndex, seed, laps)
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     this.renderer = new RacingRenderer(canvas, this.state.track, reduced)
     this.layout()

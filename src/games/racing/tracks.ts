@@ -23,6 +23,13 @@ export type SolidKind =
 
 export type ZoneKind = 'dulce' | 'coffee' | 'water' | 'oil'
 
+/** Qué se maneja en cada escenario (solo cambia el dibujo y el sonido de la presentación). */
+export type VehicleKind = 'car' | 'boat' | 'bike' | 'copter'
+
+/** Vueltas que puede elegir el jugador antes de largar. */
+export const LAP_OPTIONS: readonly number[] = [3, 5, 7]
+export const DEFAULT_LAPS = 5
+
 /** Obstáculo fijo al costado de la pista: `off` es qué tan lejos del eje está, en mitades de ancho. */
 export interface SolidDef {
   u: number
@@ -57,7 +64,8 @@ export interface TrackDef {
   points: readonly Pt[]
   /** Ancho total de la pista. */
   width: number
-  laps: number
+  /** Vehículo propio del escenario. */
+  vehicle: VehicleKind
   /** Velocidad máxima de los rivales respecto de la del jugador. */
   aiSpeed: number
   /** Posiciones sobre el eje (0..1) de los parches de turbo. */
@@ -74,7 +82,7 @@ export const TRACK_DEFS: readonly TrackDef[] = [
     id: 'vitrina',
     scene: 'vitrina',
     width: 92,
-    laps: 3,
+    vehicle: 'car',
     aiSpeed: 0.86,
     boosts: [0.18, 0.62],
     solids: [
@@ -86,14 +94,16 @@ export const TRACK_DEFS: readonly TrackDef[] = [
     sweepers: [],
     points: [
       [300, 200],
-      [700, 150],
-      [1100, 220],
-      [1250, 450],
-      [1100, 700],
-      [750, 780],
-      [450, 720],
-      [250, 560],
-      [180, 350],
+      [600, 200],
+      [900, 200],
+      [1150, 230],
+      [1300, 450],
+      [1150, 690],
+      [900, 720],
+      [600, 720],
+      [350, 700],
+      [190, 450],
+      [200, 280],
     ],
   },
   {
@@ -101,7 +111,7 @@ export const TRACK_DEFS: readonly TrackDef[] = [
     id: 'obrador',
     scene: 'obrador',
     width: 82,
-    laps: 3,
+    vehicle: 'boat',
     aiSpeed: 0.93,
     boosts: [0.1, 0.4, 0.78],
     solids: [
@@ -117,17 +127,19 @@ export const TRACK_DEFS: readonly TrackDef[] = [
     sweepers: [],
     points: [
       [200, 200],
-      [600, 140],
-      [900, 260],
-      [1200, 160],
-      [1350, 420],
-      [1100, 560],
-      [900, 450],
-      [650, 600],
-      [850, 800],
-      [500, 880],
-      [200, 760],
-      [120, 480],
+      [500, 200],
+      [800, 200],
+      [1100, 200],
+      [1330, 280],
+      [1380, 470],
+      [1250, 640],
+      [1000, 700],
+      [800, 640],
+      [600, 700],
+      [350, 760],
+      [180, 650],
+      [130, 450],
+      [150, 300],
     ],
   },
   {
@@ -135,7 +147,7 @@ export const TRACK_DEFS: readonly TrackDef[] = [
     id: 'cafetera',
     scene: 'cafetera',
     width: 74,
-    laps: 3,
+    vehicle: 'bike',
     aiSpeed: 0.97,
     boosts: [0.08, 0.34, 0.55, 0.86],
     solids: [
@@ -151,20 +163,21 @@ export const TRACK_DEFS: readonly TrackDef[] = [
     ],
     sweepers: [],
     points: [
-      [200, 300],
-      [450, 120],
-      [750, 200],
-      [700, 400],
-      [1000, 330],
-      [1300, 200],
-      [1400, 500],
-      [1150, 700],
-      [900, 600],
-      [800, 850],
-      [500, 780],
-      [550, 580],
-      [300, 650],
-      [120, 500],
+      [250, 200],
+      [550, 200],
+      [850, 200],
+      [1150, 200],
+      [1350, 280],
+      [1400, 480],
+      [1300, 660],
+      [1050, 720],
+      [850, 600],
+      [650, 590],
+      [480, 700],
+      [280, 790],
+      [130, 640],
+      [110, 430],
+      [130, 290],
     ],
   },
   {
@@ -172,7 +185,7 @@ export const TRACK_DEFS: readonly TrackDef[] = [
     id: 'boleria',
     scene: 'boleria',
     width: 76,
-    laps: 3,
+    vehicle: 'copter',
     aiSpeed: 0.99,
     boosts: [0.12, 0.45, 0.8],
     solids: [
@@ -189,19 +202,20 @@ export const TRACK_DEFS: readonly TrackDef[] = [
     ],
     sweepers: [],
     points: [
-      [220, 260],
-      [520, 140],
-      [880, 190],
-      [1180, 140],
-      [1400, 340],
-      [1260, 560],
-      [960, 480],
-      [780, 690],
-      [1020, 880],
-      [650, 960],
-      [320, 830],
-      [150, 620],
-      [340, 470],
+      [220, 220],
+      [520, 170],
+      [820, 170],
+      [1120, 170],
+      [1360, 260],
+      [1420, 450],
+      [1380, 650],
+      [1150, 800],
+      [900, 900],
+      [600, 900],
+      [330, 900],
+      [150, 740],
+      [120, 520],
+      [140, 340],
     ],
   },
   {
@@ -209,7 +223,7 @@ export const TRACK_DEFS: readonly TrackDef[] = [
     id: 'fiambrera',
     scene: 'fiambrera',
     width: 70,
-    laps: 3,
+    vehicle: 'car',
     aiSpeed: 1.0,
     boosts: [0.1, 0.36, 0.6, 0.88],
     solids: [
@@ -224,19 +238,20 @@ export const TRACK_DEFS: readonly TrackDef[] = [
     sweepers: [{ u: 0.52, side: 1, off: 0.95, orbit: 18, r: 14, period: 150 }],
     points: [
       [200, 200],
-      [600, 160],
-      [1000, 200],
-      [1300, 150],
-      [1460, 380],
-      [1300, 610],
-      [1000, 560],
-      [800, 690],
-      [1050, 870],
+      [500, 200],
+      [800, 200],
+      [1100, 200],
+      [1340, 250],
+      [1450, 430],
+      [1330, 600],
+      [1080, 620],
+      [860, 730],
+      [950, 880],
       [700, 940],
-      [400, 860],
-      [240, 680],
-      [430, 520],
-      [180, 420],
+      [450, 940],
+      [250, 840],
+      [160, 640],
+      [160, 400],
     ],
   },
 ]
@@ -244,6 +259,7 @@ export const TRACK_DEFS: readonly TrackDef[] = [
 export const TRACK_COUNT = TRACK_DEFS.length
 /** Distancia entre muestras del eje. */
 export const SPACING = 10
+const X_STRETCH = 1.35
 
 export interface Track {
   def: TrackDef
@@ -277,13 +293,15 @@ const cache = new Map<string, Track>()
 export function buildTrack(def: TrackDef): Track {
   const cached = cache.get(def.id)
   if (cached) return cached
-  const n = def.points.length
+  // Las pistas se estiran a lo ancho para ganar rectas largas sin cerrar las curvas.
+  const pts: Pt[] = def.points.map(([x, y]) => [x * X_STRETCH, y])
+  const n = pts.length
   const dense: [number, number][] = []
   for (let i = 0; i < n; i++) {
-    const p0 = def.points[(i + n - 1) % n]!
-    const p1 = def.points[i]!
-    const p2 = def.points[(i + 1) % n]!
-    const p3 = def.points[(i + 2) % n]!
+    const p0 = pts[(i + n - 1) % n]!
+    const p1 = pts[i]!
+    const p2 = pts[(i + 1) % n]!
+    const p3 = pts[(i + 2) % n]!
     for (let k = 0; k < 24; k++) dense.push(catmull(p0, p1, p2, p3, k / 24))
   }
   // Re-muestreo a pasos parejos a lo largo de la curva.

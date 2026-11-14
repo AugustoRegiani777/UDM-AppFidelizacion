@@ -12,6 +12,7 @@ import {
   type RaceResult,
 } from './controller.ts'
 import { createRace } from './sim.ts'
+import { DEFAULT_LAPS, LAP_OPTIONS } from './tracks.ts'
 
 interface RacingGameProps {
   trackIndex: number
@@ -55,8 +56,9 @@ export function RacingGame({ trackIndex, seed, onEnd, onExit }: RacingGameProps)
   const onEndRef = useRef(onEnd)
   const sound = useSoundEnabled()
   const [phase, setPhase] = useState<RacePhase>('ready')
-  const [hud, setHud] = useState<RaceHud>(() => raceHudOf(createRace(trackIndex, seed)))
+  const [hud, setHud] = useState<RaceHud>(() => raceHudOf(createRace(trackIndex, seed, DEFAULT_LAPS)))
   const [count, setCount] = useState<number | null>(null)
+  const [laps, setLaps] = useState(DEFAULT_LAPS)
 
   useEffect(() => {
     onEndRef.current = onEnd
@@ -68,6 +70,7 @@ export function RacingGame({ trackIndex, seed, onEnd, onExit }: RacingGameProps)
       containerRef.current!,
       trackIndex,
       seed,
+      laps,
       {
         onPhase: setPhase,
         onHud: setHud,
@@ -80,7 +83,7 @@ export function RacingGame({ trackIndex, seed, onEnd, onExit }: RacingGameProps)
       controller.dispose()
       controllerRef.current = null
     }
-  }, [trackIndex, seed])
+  }, [trackIndex, seed, laps])
 
   const name = copy.racing.trackName(trackIndex)
 
@@ -147,7 +150,30 @@ export function RacingGame({ trackIndex, seed, onEnd, onExit }: RacingGameProps)
       {phase === 'ready' && (
         <Backdrop label={copy.racing.title}>
           <h2 className="font-display text-5xl leading-none">{copy.racing.title}</h2>
-          <p className="text-brand-ink text-xl font-bold">{name}</p>
+          <p className="text-brand-ink text-xl font-bold">
+            {name} · {copy.racing.vehicleName(trackIndex)}
+          </p>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="text-muted mx-auto mb-1 text-sm">{copy.racing.lapsTitle}</legend>
+            <div className="flex justify-center gap-2">
+              {LAP_OPTIONS.map((n) => (
+                <label
+                  key={n}
+                  className={`flex min-h-12 min-w-16 cursor-pointer items-center justify-center rounded-full border-2 px-3 font-bold has-[:focus-visible]:outline-2 ${n === laps ? 'border-brand bg-brand text-bg' : 'border-ink/20 bg-surface'}`}
+                >
+                  <input
+                    type="radio"
+                    name="laps"
+                    className="sr-only"
+                    checked={n === laps}
+                    onChange={() => setLaps(n)}
+                    aria-label={copy.racing.lapsOption(n)}
+                  />
+                  <span aria-hidden>{n}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <ul className="text-muted flex flex-col gap-2 text-left">
             {copy.racing.howTo.map((line) => (
               <li key={line.text} className="flex items-center gap-3">

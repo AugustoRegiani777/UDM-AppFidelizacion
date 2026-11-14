@@ -2,7 +2,8 @@
 // (vitrina, obrador, cafetera, bollería, fiambrera). La simulación no sabe nada de esto: acá viven la
 // cámara, el humo, las chispas y el zoom del turbo.
 
-import { buildTrack, type SceneId, type Track } from './tracks.ts'
+import { buildTrack, type SceneId, type Track, type VehicleKind } from './tracks.ts'
+import { drawVehicle, vehicleShadow } from './vehicles.ts'
 import {
   CAR_RADIUS,
   playerOf,
@@ -89,6 +90,7 @@ export class RacingRenderer {
   private readonly style: SceneStyle
   private readonly trackPath = new Path2D()
   private readonly props: Prop[]
+  private readonly vehicle: VehicleKind
   private particles: Particle[] = Array.from({ length: MAX_PARTICLES }, () => ({
     active: false,
     x: 0,
@@ -116,6 +118,7 @@ export class RacingRenderer {
   ) {
     this.ctx = canvas.getContext('2d', { alpha: false })!
     this.style = SCENES[track.def.scene]
+    this.vehicle = track.def.vehicle
     this.floor = this.ctx.createPattern(makeTile(this.style), 'repeat')
     this.floor?.setTransform(new DOMMatrix().scale(0.5))
     const t = buildTrack(track.def)
@@ -200,10 +203,8 @@ export class RacingRenderer {
     const ctx = this.ctx
     ctx.save()
     ctx.translate(x, y)
-    ctx.fillStyle = 'rgba(42,26,20,0.22)'
-    ctx.beginPath()
-    ctx.ellipse(2, 4, 16, 9, h, 0, Math.PI * 2)
-    ctx.fill()
+    const vehicle = this.vehicle
+    vehicleShadow(ctx, vehicle, h)
     ctx.rotate(h)
 
     if (car.boost > 0) {
@@ -214,34 +215,7 @@ export class RacingRenderer {
       ctx.lineTo(-14, 4)
       ctx.fill()
     }
-    // Ruedas.
-    ctx.fillStyle = INK
-    for (const [wx, wy] of [
-      [-8, -8],
-      [8, -8],
-      [-8, 8],
-      [8, 8],
-    ] as const) {
-      ctx.fillRect(wx - 3.5, wy - 1.6, 7, 3.2)
-    }
-    // Carrocería.
-    ctx.fillStyle = car.flash > 0 ? '#ffffff' : car.color
-    ctx.beginPath()
-    ctx.roundRect(-14, -7, 28, 14, 5)
-    ctx.fill()
-    ctx.strokeStyle = INK
-    ctx.lineWidth = 1.4
-    ctx.stroke()
-    // Franja y cabina.
-    ctx.fillStyle = 'rgba(255,246,224,0.85)'
-    ctx.fillRect(-12, -1.4, 24, 2.8)
-    ctx.fillStyle = '#fff6e0'
-    ctx.beginPath()
-    ctx.roundRect(-4, -4.5, 9, 9, 3)
-    ctx.fill()
-    ctx.fillStyle = INK
-    ctx.fillRect(10, -5, 2, 2.4)
-    ctx.fillRect(10, 2.6, 2, 2.4)
+    drawVehicle(ctx, vehicle, car.color, car.flash > 0, now, !this.reducedMotion)
     ctx.restore()
   }
 

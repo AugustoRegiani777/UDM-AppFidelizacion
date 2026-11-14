@@ -40,9 +40,9 @@ set local role authenticated;
 
 select throws_ok($$ update public.profiles set adult_confirmed_at = now(), legal_version = 'trucho' $$,
                  '42501', null, 'Ana no puede escribir las columnas legales directamente');
-select throws_ok($$ select public.complete_onboarding('Ana', false, true, true, false) $$,
+select throws_ok($$ select public.complete_onboarding('Ana M.', false, true, true, false) $$,
                  '22023', 'consent_required', 'sin aceptar las bases no se completa la bienvenida');
-select throws_ok($$ select public.complete_onboarding('Ana', false, false, true, true) $$,
+select throws_ok($$ select public.complete_onboarding('Ana M.', false, false, true, true) $$,
                  '22023', 'consent_required', 'sin confirmar +18 no se completa la bienvenida');
 select throws_ok($$ select public.accept_legal(true, false, true) $$,
                  '22023', 'consent_required', 'sin aceptar la privacidad no se registra nada');

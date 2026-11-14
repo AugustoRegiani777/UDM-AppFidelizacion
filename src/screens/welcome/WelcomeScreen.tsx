@@ -24,7 +24,20 @@ export function WelcomeScreen() {
   }
   // Ya había aceptado el programa antes: solo vuelve a confirmar las casillas (sin tocar nombre ni promos).
   const returning = Boolean(profile.data.program_consent_at)
-  return <WelcomeForm initialName={profile.data.display_name} returning={returning} />
+  return (
+    <WelcomeForm
+      initialName={profile.data.display_name}
+      googleName={profile.data.google_name}
+      returning={returning}
+    />
+  )
+}
+
+/** Chequeo rápido en el cliente; el servidor valida de verdad (largo, emails, teléfonos, enlaces, groserías). */
+function isValidAlias(value: string) {
+  if (value.length < 2 || value.length > 30) return false
+  if (value.includes('@') || /www\.|https?:/i.test(value)) return false
+  return value.replace(/\D/g, '').length < 6
 }
 
 /** Enlace que se abre en otra pestaña para no perder lo que ya se marcó. */
@@ -36,7 +49,15 @@ function LegalLink({ to, children }: { to: string; children: string }) {
   )
 }
 
-function WelcomeForm({ initialName, returning }: { initialName: string; returning: boolean }) {
+function WelcomeForm({
+  initialName,
+  googleName,
+  returning,
+}: {
+  initialName: string
+  googleName: string | null
+  returning: boolean
+}) {
   const navigate = useNavigate()
   const invalidateProfile = useInvalidateProfile()
   const [name, setName] = useState(initialName)
@@ -49,7 +70,7 @@ function WelcomeForm({ initialName, returning }: { initialName: string; returnin
   const [busy, setBusy] = useState(false)
 
   const trimmed = name.trim()
-  const nameValid = returning || (trimmed.length >= 1 && trimmed.length <= 60)
+  const nameValid = returning || isValidAlias(trimmed)
   const consentsOk = adult && privacy && terms
   const missing: string[] = []
   if (!adult) missing.push(legalCopy.consent.missingAdult)
@@ -88,9 +109,23 @@ function WelcomeForm({ initialName, returning }: { initialName: string; returnin
             id="name"
             label={copy.welcome.nameLabel}
             value={name}
-            maxLength={60}
+            maxLength={30}
             onChange={(e) => setName(e.target.value)}
           />
+        )}
+        {!returning && (
+          <div className="-mt-3 flex flex-col gap-2">
+            <p className="text-muted text-xs">{copy.welcome.nameHint}</p>
+            {googleName && googleName !== name && (
+              <button
+                type="button"
+                className="self-start text-sm font-bold underline"
+                onClick={() => setName(googleName.slice(0, 30))}
+              >
+                {copy.welcome.useGoogleName(googleName)}
+              </button>
+            )}
+          </div>
         )}
         <Checkbox checked={adult} onChange={(e) => setAdult(e.target.checked)}>
           {legalCopy.consent.adult}

@@ -47,13 +47,33 @@ describe('WelcomeScreen', () => {
     localStorage.clear()
     completeOnboarding.mockClear()
     acceptLegal.mockClear()
-    profileData = { display_name: 'Lucía Pérez', program_consent_at: null }
+    profileData = {
+      display_name: 'Cliente 1A2B',
+      google_name: 'Lucía Pérez',
+      program_consent_at: null,
+    }
   })
 
-  it('arranca con todas las casillas desmarcadas y precarga el nombre de Google', () => {
+  it('arranca con todas las casillas desmarcadas y un alias neutro, nunca el email', () => {
     renderWelcome()
-    expect(screen.getByLabelText(/cómo te llamamos/i)).toHaveValue('Lucía Pérez')
+    expect(screen.getByLabelText(/tu alias/i)).toHaveValue('Cliente 1A2B')
     for (const box of [adult(), privacy(), terms(), promo()]) expect(box).not.toBeChecked()
+    expect(submit()).toBeDisabled()
+  })
+
+  it('ofrece el nombre de Google solo si la persona lo elige', async () => {
+    renderWelcome()
+    await userEvent.click(screen.getByRole('button', { name: /usar mi nombre de google/i }))
+    expect(screen.getByLabelText(/tu alias/i)).toHaveValue('Lucía Pérez')
+  })
+
+  it('no deja enviar un alias con email', async () => {
+    renderWelcome()
+    await userEvent.clear(screen.getByLabelText(/tu alias/i))
+    await userEvent.type(screen.getByLabelText(/tu alias/i), 'ana@mail.com')
+    await userEvent.click(adult())
+    await userEvent.click(privacy())
+    await userEvent.click(terms())
     expect(submit()).toBeDisabled()
   })
 
@@ -107,7 +127,7 @@ describe('WelcomeScreen', () => {
     await userEvent.click(submit())
 
     await waitFor(() => expect(screen.getByText('PANEL')).toBeInTheDocument())
-    expect(completeOnboarding).toHaveBeenCalledWith('Lucía Pérez', false, {
+    expect(completeOnboarding).toHaveBeenCalledWith('Cliente 1A2B', false, {
       adult: true,
       privacy: true,
       terms: true,
@@ -124,7 +144,7 @@ describe('WelcomeScreen', () => {
     await userEvent.click(submit())
 
     await waitFor(() => expect(screen.getByText('VENTA')).toBeInTheDocument())
-    expect(completeOnboarding).toHaveBeenCalledWith('Lucía Pérez', true, {
+    expect(completeOnboarding).toHaveBeenCalledWith('Cliente 1A2B', true, {
       adult: true,
       privacy: true,
       terms: true,

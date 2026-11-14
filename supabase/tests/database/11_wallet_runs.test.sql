@@ -6,6 +6,8 @@ insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data) v
   ('aaaaaaaa-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ana@test.com', '{"full_name": "Ana María Pérez"}'),
   ('bbbbbbbb-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'beto@test.com', '{"full_name": "Beto"}'),
   ('cccccccc-0000-4000-8000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'cami@test.com', '{"full_name": "Camila Roldán"}');
+-- El alias nace neutro (Cliente XXXX); estos tests necesitan el nombre de Google como alias elegido.
+update public.profiles set display_name = google_name where google_name is not null;
 
 -- 50 € de compras = 500 puntos para Ana.
 select public.claim_sale_apply('aaaaaaaa-0000-4000-8000-000000000001', 'd0000000-0000-4000-8000-000000000001',

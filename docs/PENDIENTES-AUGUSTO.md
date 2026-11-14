@@ -148,3 +148,10 @@ Orden de publicación (nada se ejecutó en producción):
 - Sin secretos ni variables nuevas.
 - Los costos del café (1,00 €) y del sanguche (1,20 €) en `settings.reward_costs` son ESTIMADOS (un tercio del precio de carta: 3 € y 3,5 €); cargá los reales cuando los tengas.
 - Efecto en clientes que ya existen: ver `docs/06-economia-de-puntos.md` (sección «Ajuste de noviembre»). Antes de aplicar en producción conviene mirar si hay clientes con puntos de juego, misiones o ajustes que hoy les dan un café o sanguche disponible: lo perderían.
+
+
+## 16. Privacidad del alias público (migración 20261105000001)
+
+- [ ] `node node_modules/supabase/dist/supabase.js db push` (aplica `20261105000001_public_alias_privacy`, después de `20261104000001_economy_adjustment`). Sin funciones que publicar ni secretos nuevos.
+- Qué hace: el alias de los rankings nunca sale del email (alta = "Cliente" + 4 caracteres del id; el nombre de Google solo se usa si la persona lo elige en la bienvenida), el alias se valida en el servidor y `public_name` enmascara como "Cliente" lo que parezca email, teléfono o enlace. Además sanea los alias existentes que fueran un email o el prefijo del email (pasan a "Cliente XXXX"; la persona puede cambiarlo en su perfil).
+- La web nueva también lee `google_name` del perfil (bienvenida): publicar el front después de la migración.

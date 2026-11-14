@@ -162,7 +162,7 @@ update auth.users
        raw_user_meta_data = '{"full_name": "Carla Díaz", "avatar_url": "https://example.com/c.png"}'
  where id = 'cccccccc-1400-4000-8000-000000000003';
 
-select is((select display_name from public.profiles where id = 'cccccccc-1400-4000-8000-000000000003'), 'Carla Díaz', 'al vincular, el perfil toma el nombre de Google');
+select is((select display_name from public.profiles where id = 'cccccccc-1400-4000-8000-000000000003'), 'Invitado '||upper(substr(md5('cccccccc-1400-4000-8000-000000000003'),1,4)), 'al vincular, el alias no se pisa con el nombre de Google');
 select is((select google_name from public.profiles where id = 'cccccccc-1400-4000-8000-000000000003'), 'Carla Díaz', 'y lo guarda para verificar reseñas');
 select is((select avatar_url from public.profiles where id = 'cccccccc-1400-4000-8000-000000000003'), 'https://example.com/c.png', 'y la foto');
 select is(public.customer_balance('cccccccc-1400-4000-8000-000000000003'), 1700, 'los puntos (entrada + compra) siguen intactos');

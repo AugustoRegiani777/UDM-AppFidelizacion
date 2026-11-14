@@ -16,8 +16,8 @@ insert into public.point_movements (customer_id, kind, points, ref_table, ref_id
   ('aaaaaaaa-0000-4000-8000-000000000001', 'purchase', 62, 'claims', 'c1000000-0000-4000-8000-000000000001'),
   ('bbbbbbbb-0000-4000-8000-000000000002', 'purchase', 10, 'claims', 'c2000000-0000-4000-8000-000000000002');
 
-select is((select display_name from public.profiles where id = 'aaaaaaaa-0000-4000-8000-000000000001'), 'Ana', 'el perfil toma el nombre de Google');
-select is((select display_name from public.profiles where id = 'bbbbbbbb-0000-4000-8000-000000000002'), 'beto', 'sin nombre, usa el mail');
+select is((select display_name from public.profiles where id = 'aaaaaaaa-0000-4000-8000-000000000001'), 'Cliente AAAA', 'el alias nace como Cliente + 4 del id, no del nombre de Google');
+select is((select display_name from public.profiles where id = 'bbbbbbbb-0000-4000-8000-000000000002'), 'Cliente BBBB', 'sin nombre de Google, nunca se usa el mail');
 
 -- Actuamos como Ana.
 set local role authenticated;

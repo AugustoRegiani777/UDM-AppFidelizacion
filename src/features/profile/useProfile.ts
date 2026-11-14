@@ -13,7 +13,7 @@ export function useProfile() {
       const { data, error } = await supabase
         .from('profiles')
         .select(
-          'id, display_name, avatar_url, promo_consent, program_consent_at, adult_confirmed_at, privacy_accepted_at, terms_accepted_at, legal_version',
+          'id, display_name, google_name, avatar_url, promo_consent, program_consent_at, adult_confirmed_at, privacy_accepted_at, terms_accepted_at, legal_version',
         )
         .eq('id', userId!)
         .single()

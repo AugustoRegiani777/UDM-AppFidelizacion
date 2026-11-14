@@ -12,6 +12,8 @@ update public.rewards set threshold = 1000 where kind = 'points' and name = 'Gor
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data) values
   ('aaaaaaaa-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ana@test.com', '{"full_name": "Ana María Pérez"}'),
   ('bbbbbbbb-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'beto@test.com', '{}');
+-- El alias nace neutro (Cliente XXXX); estos tests necesitan el nombre de Google como alias elegido.
+update public.profiles set display_name = google_name where google_name is not null;
 
 create temp table reward_ids as select name, id from public.rewards;
 

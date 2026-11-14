@@ -7,6 +7,8 @@ import '@fontsource/rubik/latin-400.css'
 import '@fontsource/rubik/latin-500.css'
 import '@fontsource/rubik/latin-700.css'
 import { copy } from '@/copy'
+import { reportScore } from '@/features/economy/reportScore'
+import { storedRallyScore } from './score.ts'
 import { enterLandscape } from '../shared/landscape.ts'
 import { RallyAudio } from './audio.ts'
 import {
@@ -171,7 +173,11 @@ export function createRallyGame(container: HTMLElement, options: RallyOptions): 
     onRocketRemove: (r) => world?.hooks.onRocketRemove(r),
     onOilSpawn: (o) => world?.hooks.onOilSpawn(o),
     onOilRemove: (o) => world?.hooks.onOilRemove(o),
-    saveBest: (carId, lap) => recordLap(store, sim.track.id, carId, lap),
+    saveBest: (carId, lap) => {
+      const isRecord = recordLap(store, sim.track.id, carId, lap)
+      if (isRecord) void reportScore('rally', storedRallyScore())
+      return isRecord
+    },
     saveRace: (carId, time, laps) => recordRace(store, sim.track.id, carId, time, laps),
     onPlayerFinish(player) {
       unlockedNow = null

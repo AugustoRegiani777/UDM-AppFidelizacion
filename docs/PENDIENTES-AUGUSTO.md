@@ -135,3 +135,5 @@ Si algún día querés volver a los puertos de antes: abrí PowerShell **como ad
 
 - [ ] Aplicar la migración nueva `20261101000001_admin_overview` (función `admin_overview`): `node node_modules/supabase/dist/supabase.js db push`. No hay funciones nuevas que publicar ni secretos nuevos. Nota: no existe tabla de escaneos de QR, así que `qr_scans_by_day` viene vacío.
 - [ ] Funciones de desarrollo `dev-mock-sale` y `dev-pos-redeem`: siguen publicadas en producción; borrarlas con `functions delete` antes de abrir al público.
+
+- [ ] Aplicar las migraciones nuevas `20261102000001_casual_rankings` y `20261103000001_export_game_scores` (en ese orden; la segunda hace que `export_my_data` incluya `game_scores`): `node node_modules/supabase/dist/supabase.js db push`. Sin funciones nuevas que publicar ni secretos nuevos.

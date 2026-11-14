@@ -5,7 +5,9 @@ import { Button } from '@/components/Button'
 import { FullScreenLoader } from '@/components/FullScreenLoader'
 import { Screen } from '@/components/Screen'
 import type { ClaimResult } from '@/features/claims/claimApi'
+import { isSaleUuid } from '@/features/claims/pendingSale'
 import { useClaimSale } from '@/features/claims/useClaimSale'
+import { useGamesStatus } from '@/features/games/gameApi'
 import { Celebration } from '@/motion/Celebration'
 import { CountUp } from '@/motion/CountUp'
 import { usePopups } from '@/motion/usePopups'
@@ -15,6 +17,11 @@ import { RewardUnlockedPopup } from './RewardUnlockedPopup'
 /** Resultado de escanear una venta: sumada, repetida, pendiente, rechazada o error amable. */
 export function SaleScreen() {
   const { uuid = '' } = useParams()
+  if (!isSaleUuid(uuid)) return <Message title={copy.sale.invalidTitle} body={copy.sale.invalidBody} />
+  return <ClaimView uuid={uuid} />
+}
+
+function ClaimView({ uuid }: { uuid: string }) {
   const claim = useClaimSale(uuid)
 
   if (claim.isPending) return <FullScreenLoader />
@@ -37,6 +44,10 @@ function ResultView({ result }: { result: ClaimResult }) {
 function ConfirmedView({ result }: { result: Extract<ClaimResult, { status: 'confirmed' }> }) {
   const unlocked = result.unlocked?.[0]
   const { show } = usePopups()
+  const games = useGamesStatus()
+  // La raspadita solo existe si la compra llega al mínimo: el servidor lo dice en games_status.
+  const gamesKnown = games.isSuccess && !games.isFetching
+  const scratchAvailable = gamesKnown && games.data.scratch_claim_id === result.claim_id
 
   // El regalo se abre un momento después, para que se disfrute primero el "+puntos".
   useEffect(() => {
@@ -66,10 +77,14 @@ function ConfirmedView({ result }: { result: Extract<ClaimResult, { status: 'con
       <p className="text-lg">
         {unlocked ? copy.sale.unlocked(unlocked.name) : copy.sale.confirmedGeneric}
       </p>
-      <Link to={`/raspadita/${result.claim_id}`} className="font-bold underline">
-        {copy.games.scratchTitle}
-      </Link>
-      <p className="text-muted text-sm">{copy.games.scratchMinHint(5)}</p>
+      {scratchAvailable && (
+        <Link to={`/raspadita/${result.claim_id}`} className="font-bold underline">
+          {copy.games.scratchTitle}
+        </Link>
+      )}
+      {gamesKnown && !scratchAvailable && (
+        <p className="text-muted text-sm">{copy.games.scratchMinHint(5)}</p>
+      )}
       <PanelLink />
     </Screen>
   )

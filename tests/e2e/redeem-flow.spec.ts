@@ -34,7 +34,7 @@ test('compra grande: regalo, cofre con juego, código y validación en caja', as
   await page.getByRole('link', { name: 'Ir a mi panel' }).click()
   await expect(page.getByText('Desbloqueado')).toBeVisible()
   await page.getByRole('button', { name: 'Abrir cofre' }).click()
-  await expect(page.getByRole('heading', { name: /abrí el cofre de tu un café/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /abrí el cofre y ganate un café/i })).toBeVisible()
   await page.getByRole('button', { name: 'Abrir el cofre' }).click()
 
   // Menú inicial del juego y partida.
@@ -59,7 +59,7 @@ test('compra grande: regalo, cofre con juego, código y validación en caja', as
   // La caja valida el código (firmado con HMAC) y la pantalla del cliente lo nota sola.
   const validated = await callFunction('dev-pos-redeem', { code })
   expect(validated.body).toMatchObject({ valid: true })
-  await expect(page.getByText(/disfrutá tu un café/i)).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByText(/disfrutá un café/i)).toBeVisible({ timeout: 10_000 })
 
   // Los puntos no se gastan: el saldo sigue en 400 y el próximo café es a los 800.
   await page.getByRole('link', { name: 'Volver al panel' }).click()

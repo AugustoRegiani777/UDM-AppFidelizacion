@@ -4,6 +4,7 @@ import { SaveProgressHint } from '@/features/auth/SaveProgress'
 import { ResetSession } from '@/features/auth/ResetSession'
 import { Screen } from '@/components/Screen'
 import { useDashboard, type Dashboard } from '@/features/dashboard/useDashboard'
+import { useDailyLimitReached } from '@/features/redemptions/useRedeemsToday'
 import { Cascade, CascadeItem } from '@/motion/Cascade'
 import { copy } from '@/copy'
 import { BalanceHero } from './BalanceHero'
@@ -30,6 +31,7 @@ export function PanelScreen() {
 }
 
 function PanelContent({ data }: { data: Dashboard }) {
+  const limitReached = useDailyLimitReached()
   if (!data.profile) return <ResetSession />
   const isNew = data.recent_claims.length === 0
 
@@ -64,6 +66,12 @@ function PanelContent({ data }: { data: Dashboard }) {
         <h2 id="rewards" className="font-display text-3xl">
           {copy.panel.rewardsTitle}
         </h2>
+        {limitReached && (
+          <p role="status" className="bg-brand-soft text-brand-ink rounded-card px-4 py-3 font-semibold">
+            {copy.redeem.dailyLimit}
+          </p>
+        )}
+        {!isNew && <p className="text-muted text-sm">{copy.panel.pointsKeptNote}</p>}
         <Cascade className="flex flex-col gap-3">
           {data.rewards.map((reward) => (
             <CascadeItem key={reward.id}>

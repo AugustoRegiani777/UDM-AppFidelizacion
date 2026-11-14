@@ -1,7 +1,6 @@
 import {
   createBrowserRouter,
   Navigate,
-  redirect,
   type LoaderFunctionArgs,
   type RouteObject,
 } from 'react-router'
@@ -20,8 +19,8 @@ import { RouteError } from './RouteError'
 
 /** Se ejecuta antes de los guards: así el uuid queda guardado aunque haya que loguearse primero. */
 function saleLoader({ params }: LoaderFunctionArgs) {
-  if (!isSaleUuid(params.uuid)) return redirect('/')
-  savePendingSale(params.uuid)
+  // Si el código no es un uuid, SaleScreen explica que no es válido en vez de redirigir sin avisar.
+  if (isSaleUuid(params.uuid)) savePendingSale(params.uuid)
   return null
 }
 

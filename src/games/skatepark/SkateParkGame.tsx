@@ -27,7 +27,7 @@ const label = (name: string) => (copy.skatepark.tricks as Record<string, string>
 function Backdrop({ children, label: aria }: { children: React.ReactNode; label: string }) {
   return (
     <motion.div
-      className="bg-ink/75 absolute inset-0 z-20 grid place-items-center overflow-y-auto p-4"
+      className="bg-ink/75 absolute inset-0 z-20 grid place-items-center overflow-y-auto p-2"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       role="dialog"
@@ -35,7 +35,7 @@ function Backdrop({ children, label: aria }: { children: React.ReactNode; label:
       aria-label={aria}
     >
       <motion.div
-        className="bg-surface text-ink rounded-card flex w-full max-w-lg flex-col gap-3 p-5 text-center"
+        className="bg-surface text-ink rounded-card flex max-h-[calc(100dvh-1rem)] w-full max-w-lg flex-col gap-3 overflow-y-auto p-4 text-center landscape:gap-2 landscape:p-3"
         initial={{ scale: 0.9, y: 16 }}
         animate={{ scale: 1, y: 0 }}
         transition={spring.bouncy}
@@ -205,14 +205,16 @@ export function SkateParkGame({ level, seed, onEnd, onExit }: SkateParkGameProps
               </li>
             ))}
           </ul>
-          <Button
-            onClick={() => {
-              void enterLandscape()
-              controllerRef.current?.start()
-            }}
-          >
-            {copy.skatepark.play}
-          </Button>
+          <div className="bg-surface sticky bottom-0 z-10 py-1">
+            <Button
+              onClick={() => {
+                void enterLandscape()
+                controllerRef.current?.start()
+              }}
+            >
+              {copy.skatepark.play}
+            </Button>
+          </div>
           <label className="text-muted flex min-h-10 items-center justify-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -252,7 +254,7 @@ export function SkateParkGame({ level, seed, onEnd, onExit }: SkateParkGameProps
           </motion.p>
         </motion.div>
       )}
-      {portrait && <RotateOverlay />}
+      {portrait && <RotateOverlay onExit={onExit} />}
     </div>
   )
 }

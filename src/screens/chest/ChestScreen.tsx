@@ -10,6 +10,7 @@ import {
   startChest,
   type FinishChestResult,
 } from '@/features/chest/chestApi'
+import { useDailyLimitReached } from '@/features/redemptions/useRedeemsToday'
 import { useDashboard } from '@/features/dashboard/useDashboard'
 import type { GameConfig } from '@engine/config.ts'
 import type { GameOutcome, GameSession } from '@/games/outcome'
@@ -27,6 +28,7 @@ type Phase =
   | { name: 'verifying'; sessionId: string; outcome: GameOutcome }
   | { name: 'opened'; result: FinishChestResult; statsText: string }
   | { name: 'lost'; outcome: GameOutcome; relaxedNext: boolean }
+  | { name: 'limit' }
   | { name: 'error'; message: string; retry?: { sessionId: string; outcome: GameOutcome } }
 
 /** Cofre de un premio: se abre al pasar el juego. El servidor reproduce la partida antes de dar el código. */
@@ -36,6 +38,7 @@ export function ChestScreen() {
   const queryClient = useQueryClient()
   const dashboard = useDashboard()
   const [phase, setPhase] = useState<Phase>({ name: 'intro' })
+  const limitReached = useDailyLimitReached()
 
   const rewardName = dashboard.data?.rewards.find((r) => r.id === rewardId)?.name ?? ''
 
@@ -54,12 +57,15 @@ export function ChestScreen() {
         play: { game: 'survivors', session: { ...base, config: started.config } },
       })
     } catch (error) {
+      if (error instanceof DailyRedeemLimitError) {
+        void queryClient.invalidateQueries({ queryKey: ['redeems-today'] })
+        setPhase({ name: 'limit' })
+        return
+      }
       setPhase({
         name: 'error',
         message:
-          error instanceof DailyRedeemLimitError
-            ? copy.redeem.dailyLimit
-            : error instanceof RewardNotReachedError
+          error instanceof RewardNotReachedError
               ? copy.chest.notReached
               : copy.chest.errorBody,
       })
@@ -71,6 +77,7 @@ export function ChestScreen() {
     try {
       const result = await finishChest(sessionId, outcome.log)
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['redeems-today'] })
       if (result.won && result.redemption) {
         setPhase({ name: 'opened', result, statsText: outcome.statsText })
       } else {
@@ -78,7 +85,8 @@ export function ChestScreen() {
       }
     } catch (error) {
       if (error instanceof DailyRedeemLimitError) {
-        setPhase({ name: 'error', message: copy.redeem.dailyLimit })
+        void queryClient.invalidateQueries({ queryKey: ['redeems-today'] })
+        setPhase({ name: 'limit' })
         return
       }
       setPhase({ name: 'error', message: copy.chest.errorBody, retry: { sessionId, outcome } })
@@ -93,7 +101,15 @@ export function ChestScreen() {
 
   return (
     <Screen className="items-center justify-center gap-5 text-center">
-      {phase.name === 'intro' && (
+      {(phase.name === 'limit' || (phase.name === 'intro' && limitReached)) && (
+        <>
+          <ChestIllustration open={false} />
+          <h1 className="font-display text-5xl leading-none">{copy.redeem.dailyLimit}</h1>
+          <BackLink />
+        </>
+      )}
+
+      {phase.name === 'intro' && !limitReached && (
         <>
           <ChestIllustration open={false} />
           <h1 className="font-display text-5xl leading-none">

@@ -7,7 +7,7 @@ const SIZE = 300
 const CENTER = SIZE / 2
 const RADIUS = 140
 const FULL_TURNS = 6
-const COLORS = ['#c8102e', '#faf3e3', '#2a1a14', '#efe2c8']
+const COLORS = ['#c8102e', '#f2b84b', '#2a1a14', '#efe2c8']
 
 export interface RouletteHandle {
   /** Gira hasta dejar el premio decidido por el servidor bajo la flecha. Resuelve al terminar. */
@@ -79,11 +79,18 @@ export const RouletteWheel = forwardRef<RouletteHandle, { prizes: Prize[] }>(fun
                   transform={`rotate(${mid} ${label.x} ${label.y})`}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize="22"
+                  fontSize={prize.points > 0 ? 22 : 13}
                   fontFamily="'Bebas Neue', sans-serif"
+                  fontWeight={prize.points > 0 ? undefined : 700}
                   fill={dark ? '#faf3e3' : '#2a1a14'}
                 >
-                  {prize.points > 0 ? prize.label : '·'}
+                  {prize.points > 0
+                    ? prize.label
+                    : prize.label.split(' ').map((word, i) => (
+                        <tspan key={word} x={label.x} dy={i === 0 ? '-0.5em' : '1.1em'}>
+                          {word}
+                        </tspan>
+                      ))}
                 </text>
               </g>
             )

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router'
 import { Button } from '@/components/Button'
 import { Card } from '@/components/Card'
 import type { DashboardReward } from '@/features/dashboard/useDashboard'
+import { useDailyLimitReached } from '@/features/redemptions/useRedeemsToday'
 import { ProgressBar } from '@/motion/ProgressBar'
 import { copy } from '@/copy'
 
@@ -14,6 +15,7 @@ function remainingText(reward: DashboardReward): string {
 /** Un premio con su barra de avance y cuánto falta; desbloqueado ofrece canjearlo. */
 export function RewardCard({ reward }: { reward: DashboardReward }) {
   const navigate = useNavigate()
+  const limitReached = useDailyLimitReached()
   const done = reward.unlocked || reward.active_redemption !== null
   const almost = !done && reward.current / reward.threshold >= 0.8
 
@@ -42,7 +44,7 @@ export function RewardCard({ reward }: { reward: DashboardReward }) {
           {copy.redeem.viewCode}
         </Button>
       )}
-      {reward.unlocked && (
+      {reward.unlocked && !limitReached && (
         <Button onClick={() => navigate(`/cofre/${reward.id}`)}>{copy.chest.cta}</Button>
       )}
     </Card>

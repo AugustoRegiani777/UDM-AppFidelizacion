@@ -86,7 +86,7 @@ export function SkateGame({ session, onEnd, onExit }: SkateGameProps) {
         <SkatePauseOverlay onResume={() => controllerRef.current?.resume()} onExit={onExit} />
       )}
       {phase === 'ended' && <SkateEndedOverlay won={won} />}
-      {portrait && <RotateOverlay />}
+      {portrait && <RotateOverlay onExit={onExit} />}
     </div>
   )
 }

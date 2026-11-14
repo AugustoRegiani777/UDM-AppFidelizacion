@@ -1,4 +1,5 @@
 import { CountUp } from '@/motion/CountUp'
+import { useWallet } from '@/features/economy/useEconomy'
 import { StreakFlame } from './StreakFlame'
 import { copy } from '@/copy'
 
@@ -13,6 +14,7 @@ interface BalanceHeroProps {
 
 /** El saldo es el protagonista de la pantalla. */
 export function BalanceHero({ ladderPoints, balance, streakWeeks, pending }: BalanceHeroProps) {
+  const wallet = useWallet()
   return (
     <section aria-label={copy.panel.balanceLabel} className="text-center">
       <p className="text-muted font-semibold">{copy.panel.balanceLabel}</p>
@@ -20,9 +22,9 @@ export function BalanceHero({ ladderPoints, balance, streakWeeks, pending }: Bal
         value={ladderPoints}
         className="font-display text-brand block text-[96px] leading-none"
       />
-      {balance !== ladderPoints && (
+      {wallet.data && (balance !== ladderPoints || wallet.data.spendable !== ladderPoints) && (
         <p className="text-muted mt-1 text-sm font-semibold">
-          {copy.panel.accumulatedLabel(balance)}
+          {copy.panel.shopPointsLabel(wallet.data.spendable)}
         </p>
       )}
       <p className="text-muted mx-auto mt-2 max-w-xs text-sm">{copy.panel.balanceHint}</p>

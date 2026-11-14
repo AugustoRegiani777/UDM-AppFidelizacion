@@ -29,7 +29,7 @@ const formatTime = (seconds: number) => {
 function Backdrop({ children, label }: { children: React.ReactNode; label: string }) {
   return (
     <motion.div
-      className="bg-ink/75 absolute inset-0 z-20 grid place-items-center overflow-y-auto p-5"
+      className="bg-ink/75 absolute inset-0 z-20 grid place-items-center overflow-y-auto p-2"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       role="dialog"
@@ -37,7 +37,7 @@ function Backdrop({ children, label }: { children: React.ReactNode; label: strin
       aria-label={label}
     >
       <motion.div
-        className="bg-surface rounded-card flex w-full max-w-sm flex-col gap-4 p-6 text-center"
+        className="bg-surface rounded-card flex max-h-[calc(100dvh-1rem)] w-full max-w-sm flex-col gap-4 overflow-y-auto p-5 text-center landscape:max-w-lg landscape:gap-2 landscape:p-3"
         initial={{ scale: 0.9, y: 16 }}
         animate={{ scale: 1, y: 0 }}
         transition={spring.bouncy}
@@ -149,7 +149,7 @@ export function RacingGame({ trackIndex, seed, onEnd, onExit }: RacingGameProps)
 
       {phase === 'ready' && (
         <Backdrop label={copy.racing.title}>
-          <h2 className="font-display text-5xl leading-none">{copy.racing.title}</h2>
+          <h2 className="font-display text-5xl leading-none landscape:text-3xl">{copy.racing.title}</h2>
           <p className="text-brand-ink text-xl font-bold">
             {name} · {copy.racing.vehicleName(trackIndex)}
           </p>
@@ -184,7 +184,9 @@ export function RacingGame({ trackIndex, seed, onEnd, onExit }: RacingGameProps)
               </li>
             ))}
           </ul>
-          <Button onClick={() => controllerRef.current?.start()}>{copy.racing.play}</Button>
+          <div className="bg-surface sticky bottom-0 z-10 py-1">
+            <Button onClick={() => controllerRef.current?.start()}>{copy.racing.play}</Button>
+          </div>
           <label className="text-muted flex min-h-11 items-center justify-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -194,7 +196,7 @@ export function RacingGame({ trackIndex, seed, onEnd, onExit }: RacingGameProps)
             />
             {copy.profile.sound}
           </label>
-          <button type="button" onClick={onExit} className="text-muted min-h-11 text-sm underline">
+          <button type="button" onClick={onExit} className="text-muted mb-1 min-h-11 text-sm underline">
             {copy.survivors.exit}
           </button>
         </Backdrop>

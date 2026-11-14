@@ -61,6 +61,7 @@ export function ReadyOverlay({
           </li>
         ))}
       </ul>
+      {!stageLabel && <p className="text-muted text-sm">{copy.survivors.chestNote}</p>}
       {relaxed && (
         <p className="bg-green-soft text-green-ink rounded-chip px-3 py-2 text-sm font-semibold">
           {copy.survivors.relaxedNotice}

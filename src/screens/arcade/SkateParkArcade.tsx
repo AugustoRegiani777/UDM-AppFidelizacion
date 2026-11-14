@@ -114,7 +114,10 @@ export function SkateParkArcade({ onBack }: { onBack: () => void }) {
                     </span>
                   </span>
                   {open ? (
-                    <Stars count={stars[level - 1] ?? 0} />
+                    <span className="flex flex-col items-end gap-1">
+                      <Stars count={stars[level - 1] ?? 0} />
+                      <span className="text-brand-ink font-semibold">{copy.arcade.play}</span>
+                    </span>
                   ) : (
                     <span className="text-2xl">🔒</span>
                   )}

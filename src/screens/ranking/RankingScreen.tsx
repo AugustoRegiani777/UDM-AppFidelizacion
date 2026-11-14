@@ -33,8 +33,8 @@ function Rows({ board, unit }: { board: Board; unit?: string }) {
   }
   return (
     <ol className="flex flex-col gap-2">
-      {board.rows.map((row) => (
-        <li key={`${row.rank}-${row.name}`}>
+      {board.rows.map((row, index) => (
+        <li key={`${index}-${row.rank}-${row.name}`}>
           <Card
             className={`flex items-center gap-3 !py-3 ${row.me ? 'ring-brand ring-2' : ''}`}
             aria-current={row.me ? 'true' : undefined}
@@ -45,7 +45,7 @@ function Rows({ board, unit }: { board: Board; unit?: string }) {
               {row.me && <span className="text-brand-ink"> · {copy.ranking.you}</span>}
             </span>
             <span className="font-display text-xl leading-none">
-              {row.score}
+              {row.score.toLocaleString('es-AR')}
               {unit && (
                 <span className="text-muted block text-right font-sans text-xs">{unit}</span>
               )}
@@ -78,6 +78,7 @@ export function RankingScreen() {
   const board = isCasual(tab) ? casualBoard : officialBoard
   const wallet = useWallet()
   const unit = isCasual(tab) ? copy.ranking.unit[tab] : ''
+  const rowUnit = unit || (tab === 'survivors' ? copy.ranking.scoreUnit : copy.ranking.pointsUnit)
 
   // El progreso que ya había en este celular también cuenta (el servidor se queda con el mayor).
   useEffect(() => {
@@ -130,11 +131,11 @@ export function RankingScreen() {
               type="button"
               aria-pressed={stage === n}
               onClick={() => setStage(n)}
-              className={`rounded-chip min-h-11 min-w-11 px-3 font-bold ${
+              className={`rounded-chip min-h-11 px-3 font-bold ${
                 stage === n ? 'bg-brand-soft text-brand-ink' : 'bg-surface text-muted'
               }`}
             >
-              {n}
+              {copy.arcade.stageLabel(n)}
             </button>
           ))}
         </div>
@@ -174,7 +175,7 @@ export function RankingScreen() {
       )}
       {board.data && (
         <>
-          <Rows board={board.data} unit={unit} />
+          <Rows board={board.data} unit={rowUnit} />
           <p className="font-bold">
             {board.data.me
               ? unit

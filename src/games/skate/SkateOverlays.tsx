@@ -120,7 +120,7 @@ export function SkateEndedOverlay({ won }: { won: boolean }) {
 }
 
 /** Aviso a pantalla completa mientras el celular está en vertical. */
-export function RotateOverlay() {
+export function RotateOverlay({ onExit }: { onExit?: () => void }) {
   return (
     <div
       className="bg-ink absolute inset-0 z-30 grid place-items-center p-8 text-center"
@@ -137,6 +137,11 @@ export function RotateOverlay() {
         </motion.span>
         <h2 className="font-display text-bg text-5xl leading-none">{copy.skate.rotateTitle}</h2>
         <p className="text-bg/80">{copy.skate.rotateBody}</p>
+        {onExit && (
+          <button type="button" onClick={onExit} className="text-bg/80 min-h-12 underline">
+            {copy.arcade.backToGames}
+          </button>
+        )}
       </div>
     </div>
   )

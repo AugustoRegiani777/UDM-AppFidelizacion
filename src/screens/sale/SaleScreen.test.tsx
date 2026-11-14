@@ -10,12 +10,15 @@ vi.mock('@/motion/feedback', () => ({
   vibrate: vi.fn(),
   playChime: vi.fn(),
 }))
+vi.mock('@/features/games/gameApi', () => ({
+  useGamesStatus: () => ({ isSuccess: true, isFetching: false, data: { scratch_claim_id: 'c1' } }),
+}))
 vi.mock('@/features/claims/useClaimSale', () => ({ useClaimSale: () => queryState }))
 
-function renderSale(data: ClaimResult) {
+function renderSale(data: ClaimResult, code = '123e4567-e89b-12d3-a456-426614174000') {
   queryState = { isPending: false, isError: false, data, refetch: vi.fn() }
   render(
-    <MemoryRouter initialEntries={['/s/abc']}>
+    <MemoryRouter initialEntries={[`/s/${code}`]}>
       <Routes>
         <Route path="/s/:uuid" element={<SaleScreen />} />
       </Routes>
@@ -35,6 +38,11 @@ describe('SaleScreen', () => {
     })
     expect(screen.getByText('¡Sumaste 162 puntos!')).toBeInTheDocument()
     expect(screen.getByText(/un café va por la casa/i)).toBeInTheDocument()
+  })
+
+  it('un código que no es un uuid explica que no es válido', () => {
+    renderSale({ status: 'pending', points: 0 }, 'basura')
+    expect(screen.getByText('Ese código de compra no es válido')).toBeInTheDocument()
   })
 
   it('avisa sin alarmar cuando la compra queda pendiente', () => {
@@ -61,7 +69,7 @@ describe('SaleScreen', () => {
   it('ofrece reintentar si falla la conexión', () => {
     queryState = { isPending: false, isError: true, refetch: vi.fn() }
     render(
-      <MemoryRouter initialEntries={['/s/abc']}>
+      <MemoryRouter initialEntries={['/s/123e4567-e89b-12d3-a456-426614174000']}>
         <Routes>
           <Route path="/s/:uuid" element={<SaleScreen />} />
         </Routes>

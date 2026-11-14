@@ -11,19 +11,19 @@ test('tienda: mejora de personaje y premio del local con código, sin atrasar lo
   await admin.from('point_movements').insert({ customer_id: id, kind: 'adjustment', points: 700 })
 
   await page.goto('/tienda')
-  await expect(page.getByText(/Tenés 700 para gastar/)).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText(/Tenés 700 puntos de tienda para gastar/)).toBeVisible({ timeout: 15_000 })
 
   // Mejora: corazón extra (300 puntos el nivel 1).
-  await page.getByRole('button', { name: /Subir de nivel Corazón extra, 300 puntos/ }).click()
+  await page.getByRole('button', { name: /Subir de nivel Corazón extra, Comprar por 300 puntos de tienda/ }).click()
   await expect(page.getByText('Corazón extra: nivel 1')).toBeVisible()
-  await expect(page.getByText(/Tenés 400 para gastar/)).toBeVisible()
+  await expect(page.getByText(/Tenés 400 puntos de tienda para gastar/)).toBeVisible()
   await expect(page.getByText('Nivel 1 de 3')).toBeVisible()
 
   // Premio del local con código para el mostrador.
   await page.getByRole('tab', { name: 'Premios del local' }).click()
-  await page.getByRole('button', { name: /Comprar Un chipá, 200 puntos/ }).click()
+  await page.getByRole('button', { name: /Comprar Un chipá, Comprar por 200 puntos de tienda/ }).click()
   await expect(page.getByText('Tu código para el mostrador:')).toBeVisible()
-  await expect(page.getByText(/Tenés 200 para gastar/)).toBeVisible()
+  await expect(page.getByText(/Tenés 200 puntos de tienda para gastar/)).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Tus códigos' })).toBeVisible()
   await expect(page.getByText('Para usar')).toBeVisible()
 

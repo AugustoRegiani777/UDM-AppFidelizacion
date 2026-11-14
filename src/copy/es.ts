@@ -9,7 +9,7 @@ export const es = {
     steps: [
       { title: 'Comprá en el local', body: 'Pagás como siempre. Sin tarjetas ni papelitos.' },
       { title: 'Escaneá el QR de la caja', body: 'Tu compra se suma sola, en un toque.' },
-      { title: 'Ganate tu premio', body: 'Café, miga, gorra. Mirá cuánto te falta en tu panel.' },
+      { title: 'Ganate tu premio', body: 'Café, sándwich y más. Mirá cuánto te falta en tu panel.' },
     ],
     footerPrivacy: 'Privacidad',
   },
@@ -37,17 +37,21 @@ export const es = {
   welcome: {
     title: '¡Bienvenido a la miga!',
     subtitle: 'Un último paso y empezás a sumar.',
-    nameLabel: '¿Cómo te llamamos?',
+    nameLabel: 'Tu alias (es lo que se ve en los rankings)',
+    nameHint: 'Elegí un apodo. No uses tu email, teléfono ni datos personales.',
+    useGoogleName: (name: string) => `Usar mi nombre de Google (${name})`,
     programConsent: 'Acepto las reglas del programa de puntos y la política de privacidad.',
     promoConsent: 'Quiero recibir novedades y promos de Uno de Miga (opcional).',
     submit: 'Empezar a sumar',
-    nameError: 'Escribí tu nombre (hasta 60 letras).',
+    nameError: 'Elegí un alias de 2 a 30 caracteres, sin emails, teléfonos ni enlaces.',
     error: 'Uy, no pudimos guardar tus datos. Probá de nuevo.',
   },
   panel: {
     hello: (name: string) => `¡Hola, ${name}!`,
     balanceLabel: 'Puntos para tus premios',
-    accumulatedLabel: (n: number) => `Puntos acumulados: ${n.toLocaleString('es-AR')}`,
+    shopPointsLabel: (n: number) => `Puntos de tienda: ${n.toLocaleString('es-AR')}`,
+    pointsKeptNote:
+      'Canjear un premio no gasta tus puntos: siguen sumando para el próximo escalón.',
     balanceHint:
       'El café y el sándwich se abren con los puntos de tus compras. Los juegos, las misiones y la comunidad suman puntos para la tienda.',
     scanCta: 'Escanear mi compra',
@@ -83,11 +87,11 @@ export const es = {
       'No pasa nada, no perdiste ningún punto. Generá uno nuevo cuando estés en la caja.',
     regenerate: 'Generar otro código',
     usedTitle: (reward: string) =>
-      reward ? `¡Listo! Disfrutá tu ${reward.toLowerCase()}` : '¡Listo! Disfrutá tu premio',
+      reward ? `¡Listo! Disfrutá ${reward.toLowerCase()}` : '¡Listo! Disfrutá tu premio',
     usedBody: 'Ya lo registramos en la caja. ¡Gracias por volver!',
     notFound: 'No encontramos ese código.',
     errorNotReached: 'Todavía no llegaste a este premio. ¡Falta poquito!',
-    dailyLimit: 'Hoy ya canjeaste 2 premios. Volvé mañana.',
+    dailyLimit: 'Hoy ya usaste tus 2 canjes, volvé mañana.',
     error: 'Uy, no pudimos generar tu código. Probá de nuevo.',
     backToPanel: 'Volver al panel',
   },
@@ -322,7 +326,7 @@ export const es = {
     seconds: (n: number) => `${n} s`,
     lives: (n: number, max: number) => `Vidas: ${n} de ${max}`,
     combo: (n: number) => `Racha ${n}`,
-    score: (n: number) => `${n} pts`,
+    score: (n: number) => `Puntaje ${n}`,
     streakToLife: (n: number) => `${n} cortes seguidos para una vida de regalo`,
     go: '¡A cortar!',
     pause: 'Pausa',
@@ -353,7 +357,7 @@ export const es = {
     icons: ['🥪', '🥐', '🥖', '☕', '🏛️', '🧺', '🏖️', '🏟️', '🎆', '👑'],
   },
   skatepark: {
-    title: 'Skate Spot',
+    title: 'Miga Skate',
     subtitle:
       'Un parque lleno de rampas, cajones y rieles. Encadená trucos, sumá combos y sacá las tres estrellas.',
     levelLabel: (n: number) => `Nivel ${n}`,
@@ -370,9 +374,9 @@ export const es = {
     play: '¡A patinar!',
     goal: (seconds: number) => `Hacé el mayor puntaje que puedas en ${seconds} segundos.`,
     guide: [
-      { icon: '👍', text: 'Derecho mantenido y soltado: salto (más tiempo, más alto)' },
-      { icon: '✨', text: 'En el aire, un toque del derecho es un truco (la palanca elige cuál)' },
-      { icon: '🤏', text: 'En el aire, derecho mantenido: agarre (soltalo antes de caer)' },
+      { icon: '👍', text: 'Saltar: mantené apretado el botón derecho y soltalo (cuanto más lo mantenés, más alto saltás)' },
+      { icon: '✨', text: 'En el aire, tocá rápido el botón derecho para hacer un truco (la palanca izquierda elige cuál)' },
+      { icon: '🤏', text: 'En el aire, mantené apretado el botón derecho para agarrar la tabla (soltalo antes de caer)' },
       { icon: '🔄', text: 'Palanca ← → en el aire: girá el cuerpo. Aterrizá derecho' },
       {
         icon: '🔥',
@@ -438,7 +442,7 @@ export const es = {
       { icon: '🗣️', text: 'Cantá Truco, Retruco o Vale cuatro para subir lo que vale la mano.' },
       { icon: '🔢', text: 'En la primera baza podés cantar Envido, Real envido o Falta envido.' },
       { icon: '🧉', text: 'Tomá mate entre manos: cada mate suma suerte para el próximo reparto.' },
-      { icon: '🧀', text: 'Si te falta tiempo para pensar, comé un chipá (cuesta monedas).' },
+      { icon: '🧀', text: 'Si te falta tiempo para pensar, comé un chipá (hay un botón para eso).' },
     ],
     noFlor: 'Sin flor. La partida es a 15 puntos.',
     start: '¡A jugar!',
@@ -707,17 +711,17 @@ export const es = {
     link: 'Tienda',
     backMenu: 'Volver al menú',
     pointsHint:
-      'Puntos de tienda: los ganás con tus compras, la ruleta, las raspaditas, las misiones y la comunidad. Se gastan acá; tus puntos acumulados no bajan.',
+      'Puntos de tienda: los ganás con tus compras, la ruleta, las raspaditas, las misiones y la comunidad. Se gastan acá; tus puntos para premios no bajan.',
     coinsHintShort: 'Monedas de juego: las ganás jugando. Sirven solo para pases del cofre.',
     empty: 'Por ahora no hay nada en esta sección.',
     loadError: 'No pudimos cargar la tienda. Probá de nuevo.',
     retry: 'Reintentar',
-    missing: (n: number) => `Te faltan ${n} puntos`,
+    missing: (n: number) => `Te faltan ${n.toLocaleString('es-AR')} puntos`,
     missingCoins: (n: number) => `Te faltan ${n} monedas`,
     guestNote: 'Entrá con tu cuenta para comprar.',
     passPriceNote: 'Los pases se pagan con monedas de juego, no con puntos de tienda.',
-    yourPoints: (spendable: number, earned: number) =>
-      `Tenés ${spendable.toLocaleString('es-AR')} para gastar, de ${earned.toLocaleString('es-AR')} acumulados`,
+    yourPoints: (spendable: number) =>
+      `Tenés ${spendable.toLocaleString('es-AR')} puntos de tienda para gastar`,
     yourCoins: (n: number) => `${n} ${n === 1 ? 'moneda' : 'monedas'}`,
     tabs: { upgrades: 'Mejoras', vouchers: 'Premios del local', passes: 'Pases' },
     upgradesIntro:
@@ -729,7 +733,8 @@ export const es = {
     level: (n: number, max: number) => `Nivel ${n} de ${max}`,
     buy: 'Comprar',
     buyNext: 'Subir de nivel',
-    price: (n: number) => `${n} puntos`,
+    price: (n: number) => `${n.toLocaleString('es-AR')} puntos`,
+    buyFor: (n: number) => `Comprar por ${n.toLocaleString('es-AR')} puntos de tienda`,
     maxed: 'Al máximo',
     notEnough: 'Te faltan puntos',
     notEnoughCoins: 'Te faltan monedas',
@@ -747,26 +752,27 @@ export const es = {
   },
   ranking: {
     title: 'Ranking',
-    subtitle: 'Los mejores de la comunidad en cada juego, y quién más puntos sumó comprando.',
+    subtitle: 'Sobreviví a las migas tiene ranking oficial. Los demás juegos son práctica, con ranking no oficial. Y quién más puntos sumó comprando.',
     back: 'Volver a los juegos',
     tabs: { survivors: 'Sobreviví', points: 'Puntos' },
     stageLabel: 'Nivel',
-    pointsNote: 'Quién tiene más puntos acumulados por sus compras en el local.',
+    pointsNote: 'Quién sumó más puntos de compras en el local. Los puntos de juegos y misiones no cuentan acá.',
     empty: 'Todavía nadie entró al ranking. ¡Sé el primero!',
     loading: 'Cargando el ranking…',
     error: 'No pudimos cargar el ranking. Probá de nuevo más tarde.',
     you: 'Vos',
-    yourRank: (rank: number, score: number) => `Estás en el puesto ${rank} con ${score} puntos.`,
-    notRanked: 'Jugá una partida oficial y ganala para entrar al ranking.',
+    yourRank: (rank: number, score: number) =>
+      `Estás en el puesto ${rank} con ${score.toLocaleString('es-AR')} puntos de compras.`,
+    notRanked: 'Jugá una partida oficial de Sobreviví a las migas y ganala para entrar al ranking.',
     noPointsYet: 'Sumá tu primera compra para entrar al ranking.',
     privacy: 'Se muestra tu nombre y la inicial del apellido.',
     hideMe: 'No mostrarme en los rankings',
     backMenu: 'Volver al menú',
     gameLabel: 'Elegí qué ranking ver',
-    games: { survivors: 'Sobreviví', racing: 'Racers', skatepark: 'Skate Spot', sokoban: 'Entregas', ninja: 'Ninja', rally: 'Rally', truco: 'Truco', points: 'Puntos' },
-    unofficialNote: 'Ranking no oficial: el progreso lo informa tu celular. No da monedas ni premios, es por la gloria.',
-    unit: { racing: 'pistas con podio', skatepark: 'estrellas', sokoban: 'estrellas', ninja: 'estrellas', rally: 'puntaje de vuelta', truco: 'partidas ganadas' },
-    yourRankUnit: (rank: number, score: number, unit: string) => `Estás en el puesto ${rank} con ${score} ${unit}.`,
+    games: { survivors: 'Sobreviví', racing: 'Racers', skatepark: 'Miga Skate', sokoban: 'Entregas', ninja: 'Ninja', rally: 'Rally', truco: 'Truco', points: 'Puntos' },
+    unofficialNote: 'Ranking no oficial: el progreso lo informa tu celular. Este juego es práctica y no da monedas, pases ni premios: es por la gloria. Solo Sobreviví a las migas tiene ranking oficial.', scoreUnit: 'de puntaje', pointsUnit: 'puntos',
+    unit: { racing: 'pistas con podio', skatepark: 'estrellas', sokoban: 'estrellas', ninja: 'estrellas', rally: 'de puntaje de vuelta', truco: 'partidas ganadas' },
+    yourRankUnit: (rank: number, score: number, unit: string) => `Estás en el puesto ${rank} con ${score.toLocaleString('es-AR')} ${unit}.`,
     notRankedCasual: 'Jugá y sumá progreso para entrar al ranking.',
     retry: 'Reintentar',
     boosted: 'Con mejoras de la tienda',
@@ -778,17 +784,17 @@ export const es = {
     back: 'Volver al panel',
     title: 'Sala de juegos',
     subtitle:
-      'Elegí un juego. En práctica jugás todo lo que quieras, sin apuro. En partida oficial entrás al ranking y ganás monedas y pases.',
+      'Elegí un juego. Solo Sobreviví a las migas tiene partida oficial (ranking oficial, monedas y pases). Los demás son práctica: jugás todo lo que quieras, sin premios.',
     backToGames: 'Volver a los juegos',
     skateWon: '¡Completaste el circuito!',
     games: {
       survivors: {
         name: 'Sobreviví a las migas',
-        body: 'Seis niveles, poderes y una Reina hormiga.',
+        body: 'Seis niveles, poderes y una Reina hormiga. Es el único con partida oficial: da monedas, pases y ranking.',
       },
       skatepark: {
         name: 'Miga Skate',
-        body: 'Trucos, combos, grinds y cinco niveles de parque. Mejor en horizontal.',
+        body: 'Trucos, combos, grinds y cinco niveles de parque. Práctica, sin premios. Mejor en horizontal.',
       },
       migaskate: {
         name: 'Miga Skate',
@@ -862,13 +868,14 @@ export const es = {
     scratchRules: (hours: number, minEuros: number) =>
       `Ganás una raspadita con cada compra desde ${minEuros} € y tenés ${hours} horas para usarla. El resultado ya está decidido antes de que raspes: no cambia por cómo ni cuándo raspes.`,
     rouletteRules: (limit: number) =>
-      `Tenés ${limit} ${limit === 1 ? 'giro' : 'giros'} por día. El resultado lo decide el servidor antes de que gire la rueda.`,
+      `Tenés ${limit} ${limit === 1 ? 'giro' : 'giros'} por día. Cuando apretás Girar, tu resultado ya está definido: la rueda solo te lo muestra.`,
     fairness: (budget: number) =>
       `Los puntos de tienda de los juegos tienen un tope diario del local (${budget} en total). Si se agotó, igual podés jugar pero ese día no hay premio.`,
   },
   chest: {
     cta: 'Abrir cofre',
-    introTitle: (reward: string) => `Abrí el cofre de tu ${reward.toLowerCase()}`,
+    introTitle: (reward: string) =>
+      reward ? `Abrí el cofre y ganate ${reward.toLowerCase()}` : 'Abrí el cofre de tu premio',
     introBody:
       'Superá el desafío para desbloquear tu premio. Podés intentarlo las veces que quieras: no perdés nada.',
     open: 'Abrir el cofre',
@@ -898,7 +905,7 @@ export const es = {
       queen ? `Aguantá ${seconds} segundos y vencé a la Reina` : `Sobreviví ${seconds} segundos`,
     howTo: [
       { icon: '👆', text: 'Arrastrá el dedo para moverte' },
-      { icon: '🥪', text: 'Tu sanguche tira migas solo al bicho más cercano' },
+      { icon: '🥪', text: 'Tu sándwich tira migas solo al bicho más cercano' },
       { icon: '✨', text: 'Juntá gemas, subí de nivel y elegí mejoras' },
       {
         icon: '🫧',
@@ -909,7 +916,7 @@ export const es = {
         text: 'Después del minuto llega la Reina: cuanto más rápido la vencés, más puntos',
       },
     ],
-    play: '¡Jugar!',
+    play: '¡Jugar!', chestNote: 'Si vencés a la Reina, ganás tu premio. Podés salir cuando quieras: no perdés el desbloqueo y podés volver a intentarlo.',
     exit: 'Salir',
     paused: 'Pausa',
     resume: 'Seguir',
@@ -1248,6 +1255,9 @@ export const es = {
     } as Record<string, string>,
     rejectedFallback: 'No pudimos sumar esta compra.',
     rejectedTitle: 'Uy, esta no se pudo sumar',
+    invalidTitle: 'Ese código de compra no es válido',
+    invalidBody:
+      'Revisá que sea el QR de tu ticket. Si lo escaneaste en el local, pedile ayuda a quien te atendió.',
     errorTitle: 'Uy, algo falló',
     errorBody: 'No pudimos conectar. Probá de nuevo en un ratito, tu compra no se pierde.',
     retry: 'Probar de nuevo',

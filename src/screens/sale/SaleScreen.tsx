@@ -69,6 +69,7 @@ function ConfirmedView({ result }: { result: Extract<ClaimResult, { status: 'con
       <Link to={`/raspadita/${result.claim_id}`} className="font-bold underline">
         {copy.games.scratchTitle}
       </Link>
+      <p className="text-muted text-sm">{copy.games.scratchMinHint(5)}</p>
       <PanelLink />
     </Screen>
   )

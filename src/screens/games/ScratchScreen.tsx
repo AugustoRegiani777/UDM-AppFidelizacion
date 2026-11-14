@@ -29,6 +29,9 @@ export function ScratchScreen() {
     return (
       <Screen className="justify-center gap-4 text-center">
         <h1 className="font-display text-5xl leading-none">{copy.games.scratchUnavailable}</h1>
+        <p className="text-muted">
+          {copy.games.scratchMinHint((config.data?.scratch.min_total_cents ?? 500) / 100)}
+        </p>
         <Link to="/panel" className="font-bold underline">
           {copy.sale.toPanel}
         </Link>

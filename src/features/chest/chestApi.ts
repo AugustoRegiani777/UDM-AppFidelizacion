@@ -3,6 +3,8 @@ import type { GameConfig } from '@engine/config.ts'
 import { supabase } from '@/lib/supabase'
 
 export class RewardNotReachedError extends Error {}
+/** Ya se canjeó el tope de premios del día (409 daily_redeem_limit). */
+export class DailyRedeemLimitError extends Error {}
 
 export type ChestGameName = 'survivors'
 
@@ -30,6 +32,7 @@ async function call<T>(name: string, body: unknown): Promise<T> {
   if (error instanceof FunctionsHttpError && error.context.status === 409) {
     const payload = await error.context.json().catch(() => ({}))
     if (payload.error === 'reward_not_reached') throw new RewardNotReachedError()
+    if (payload.error === 'daily_redeem_limit') throw new DailyRedeemLimitError()
   }
   if (error || !data) throw error ?? new Error('empty_response')
   return data

@@ -17,7 +17,7 @@ import { copy } from '@/copy'
 type Tab = 'upgrades' | 'vouchers' | 'passes'
 const TABS: Tab[] = ['upgrades', 'vouchers', 'passes']
 
-/** Tienda: mejoras y premios del local con puntos de compra; pases con monedas de juego. */
+/** Tienda: mejoras y premios del local con puntos de tienda; pases con monedas de juego. */
 export function ShopScreen() {
   const queryClient = useQueryClient()
   const wallet = useWallet()
@@ -86,6 +86,7 @@ export function ShopScreen() {
     tab === 'upgrades' ? item.kind === 'upgrade' : item.kind === 'voucher',
   )
   const spendable = wallet.data?.spendable ?? 0
+  const earned = wallet.data?.balance ?? 0
   const coins = wallet.data?.coins ?? 0
   const passPrice = catalog.data?.pass_coin_price ?? 80
 
@@ -99,7 +100,7 @@ export function ShopScreen() {
 
       <div className="flex flex-wrap gap-2 text-sm font-bold">
         <span className="bg-surface rounded-chip px-3 py-1.5">
-          {copy.shop.yourPoints(spendable)}
+          {copy.shop.yourPoints(spendable, earned)}
         </span>
         <span className="bg-surface rounded-chip px-3 py-1.5">
           <span aria-hidden>🪙 </span>

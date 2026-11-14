@@ -26,6 +26,7 @@ const reward = (over: Partial<Dashboard['rewards'][number]>): Dashboard['rewards
 const base: Dashboard = {
   profile: { display_name: 'Lucía', avatar_url: null, onboarded: true },
   balance: 0,
+  ladder_points: 0,
   purchase_count: 0,
   streak_weeks: 0,
   pending_count: 0,
@@ -60,6 +61,7 @@ describe('PanelScreen', () => {
     renderPanel({
       ...base,
       balance: 179,
+      ladder_points: 179,
       streak_weeks: 3,
       pending_count: 1,
       rewards: [

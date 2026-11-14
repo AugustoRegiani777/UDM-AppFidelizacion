@@ -33,7 +33,10 @@ export interface DashboardClaim {
 export interface Dashboard {
   /** Viene vacío si la sesión es de un usuario que ya no existe. */
   profile: { display_name: string; avatar_url: string | null; onboarded: boolean } | null
+  /** Total acumulado del libro de puntos (compras, juegos, misiones…). */
   balance: number
+  /** Puntos de compras: lo único que mide la escalera de café y sándwich. */
+  ladder_points: number
   purchase_count: number
   streak_weeks: number
   pending_count: number

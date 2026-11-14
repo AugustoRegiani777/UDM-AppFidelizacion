@@ -3,6 +3,7 @@ import { Button } from '@/components/Button'
 import { FullScreenLoader } from '@/components/FullScreenLoader'
 import { Screen } from '@/components/Screen'
 import { CodeReveal } from '@/motion/CodeReveal'
+import { DailyRedeemLimitError } from '@/features/chest/chestApi'
 import type { RedemptionDetail } from '@/features/redemptions/redemptionApi'
 import {
   formatCountdown,
@@ -61,7 +62,9 @@ function ExpiredView({ redemptionId }: { redemptionId: string }) {
       <p className="text-muted text-lg">{copy.redeem.expiredBody}</p>
       {create.isError && (
         <p role="alert" className="text-brand-ink">
-          {copy.redeem.error}
+          {create.error instanceof DailyRedeemLimitError
+            ? copy.redeem.dailyLimit
+            : copy.redeem.error}
         </p>
       )}
       <Button

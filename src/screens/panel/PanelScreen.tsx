@@ -45,6 +45,7 @@ function PanelContent({ data }: { data: Dashboard }) {
       <SaveProgressHint />
 
       <BalanceHero
+        ladderPoints={data.ladder_points}
         balance={data.balance}
         streakWeeks={data.streak_weeks}
         pending={data.pending_count}

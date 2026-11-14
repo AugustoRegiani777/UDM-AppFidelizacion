@@ -16,7 +16,10 @@ export function GameRulesSheet({ game, open, onClose }: GameRulesSheetProps) {
   const gameConfig = config.data?.[game]
   const rules =
     game === 'scratch'
-      ? copy.games.scratchRules(config.data?.scratch.valid_hours ?? 24)
+      ? copy.games.scratchRules(
+          config.data?.scratch.valid_hours ?? 24,
+          (config.data?.scratch.min_total_cents ?? 500) / 100,
+        )
       : copy.games.rouletteRules(config.data?.roulette.daily_limit ?? 1)
 
   return (

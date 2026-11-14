@@ -1,3 +1,5 @@
+import { FunctionsHttpError } from '@supabase/supabase-js'
+import { DailyRedeemLimitError } from '@/features/chest/chestApi'
 import { supabase } from '@/lib/supabase'
 
 export interface RenewedRedemption {
@@ -12,6 +14,10 @@ export async function renewRedemption(redemptionId: string): Promise<RenewedRede
   const { data, error } = await supabase.functions.invoke<RenewedRedemption>('renew-redemption', {
     body: { redemption_id: redemptionId },
   })
+  if (error instanceof FunctionsHttpError && error.context.status === 409) {
+    const payload = await error.context.json().catch(() => ({}))
+    if (payload.error === 'daily_redeem_limit') throw new DailyRedeemLimitError()
+  }
   if (error || !data) throw error ?? new Error('empty_response')
   return data
 }

@@ -14,7 +14,7 @@ export interface Prize {
 
 export interface GamesConfig {
   daily_points_budget: number
-  scratch: { enabled: boolean; valid_hours: number; prizes: Prize[] }
+  scratch: { enabled: boolean; valid_hours: number; min_total_cents?: number; prizes: Prize[] }
   roulette: { enabled: boolean; daily_limit: number; prizes: Prize[] }
 }
 

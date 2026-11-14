@@ -6,6 +6,7 @@ import { Screen } from '@/components/Screen'
 import {
   finishChest,
   RewardNotReachedError,
+  DailyRedeemLimitError,
   startChest,
   type FinishChestResult,
 } from '@/features/chest/chestApi'
@@ -56,7 +57,11 @@ export function ChestScreen() {
       setPhase({
         name: 'error',
         message:
-          error instanceof RewardNotReachedError ? copy.chest.notReached : copy.chest.errorBody,
+          error instanceof DailyRedeemLimitError
+            ? copy.redeem.dailyLimit
+            : error instanceof RewardNotReachedError
+              ? copy.chest.notReached
+              : copy.chest.errorBody,
       })
     }
   }
@@ -71,7 +76,11 @@ export function ChestScreen() {
       } else {
         setPhase({ name: 'lost', outcome, relaxedNext: false })
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof DailyRedeemLimitError) {
+        setPhase({ name: 'error', message: copy.redeem.dailyLimit })
+        return
+      }
       setPhase({ name: 'error', message: copy.chest.errorBody, retry: { sessionId, outcome } })
     }
   }

@@ -1161,6 +1161,7 @@ export type Database = {
       customer_balance: { Args: { p_customer: string }; Returns: number }
       customer_coins: { Args: { p_customer: string }; Returns: number }
       customer_dashboard: { Args: Record<PropertyKey, never>; Returns: Json }
+      customer_ladder_points: { Args: { p_customer: string }; Returns: number }
       customer_perks: { Args: { p_customer: string; p_game: string }; Returns: Json }
       customer_purchase_count: { Args: { p_customer: string }; Returns: number }
       customer_spendable: { Args: { p_customer: string }; Returns: number }

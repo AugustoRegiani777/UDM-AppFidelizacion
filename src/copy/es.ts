@@ -46,7 +46,10 @@ export const es = {
   },
   panel: {
     hello: (name: string) => `¡Hola, ${name}!`,
-    balanceLabel: 'Tus puntos',
+    balanceLabel: 'Puntos para tus premios',
+    accumulatedLabel: (n: number) => `Puntos acumulados: ${n.toLocaleString('es-AR')}`,
+    balanceHint:
+      'El café y el sándwich se abren con los puntos de tus compras. Los juegos, las misiones y la comunidad suman puntos para la tienda.',
     scanCta: 'Escanear mi compra',
     rewardsTitle: 'Tus premios',
     remainingPoints: (n: number) => `Te faltan ${n} ${n === 1 ? 'punto' : 'puntos'}`,
@@ -79,10 +82,12 @@ export const es = {
     expiredBody:
       'No pasa nada, no perdiste ningún punto. Generá uno nuevo cuando estés en la caja.',
     regenerate: 'Generar otro código',
-    usedTitle: (reward: string) => `¡Listo! Disfrutá tu ${reward.toLowerCase()} ☕`,
+    usedTitle: (reward: string) =>
+      reward ? `¡Listo! Disfrutá tu ${reward.toLowerCase()}` : '¡Listo! Disfrutá tu premio',
     usedBody: 'Ya lo registramos en la caja. ¡Gracias por volver!',
     notFound: 'No encontramos ese código.',
     errorNotReached: 'Todavía no llegaste a este premio. ¡Falta poquito!',
+    dailyLimit: 'Hoy ya canjeaste 2 premios. Volvé mañana.',
     error: 'Uy, no pudimos generar tu código. Probá de nuevo.',
     backToPanel: 'Volver al panel',
   },
@@ -195,9 +200,9 @@ export const es = {
       }
       switch (o.kind) {
         case 'score':
-          return `Sumá ${o.target} puntos`
+          return `Llegá a ${o.target} de puntaje`
         case 'combo':
-          return `Un combo de ${o.target} puntos`
+          return `Un combo de ${o.target} de puntaje`
         case 'comboLen':
           return `Encadená ${o.target} trucos en un combo`
         case 'grindSeconds':
@@ -241,7 +246,7 @@ export const es = {
     resume: 'Seguir',
     exit: 'Salir',
     finishSession: 'Terminar sesión',
-    score: 'Puntos',
+    score: 'Puntaje',
     comboLabel: 'Combo',
     timeLeft: 'Tiempo que falta',
     balance: 'Equilibrio',
@@ -278,7 +283,7 @@ export const es = {
     resultTitle: (stars: number) =>
       stars >= 3 ? '¡Leyenda del spot!' : stars >= 1 ? '¡Buena sesión!' : 'Seguí practicando',
     resultStats: (landed: number, bails: number, bestCombo: number) =>
-      `${landed} aterrizajes, ${bails} ${bails === 1 ? 'casi' : 'casis'} y un mejor combo de ${bestCombo} puntos.`,
+      `${landed} aterrizajes, ${bails} ${bails === 1 ? 'casi' : 'casis'} y un mejor combo de ${bestCombo} de puntaje.`,
     next: 'Siguiente spot',
     again: 'Patinar de nuevo',
     backToSpots: 'Elegir spot',
@@ -303,15 +308,15 @@ export const es = {
     ] as { name: string; tagline: string }[],
     howTo: [
       { icon: '👆', text: 'Deslizá el dedo (o el mouse) para cortar todo lo rico que sale volando.' },
-      { icon: '🥪', text: 'Cortá varios de un tajo, y seguidos, para combos y más puntos.' },
+      { icon: '🥪', text: 'Cortá varios de un tajo, y seguidos, para combos y más puntaje.' },
       { icon: '🐜', text: 'No cortes la hormiga gigante: te quita una vida.' },
       { icon: '❤️', text: 'Si se te cae algo rico, perdés una vida. Con una buena racha, la recuperás.' },
     ],
     specials: [
-      { icon: '🌟', text: 'El cinnamon dorado desata el frenesí: puntos dobles y lluvia de comida.' },
+      { icon: '🌟', text: 'El cinnamon dorado desata el frenesí: puntaje doble y lluvia de comida.' },
       { icon: '🧊', text: 'El café frío congela el tiempo para que cortes con calma.' },
     ],
-    goalScore: (n: number) => `Objetivo: ${n} puntos`,
+    goalScore: (n: number) => `Objetivo: ${n} de puntaje`,
     goalCuts: (n: number) => `Objetivo: cortar ${n}`,
     goalDone: '¡Objetivo cumplido!',
     seconds: (n: number) => `${n} s`,
@@ -327,10 +332,10 @@ export const es = {
     notYet: '¡Casi lo lográs!',
     notYetBody: (goal: string) => `Sumaste un montón. Para pasar de nivel: ${goal.toLowerCase()}`,
     result: (score: number, cuts: number, bestCombo: number) =>
-      `${score} puntos, ${cuts} cortes y una racha de ${bestCombo}.`,
+      `${score} de puntaje, ${cuts} cortes y una racha de ${bestCombo}.`,
     stars: (n: number) => `${n} de 3 estrellas`,
     starsHint: (two: number, three: number) =>
-      `2 estrellas con ${two} puntos, 3 estrellas con ${three}.`,
+      `2 estrellas con ${two} de puntaje, 3 estrellas con ${three}.`,
     next: 'Siguiente nivel',
     retry: 'Jugar de nuevo',
     backToLevels: 'Elegir nivel',
@@ -361,9 +366,9 @@ export const es = {
         'El gran final',
       ][n - 1] ?? `Nivel ${n}`,
     locked: 'Sacá una estrella en el nivel anterior para abrirlo',
-    target: (n: number) => `${n} puntos para la primera estrella`,
+    target: (n: number) => `Puntaje ${n} para la primera estrella`,
     play: '¡A patinar!',
-    goal: (seconds: number) => `Sumá todos los puntos que puedas en ${seconds} segundos.`,
+    goal: (seconds: number) => `Hacé el mayor puntaje que puedas en ${seconds} segundos.`,
     guide: [
       { icon: '👍', text: 'Derecho mantenido y soltado: salto (más tiempo, más alto)' },
       { icon: '✨', text: 'En el aire, un toque del derecho es un truco (la palanca elige cuál)' },
@@ -374,13 +379,13 @@ export const es = {
         text: 'Pulgar izquierdo apretado, en el suelo o en un riel: TURBO (se gasta y se recarga)',
       },
       { icon: '🛤️', text: 'Caé sobre un riel o cajón con la tabla derecha: grind automático' },
-      { icon: '🏆', text: 'Los puntos del combo se cobran al aterrizar bien' },
+      { icon: '🏆', text: 'El puntaje del combo se cobra al aterrizar bien' },
     ],
     pause: 'Pausa',
     resume: 'Seguir',
     exit: 'Salir',
     timeLeft: 'Tiempo que falta',
-    score: 'Puntos',
+    score: 'Puntaje',
     comboHint: 'Combo',
     turbo: 'TURBO',
     turboEmpty: 'Sin turbo: se recarga solo',
@@ -554,7 +559,7 @@ export const es = {
     title: 'Rally de Cocina',
     exit: 'Volver a los juegos',
     loading: 'Cargando la cocina…',
-    practice: 'Práctica: no da puntos ni premios. Tus mejores vueltas quedan guardadas en este celular.',
+    practice: 'Práctica: no da puntos de tienda ni premios. Tus mejores vueltas quedan guardadas en este celular.',
     noWebglTitle: 'No arrancó',
     noWebglBody:
       'El navegador no pudo iniciar los gráficos 3D. Probá con Chrome, Edge o Firefox actualizados y con la aceleración por hardware activada.',
@@ -680,7 +685,7 @@ export const es = {
     verifying: 'Chequeando tu partida…',
     coinsLabel: (n: number) => `${n} ${n === 1 ? 'moneda' : 'monedas'}`,
     passesLabel: (n: number) => `${n} ${n === 1 ? 'pase' : 'pases'}`,
-    coinsHint: 'Las monedas se ganan jugando. Sirven para comprar pases de desafío, no para comida.',
+    coinsHint: 'Las monedas se ganan jugando y sirven solo para comprar pases del cofre.',
     passHint: 'Un pase abre tu próximo premio sin tener que jugar el desafío.',
     coinsEarned: (n: number) => `+${n} ${n === 1 ? 'moneda' : 'monedas'}`,
     coinsCapped: 'Llegaste al tope de monedas de hoy. Mañana seguís sumando.',
@@ -697,20 +702,22 @@ export const es = {
   shop: {
     title: 'Tienda',
     subtitle:
-      'Gastá tus puntos en mejoras para los juegos y en premios del local. Gastar puntos no atrasa tus cafés ni tus sándwiches.',
+      'Gastá tus puntos de tienda en mejoras para los juegos y en premios del local. Gastarlos no atrasa tus cafés ni tus sándwiches.',
     back: 'Volver a los juegos',
     link: 'Tienda',
     backMenu: 'Volver al menú',
-    pointsHint: 'Puntos de compra: los ganás comprando en el local. Sirven para mejoras y premios.',
-    coinsHintShort: 'Monedas de juego: las ganás jugando. Sirven solo para pases.',
+    pointsHint:
+      'Puntos de tienda: los ganás con tus compras, la ruleta, las raspaditas, las misiones y la comunidad. Se gastan acá; tus puntos acumulados no bajan.',
+    coinsHintShort: 'Monedas de juego: las ganás jugando. Sirven solo para pases del cofre.',
     empty: 'Por ahora no hay nada en esta sección.',
     loadError: 'No pudimos cargar la tienda. Probá de nuevo.',
     retry: 'Reintentar',
     missing: (n: number) => `Te faltan ${n} puntos`,
     missingCoins: (n: number) => `Te faltan ${n} monedas`,
     guestNote: 'Entrá con tu cuenta para comprar.',
-    passPriceNote: 'Los pases se pagan con monedas de juego, no con puntos de compra.',
-    yourPoints: (n: number) => `${n} puntos para gastar`,
+    passPriceNote: 'Los pases se pagan con monedas de juego, no con puntos de tienda.',
+    yourPoints: (spendable: number, earned: number) =>
+      `Tenés ${spendable.toLocaleString('es-AR')} para gastar, de ${earned.toLocaleString('es-AR')} acumulados`,
     yourCoins: (n: number) => `${n} ${n === 1 ? 'moneda' : 'monedas'}`,
     tabs: { upgrades: 'Mejoras', vouchers: 'Premios del local', passes: 'Pases' },
     upgradesIntro:
@@ -744,7 +751,7 @@ export const es = {
     back: 'Volver a los juegos',
     tabs: { survivors: 'Sobreviví', points: 'Puntos' },
     stageLabel: 'Nivel',
-    pointsNote: 'Quién más puntos acumuló comprando y jugando.',
+    pointsNote: 'Quién tiene más puntos acumulados por sus compras en el local.',
     empty: 'Todavía nadie entró al ranking. ¡Sé el primero!',
     loading: 'Cargando el ranking…',
     error: 'No pudimos cargar el ranking. Probá de nuevo más tarde.',
@@ -758,7 +765,7 @@ export const es = {
     gameLabel: 'Elegí qué ranking ver',
     games: { survivors: 'Sobreviví', racing: 'Racers', skatepark: 'Skate Spot', sokoban: 'Entregas', ninja: 'Ninja', rally: 'Rally', truco: 'Truco', points: 'Puntos' },
     unofficialNote: 'Ranking no oficial: el progreso lo informa tu celular. No da monedas ni premios, es por la gloria.',
-    unit: { racing: 'pistas con podio', skatepark: 'estrellas', sokoban: 'estrellas', ninja: 'estrellas', rally: 'puntos de vuelta', truco: 'partidas ganadas' },
+    unit: { racing: 'pistas con podio', skatepark: 'estrellas', sokoban: 'estrellas', ninja: 'estrellas', rally: 'puntaje de vuelta', truco: 'partidas ganadas' },
     yourRankUnit: (rank: number, score: number, unit: string) => `Estás en el puesto ${rank} con ${score} ${unit}.`,
     notRankedCasual: 'Jugá y sumá progreso para entrar al ranking.',
     retry: 'Reintentar',
@@ -825,11 +832,11 @@ export const es = {
     backToLevels: 'Elegir nivel',
     wonTitle: (name: string) => `¡Pasaste ${name}!`,
     lostTitle: 'Casi. ¡Probá de nuevo!',
-    bestScore: (n: number) => `Mejor: ${n} puntos`,
-    scoreLine: (n: number) => `${n} puntos`,
+    bestScore: (n: number) => `Mejor puntaje: ${n}`,
+    scoreLine: (n: number) => `Puntaje: ${n}`,
     newBest: '¡Nuevo récord!',
     allDone: 'Pasaste todos los niveles. ¡Sos una leyenda de la miga!',
-    practiceNotice: 'Práctica: este nivel no da puntos ni premios.',
+    practiceNotice: 'Práctica: este nivel no da puntos de tienda ni premios.',
   },
   games: {
     sectionTitle: 'Juegos',
@@ -844,18 +851,20 @@ export const es = {
     nextPurchaseHint: 'Con tu próxima compra, otra raspadita.',
     spin: 'Girar',
     spinning: 'Girando…',
-    won: (points: number) => `¡Ganaste ${points} puntos!`,
+    won: (points: number) =>
+      `¡Ganaste ${points} puntos de tienda! Los gastás en la tienda; no cuentan para tu café.`,
     noPrize: 'Esta vez no hubo premio. ¡Seguí participando!',
     error: 'Uy, no pudimos jugar ahora. Probá de nuevo en un ratito.',
     how: '¿Cómo funciona?',
     howTitle: '¿Cómo funciona?',
     oddsCaption: 'Probabilidad de cada premio',
-    scratchRules: (hours: number) =>
-      `Ganás una raspadita con cada compra y tenés ${hours} horas para usarla. El resultado ya está decidido antes de que raspes: no cambia por cómo ni cuándo raspes.`,
+    scratchMinHint: (euros: number) => `Raspadita: disponible con compras desde ${euros} €.`,
+    scratchRules: (hours: number, minEuros: number) =>
+      `Ganás una raspadita con cada compra desde ${minEuros} € y tenés ${hours} horas para usarla. El resultado ya está decidido antes de que raspes: no cambia por cómo ni cuándo raspes.`,
     rouletteRules: (limit: number) =>
       `Tenés ${limit} ${limit === 1 ? 'giro' : 'giros'} por día. El resultado lo decide el servidor antes de que gire la rueda.`,
     fairness: (budget: number) =>
-      `Los puntos de los juegos tienen un tope diario del local (${budget} puntos en total). Si se agotó, igual podés jugar pero ese día no hay premio.`,
+      `Los puntos de tienda de los juegos tienen un tope diario del local (${budget} en total). Si se agotó, igual podés jugar pero ese día no hay premio.`,
   },
   chest: {
     cta: 'Abrir cofre',
@@ -874,9 +883,9 @@ export const es = {
     lostBodyQueen: (lifePercent: number) =>
       `Llegaste hasta la Reina y le dejaste el ${lifePercent} % de vida. ¡Estás a un paso! Los poderes en burbuja ayudan.`,
     stats: (kills: number, level: number, score: number) =>
-      `${kills} hormigas y bichos derrotados · Nivel ${level} · ${score} puntos`,
+      `${kills} hormigas y bichos derrotados · Nivel ${level} · puntaje ${score}`,
     statsWon: (kills: number, level: number, score: number, queenTime: string) =>
-      `La Reina cayó en ${queenTime} · ${kills} bichos derrotados · Nivel ${level} · ${score} puntos`,
+      `La Reina cayó en ${queenTime} · ${kills} bichos derrotados · Nivel ${level} · puntaje ${score}`,
     retry: 'Intentar de nuevo',
     errorTitle: 'Uy, algo falló',
     errorBody: 'No pudimos chequear tu partida. Tu progreso no se pierde: probá de nuevo.',
@@ -1186,7 +1195,8 @@ export const es = {
     back: 'Volver al panel',
     kinds: {
       purchase: 'Compra',
-      redeem: 'Premio canjeado',
+      bonus: 'Puntos de tienda',
+      community: 'Comunidad',
       game: 'Juego',
       adjustment: 'Ajuste',
       reversal: 'Compra anulada',
@@ -1244,7 +1254,7 @@ export const es = {
     toPanel: 'Ir a mi panel',
     later: 'Después',
     points: 'puntos',
-    balanceLabel: 'Tu saldo',
+    balanceLabel: 'Puntos acumulados',
   },
   account: {
     saveTitle: 'Guardá tu progreso',

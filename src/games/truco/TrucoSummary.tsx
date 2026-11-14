@@ -42,51 +42,53 @@ function CardRow({
   )
 }
 
+/** Tu tanto: tus cartas y la cuenta. */
 function TantoRow({
   label,
   hand,
   breakdown,
-  show,
 }: {
   label: string
   hand: readonly Card[]
   breakdown: EnvidoBreakdown
-  show: boolean
 }) {
   return (
     <div className="flex flex-col gap-1">
       <p className="text-sm font-bold">{label}</p>
-      <CardRow hand={hand} marked={show ? breakdown.cards : []} faceDown={show ? [] : hand} />
-      {show && (
-        <p className="text-sm font-semibold" data-testid="envido-formula">
-          {envidoFormula(breakdown)}
-        </p>
-      )}
+      <CardRow hand={hand} marked={breakdown.cards} />
+      <p className="text-sm font-semibold" data-testid="envido-formula">
+        {envidoFormula(breakdown)}
+      </p>
     </div>
   )
 }
 
-/** Los dos tantos del envido, con las cartas que los forman y la cuenta. */
+/** El tanto del rival: solo el número que canta, nunca sus cartas. */
+function RivalTantoRow({ points }: { points: number }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="text-sm font-bold">{t.rivalTanto}</p>
+      <p className="font-display text-4xl leading-none" data-testid="envido-rival-tanto">
+        {points}
+      </p>
+    </div>
+  )
+}
+
+/** Los dos tantos del envido: el tuyo con la cuenta, el del rival solo como número. */
 export function EnvidoPanel({
   envido,
   mineDealt,
-  rivalDealt,
 }: {
   envido: EnvidoSummary
   mineDealt: readonly Card[]
-  rivalDealt: readonly Card[]
 }) {
   const names = envido.chain.map((c) => t.envidoNames[c]).join(' + ')
   return (
     <div className="flex flex-col gap-3" data-testid="envido-panel">
       <p className="text-muted text-sm">{t.envidoOf(names)}</p>
-      <TantoRow label={t.yourTanto} hand={mineDealt} breakdown={envido.mine} show />
-      <TantoRow
-        label={t.rivalTanto}
-        hand={rivalDealt}
-        breakdown={envido.rival}
-        show={envido.revealed}
-      />
+      <TantoRow label={t.yourTanto} hand={mineDealt} breakdown={envido.mine} />
+      <RivalTantoRow points={envido.rival.points} />
       <p className="font-bold">{t.envidoWin(envido.winner === 0, envido.won, envido.tiedByMano)}</p>
     </div>
   )
@@ -138,11 +140,7 @@ export function HandSummaryView({ summary }: { summary: HandSummary }) {
       {envido && (
         <Section title={t.envido}>
           {envido.accepted ? (
-            <EnvidoPanel
-              envido={envido}
-              mineDealt={summary.mineDealt}
-              rivalDealt={summary.rivalDealt}
-            />
+            <EnvidoPanel envido={envido} mineDealt={summary.mineDealt} />
           ) : (
             <p className="text-sm font-semibold">
               {envido.winner === 0

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { cardNick, envidoBreakdown, envidoFormula, type Card } from './cards.ts'
+import { cardNick, envidoBreakdown, envidoFormula, trucoRank, type Card } from './cards.ts'
 import { act, createMatch, type TrucoState } from './engine.ts'
 import { summarizeHand, trickWinningCard } from './summary.ts'
 
@@ -49,6 +49,48 @@ describe('desglose del envido', () => {
   })
 })
 
+describe('jerarquía completa del truco', () => {
+  it('las 40 cartas respetan el orden oficial y los empates', () => {
+    // De la más brava a la más floja; cada grupo empata entre sí.
+    const groups: Card[][] = [
+      [c(1, 'espada')],
+      [c(1, 'basto')],
+      [c(7, 'espada')],
+      [c(7, 'oro')],
+      (['oro', 'copa', 'espada', 'basto'] as const).map((s) => c(3, s)),
+      (['oro', 'copa', 'espada', 'basto'] as const).map((s) => c(2, s)),
+      [c(1, 'oro'), c(1, 'copa')],
+      (['oro', 'copa', 'espada', 'basto'] as const).map((s) => c(12, s)),
+      (['oro', 'copa', 'espada', 'basto'] as const).map((s) => c(11, s)),
+      (['oro', 'copa', 'espada', 'basto'] as const).map((s) => c(10, s)),
+      [c(7, 'copa'), c(7, 'basto')],
+      (['oro', 'copa', 'espada', 'basto'] as const).map((s) => c(6, s)),
+      (['oro', 'copa', 'espada', 'basto'] as const).map((s) => c(5, s)),
+      (['oro', 'copa', 'espada', 'basto'] as const).map((s) => c(4, s)),
+    ]
+    expect(groups.flat()).toHaveLength(40)
+    groups.forEach((g, i) => {
+      const rank = trucoRank(g[0]!)
+      for (const card of g) expect(trucoRank(card)).toBe(rank)
+      if (i > 0) expect(trucoRank(groups[i - 1]![0]!)).toBeGreaterThan(rank)
+    })
+  })
+
+  it('el ancho falso de oro pierde con el 3 y con el 2, y le gana al 12', () => {
+    const play = (mine: Card, theirs: Card) => {
+      let s = rigged([mine, c(4, 'copa'), c(4, 'oro')], [theirs, c(5, 'copa'), c(5, 'oro')])
+      s = act(s, 0, { t: 'play', index: 0 })
+      s = act(s, 1, { t: 'play', index: 0 })
+      return s.tricks[0]
+    }
+    expect(play(c(3, 'basto'), c(1, 'oro'))).toBe(0) // gana el 3
+    expect(play(c(1, 'oro'), c(3, 'basto'))).toBe(1)
+    expect(play(c(2, 'copa'), c(1, 'copa'))).toBe(0)
+    expect(play(c(1, 'oro'), c(12, 'espada'))).toBe(0)
+    expect(play(c(1, 'oro'), c(1, 'copa'))).toBe(-1) // parda
+  })
+})
+
 describe('apodos de las cartas', () => {
   it('nombra las bravas por su nombre', () => {
     expect(cardNick(c(1, 'espada'))).toBe('el ancho de espadas')
@@ -93,6 +135,26 @@ describe('resumen de la mano', () => {
     const summary = summarizeHand(s)!
     expect(summary.revealRival).toBe(false)
     expect(summary.total).toEqual([0, 1])
+  })
+
+  it('el total de la mano coincide con lo que cambió en el marcador', () => {
+    // Envido ganado por el rival y mano ganada por mí con truco.
+    let s = rigged(
+      [c(1, 'espada'), c(7, 'espada'), c(4, 'copa')],
+      [c(6, 'oro'), c(5, 'oro'), c(2, 'basto')],
+    )
+    s = act(s, 0, { t: 'envido', call: 'envido' })
+    s = act(s, 1, { t: 'quiero' }) // yo 28, rival 31: gana el rival
+    s = act(s, 0, { t: 'truco' })
+    s = act(s, 1, { t: 'quiero' })
+    s = act(s, 0, { t: 'play', index: 0 })
+    s = act(s, 1, { t: 'play', index: 0 })
+    s = act(s, 0, { t: 'play', index: 0 })
+    s = act(s, 1, { t: 'play', index: 0 })
+    const summary = summarizeHand(s)!
+    expect(summary.envido?.winner).toBe(1)
+    expect(summary.total).toEqual([2, 2])
+    expect(summary.total).toEqual(s.scores)
   })
 
   it('un envido que no se quiere no muestra los tantos', () => {

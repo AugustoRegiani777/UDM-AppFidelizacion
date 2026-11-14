@@ -514,7 +514,7 @@ export const es = {
     ],
     trickTie: '¡Parda! Las dos cartas valen lo mismo.',
     trickKeepGoing: 'La mano sigue.',
-    envidoShown: 'Se muestran los tantos',
+    envidoShown: 'Se cantan los tantos',
     summary: {
       title: 'Resumen de la mano',
       yourCards: 'Tus cartas',

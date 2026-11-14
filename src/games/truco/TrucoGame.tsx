@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/Button'
-import { addCoins, getCoins, spendCoins } from '@/features/arcade/progress'
+import { addCoins, addTrucoWin, getCoins, spendCoins } from '@/features/arcade/progress'
 import { copy } from '@/copy'
 import { spring } from '@/motion/presets'
 import { setSoundEnabled, useSoundEnabled } from '@/motion/preferences'
@@ -173,6 +173,7 @@ export function TrucoGame({ profile, seed, pacing, onRematch, onExit }: TrucoGam
               sfx.win()
               earnedRef.current += MATCH_COINS
               setCoins(addCoins(MATCH_COINS))
+              addTrucoWin()
             } else {
               sfx.lose()
             }
@@ -664,11 +665,7 @@ export function TrucoGame({ profile, seed, pacing, onRematch, onExit }: TrucoGam
               transition={spring.bouncy}
             >
               <h2 className="font-display text-3xl leading-none">{copy.truco.envidoShown}</h2>
-              <EnvidoPanel
-                envido={beat.envido}
-                mineDealt={game.dealt[0]}
-                rivalDealt={game.dealt[1]}
-              />
+              <EnvidoPanel envido={beat.envido} mineDealt={game.dealt[0]} />
               <Button onClick={endBeat}>{copy.truco.follow}</Button>
             </motion.div>
           </motion.div>

@@ -4,6 +4,10 @@
 
 export const TRACK_FORMAT_VERSION = 1
 
+/** Las pistas propias (del editor) llevan este prefijo en el id: no pisan a las del juego y no tienen candado. */
+export const CUSTOM_ID_PREFIX = 'mia-'
+export const isCustomTrackId = (id: string) => id.startsWith(CUSTOM_ID_PREFIX)
+
 /** Qué decorado y qué iluminación se construyen para la pista. */
 export const THEME_IDS = [
   'cocina',

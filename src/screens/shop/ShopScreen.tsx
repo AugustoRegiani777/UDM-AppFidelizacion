@@ -91,8 +91,8 @@ export function ShopScreen() {
 
   return (
     <Screen className="gap-4">
-      <Link to="/juegos" className="min-h-12 content-center self-start underline">
-        {copy.shop.back}
+      <Link to="/panel" className="min-h-12 content-center self-start underline">
+        {copy.shop.backMenu}
       </Link>
       <h1 className="font-display text-5xl leading-none">{copy.shop.title}</h1>
       <p className="text-muted">{copy.shop.subtitle}</p>
@@ -106,6 +106,9 @@ export function ShopScreen() {
           {copy.shop.yourCoins(coins)}
         </span>
       </div>
+      <p className="text-muted text-sm">
+        {tab === 'passes' ? copy.shop.coinsHintShort : copy.shop.pointsHint}
+      </p>
 
       <div
         role="tablist"
@@ -122,7 +125,7 @@ export function ShopScreen() {
               setTab(id)
               setMessage(null)
             }}
-            className={`rounded-chip min-h-11 flex-1 px-2 text-sm font-bold ${
+            className={`rounded-chip min-h-11 flex-1 px-2 text-sm font-bold leading-tight ${
               tab === id ? 'bg-brand text-white' : 'text-muted'
             }`}
           >
@@ -155,17 +158,33 @@ export function ShopScreen() {
         </div>
       )}
 
+      {tab !== 'passes' && catalog.isPending && (
+        <p className="text-muted" role="status">
+          …
+        </p>
+      )}
+      {tab !== 'passes' && catalog.isError && (
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-muted">{copy.shop.loadError}</p>
+          <Button className="w-auto px-4" onClick={() => void catalog.refetch()}>
+            {copy.shop.retry}
+          </Button>
+        </div>
+      )}
+      {tab !== 'passes' && catalog.data && items.length === 0 && (
+        <p className="text-muted">{copy.shop.empty}</p>
+      )}
       {tab !== 'passes' && (
         <ul className="flex flex-col gap-3">
           {items.map((item) => {
             const affordable = spendable >= item.price
             return (
               <li key={item.id}>
-                <Card className="flex items-center gap-4">
+                <Card className="flex flex-wrap items-center gap-x-4 gap-y-3">
                   <span className="text-4xl" aria-hidden>
                     {item.icon}
                   </span>
-                  <span className="flex-1">
+                  <span className="min-w-0 flex-1 basis-40">
                     <span className="block font-bold">{item.name}</span>
                     <span className="text-muted block text-sm">{item.description}</span>
                     {item.kind === 'upgrade' && (
@@ -178,12 +197,14 @@ export function ShopScreen() {
                     <span className="text-green-ink font-bold">{copy.shop.maxed}</span>
                   ) : (
                     <Button
-                      className="w-auto shrink-0 px-4"
+                      className="w-full sm:w-auto sm:shrink-0 sm:px-4"
                       disabled={busy || !affordable}
                       onClick={() => void buy(item)}
                       aria-label={`${item.kind === 'upgrade' ? copy.shop.buyNext : copy.shop.buy} ${item.name}, ${copy.shop.price(item.price)}`}
                     >
-                      {copy.shop.price(item.price)}
+                      {affordable
+                        ? copy.shop.price(item.price)
+                        : `${copy.shop.price(item.price)} · ${copy.shop.missing(item.price - spendable)}`}
                     </Button>
                   )}
                 </Card>
@@ -194,22 +215,25 @@ export function ShopScreen() {
       )}
 
       {tab === 'passes' && (
-        <Card className="flex items-center gap-4">
+        <Card className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <span className="text-4xl" aria-hidden>
             🎟️
           </span>
-          <span className="flex-1">
+          <span className="min-w-0 flex-1 basis-40">
             <span className="block font-bold">{copy.shop.passTitle}</span>
             <span className="text-muted block text-sm">
               {copy.economy.passesLabel(wallet.data?.passes ?? 0)}
             </span>
+            <span className="text-muted block text-sm">{copy.shop.passPriceNote}</span>
           </span>
           <Button
-            className="w-auto shrink-0 px-4"
+            className="w-full sm:w-auto sm:shrink-0 sm:px-4"
             disabled={busy || coins < passPrice}
             onClick={() => void buyPass()}
           >
-            {copy.shop.passPrice(passPrice)}
+            {coins < passPrice
+              ? `${copy.shop.passPrice(passPrice)} · ${copy.shop.missingCoins(passPrice - coins)}`
+              : copy.shop.passPrice(passPrice)}
           </Button>
         </Card>
       )}
@@ -223,11 +247,11 @@ export function ShopScreen() {
           <ul className="flex flex-col gap-2">
             {orders.data?.map((order) => (
               <li key={order.id}>
-                <Card className="flex items-center gap-3 !py-3">
+                <Card className="flex flex-wrap items-center gap-x-3 gap-y-1 !py-3">
                   <span className="text-2xl" aria-hidden>
                     {order.icon}
                   </span>
-                  <span className="flex-1 font-bold">{order.name}</span>
+                  <span className="min-w-0 flex-1 basis-24 font-bold">{order.name}</span>
                   <span className="font-display text-xl tracking-wider">{order.code}</span>
                   <span className="text-muted text-sm">{copy.shop.orderStatus[order.status]}</span>
                 </Card>

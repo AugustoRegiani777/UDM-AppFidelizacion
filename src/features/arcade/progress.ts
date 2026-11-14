@@ -3,6 +3,7 @@
 
 import { STAGE_COUNT, clampStage } from '@engine/config.ts'
 import { TRACK_COUNT } from '@/games/racing/tracks'
+import { reportScore } from '@/features/economy/reportScore'
 
 const KEY = 'arcade_survivors_unlocked'
 
@@ -45,6 +46,7 @@ export function unlockedTrack(): number {
 /** Subir al podio abre la pista siguiente. Devuelve la pista más alta abierta. */
 export function unlockRacing(track: number): number {
   const next = Math.min(RACING_TRACKS, Math.max(1, Math.floor(track)) + 1)
+  reportScore('racing', Math.max(0, next - 1))
   const current = unlockedTrack()
   if (next <= current) return current
   try {
@@ -89,6 +91,30 @@ export function spendCoins(amount: number): boolean {
   return true
 }
 
+const TRUCO_WINS_KEY = 'arcade_truco_wins'
+
+/** Partidas de truco ganadas en este celular (es la métrica del ranking casual de truco). */
+export function trucoWins(): number {
+  try {
+    const value = Number(localStorage.getItem(TRUCO_WINS_KEY))
+    return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0
+  } catch {
+    return 0
+  }
+}
+
+/** Suma una partida ganada y la informa al ranking. Devuelve el total. */
+export function addTrucoWin(): number {
+  const total = trucoWins() + 1
+  try {
+    localStorage.setItem(TRUCO_WINS_KEY, String(total))
+  } catch {
+    // sin almacenamiento: no se guarda, pero el juego sigue andando
+  }
+  reportScore('truco', total)
+  return total
+}
+
 const PARK_KEY = 'arcade_skatepark_stars'
 const PARK_LEVELS = 5
 
@@ -119,6 +145,7 @@ export function saveParkStars(level: number, stars: number): number[] {
   } catch {
     // sin almacenamiento: no se guarda, pero el juego sigue andando
   }
+  reportScore('skatepark', all.reduce((a, b) => a + b, 0))
   return all
 }
 
@@ -159,6 +186,7 @@ export function saveSokobanStars(level: number, stars: number): number[] {
   } catch {
     // sin almacenamiento: no se guarda, pero el juego sigue andando
   }
+  reportScore('sokoban', all.reduce((a, b) => a + b, 0))
   return all
 }
 
@@ -229,6 +257,7 @@ export function saveNinjaStars(level: number, stars: number): number[] {
   } catch {
     // sin almacenamiento: no se guarda, pero el juego sigue andando
   }
+  reportScore('ninja', all.reduce((a, b) => a + b, 0))
   return all
 }
 

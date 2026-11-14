@@ -1,19 +1,33 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { STAGE_COUNT } from '@engine/config.ts'
 import { Card } from '@/components/Card'
 import { Screen } from '@/components/Screen'
 import { setShowInRankings, type Board } from '@/features/economy/economyApi'
-import { useBoard, useWallet } from '@/features/economy/useEconomy'
+import {
+  ninjaStars,
+  parkStars,
+  sokobanStars,
+  trucoWins,
+  unlockedTrack,
+} from '@/features/arcade/progress'
+import { storedRallyScore } from '@/games/rally/score'
+import { reportScore } from '@/features/economy/reportScore'
+import { useBoard, useCasualBoard, useWallet } from '@/features/economy/useEconomy'
 import { copy } from '@/copy'
 
-type Tab = 'survivors' | 'points'
-const TABS: Tab[] = ['survivors', 'points']
+type Casual = 'racing' | 'skatepark' | 'sokoban' | 'ninja' | 'rally' | 'truco'
+type Tab = 'survivors' | Casual | 'points'
+// Para sumar un juego al ranking: agregarlo acá y en copy.ranking.games / unit.
+const CASUAL: Casual[] = ['racing', 'rally', 'skatepark', 'sokoban', 'ninja', 'truco']
+const TABS: Tab[] = ['survivors', ...CASUAL, 'points']
+const isCasual = (tab: Tab): tab is Casual => CASUAL.includes(tab as Casual)
+const sum = (values: number[]) => values.reduce((a, b) => a + b, 0)
 
 const isTab = (value: string | null): value is Tab => TABS.includes(value as Tab)
 
-function Rows({ board }: { board: Board }) {
+function Rows({ board, unit }: { board: Board; unit?: string }) {
   if (board.rows.length === 0) {
     return <p className="text-muted">{copy.ranking.empty}</p>
   }
@@ -26,11 +40,16 @@ function Rows({ board }: { board: Board }) {
             aria-current={row.me ? 'true' : undefined}
           >
             <span className="font-display w-9 text-2xl leading-none">{row.rank}º</span>
-            <span className="flex-1 font-bold">
+            <span className="min-w-0 flex-1 break-words font-bold">
               {row.name}
               {row.me && <span className="text-brand-ink"> · {copy.ranking.you}</span>}
             </span>
-            <span className="font-display text-xl leading-none">{row.score}</span>
+            <span className="font-display text-xl leading-none">
+              {row.score}
+              {unit && (
+                <span className="text-muted block text-right font-sans text-xs">{unit}</span>
+              )}
+            </span>
           </Card>
         </li>
       ))}
@@ -49,8 +68,28 @@ export function RankingScreen() {
     return Number.isInteger(n) && n >= 1 && n <= STAGE_COUNT ? n : 1
   })
   const [boosted, setBoosted] = useState(false)
-  const board = useBoard(tab, tab === 'survivors' ? stage : 1, boosted && tab === 'survivors')
+  const official = tab === 'survivors' || tab === 'points'
+  const officialBoard = useBoard(
+    official ? tab : 'points',
+    tab === 'survivors' ? stage : 1,
+    boosted && tab === 'survivors',
+  )
+  const casualBoard = useCasualBoard(isCasual(tab) ? tab : 'ninja', isCasual(tab))
+  const board = isCasual(tab) ? casualBoard : officialBoard
   const wallet = useWallet()
+  const unit = isCasual(tab) ? copy.ranking.unit[tab] : ''
+
+  // El progreso que ya había en este celular también cuenta (el servidor se queda con el mayor).
+  useEffect(() => {
+    void Promise.all([
+      reportScore('ninja', sum(ninjaStars())),
+      reportScore('skatepark', sum(parkStars())),
+      reportScore('sokoban', sum(sokobanStars())),
+      reportScore('racing', unlockedTrack() - 1),
+      reportScore('rally', storedRallyScore()),
+      reportScore('truco', trucoWins()),
+    ]).then(() => queryClient.invalidateQueries({ queryKey: ['board'] }))
+  }, [queryClient])
 
   const toggleVisibility = async () => {
     await setShowInRankings(!(wallet.data?.show_in_rankings ?? true))
@@ -60,17 +99,13 @@ export function RankingScreen() {
 
   return (
     <Screen className="gap-4">
-      <Link to="/juegos" className="min-h-12 content-center self-start underline">
-        {copy.ranking.back}
+      <Link to="/panel" className="min-h-12 content-center self-start underline">
+        {copy.ranking.backMenu}
       </Link>
       <h1 className="font-display text-5xl leading-none">{copy.ranking.title}</h1>
       <p className="text-muted">{copy.ranking.subtitle}</p>
 
-      <div
-        role="tablist"
-        aria-label={copy.ranking.title}
-        className="bg-surface rounded-chip flex gap-1 p-1"
-      >
+      <div role="tablist" aria-label={copy.ranking.gameLabel} className="flex flex-wrap gap-2">
         {TABS.map((id) => (
           <button
             key={id}
@@ -78,11 +113,11 @@ export function RankingScreen() {
             role="tab"
             aria-selected={tab === id}
             onClick={() => setTab(id)}
-            className={`rounded-chip min-h-11 flex-1 px-2 text-sm font-bold ${
-              tab === id ? 'bg-brand text-white' : 'text-muted'
+            className={`rounded-chip min-h-11 px-4 text-sm font-bold ${
+              tab === id ? 'bg-brand text-white' : 'bg-surface text-muted'
             }`}
           >
-            {copy.ranking.tabs[id]}
+            {copy.ranking.games[id]}
           </button>
         ))}
       </div>
@@ -118,22 +153,38 @@ export function RankingScreen() {
       )}
       {tab === 'survivors' && <p className="text-muted text-sm">{copy.arcade.stageName(stage)}</p>}
       {tab === 'points' && <p className="text-muted text-sm">{copy.ranking.pointsNote}</p>}
+      {isCasual(tab) && <p className="text-muted text-sm">{copy.ranking.unofficialNote}</p>}
 
       {board.isPending && (
         <p className="text-muted" role="status">
           {copy.ranking.loading}
         </p>
       )}
-      {board.isError && <p className="text-muted">{copy.ranking.error}</p>}
+      {board.isError && (
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-muted">{copy.ranking.error}</p>
+          <button
+            type="button"
+            className="rounded-chip bg-brand-soft text-brand-ink min-h-11 px-4 font-bold"
+            onClick={() => void board.refetch()}
+          >
+            {copy.ranking.retry}
+          </button>
+        </div>
+      )}
       {board.data && (
         <>
-          <Rows board={board.data} />
+          <Rows board={board.data} unit={unit} />
           <p className="font-bold">
             {board.data.me
-              ? copy.ranking.yourRank(board.data.me.rank, board.data.me.score)
+              ? unit
+                ? copy.ranking.yourRankUnit(board.data.me.rank, board.data.me.score, unit)
+                : copy.ranking.yourRank(board.data.me.rank, board.data.me.score)
               : tab === 'points'
                 ? copy.ranking.noPointsYet
-                : copy.ranking.notRanked}
+                : isCasual(tab)
+                  ? copy.ranking.notRankedCasual
+                  : copy.ranking.notRanked}
           </p>
         </>
       )}

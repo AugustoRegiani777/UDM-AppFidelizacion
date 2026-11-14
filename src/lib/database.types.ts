@@ -441,6 +441,13 @@ export type Database = {
         }
         Relationships: []
       }
+      game_scores: {
+        Row: { customer_id: string; game: string; score: number; updated_at: string }
+        ComputedFields: never
+        Insert: { customer_id: string; game: string; score: number; updated_at?: string }
+        Update: { customer_id?: string; game?: string; score?: number; updated_at?: string }
+        Relationships: []
+      }
       game_plays: {
         Row: {
           created_at: string
@@ -1197,9 +1204,11 @@ export type Database = {
         Args: { p_boosted?: boolean; p_game: string; p_limit?: number; p_stage?: number }
         Returns: Json
       }
+      leaderboard_casual: { Args: { p_game: string; p_limit?: number }; Returns: Json }
       leaderboard_points: { Args: { p_limit?: number }; Returns: Json }
       local_day_start: { Args: Record<PropertyKey, never>; Returns: string }
       match_google_reviews: { Args: Record<PropertyKey, never>; Returns: Json }
+      submit_game_score: { Args: { p_game: string; p_score: number }; Returns: number }
       my_shop_orders: { Args: Record<PropertyKey, never>; Returns: Json }
       my_wallet: { Args: Record<PropertyKey, never>; Returns: Json }
       newly_unlocked_rewards: {

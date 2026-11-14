@@ -35,7 +35,7 @@ test('partida oficial: el servidor la chequea, da monedas y un pase, y entra al 
   await expect(page.getByText(/Estás en el puesto \d+/)).toBeVisible()
 
   // La billetera de la sala de juegos refleja lo ganado.
-  await page.getByRole('link', { name: 'Volver a los juegos' }).click()
+  await page.goto('/juegos')
   await expect(page.getByText('15 monedas')).toBeVisible()
   await expect(page.getByText("1 pase", { exact: false }).first()).toBeVisible()
 })

@@ -3,6 +3,7 @@ import { useAuth } from '@/features/auth/useAuth'
 import { queryKeys } from '@/lib/queryKeys'
 import {
   fetchBoard,
+  fetchCasualBoard,
   fetchCatalog,
   fetchOrders,
   fetchPointsBoard,
@@ -29,6 +30,17 @@ export function useBoard(game: RankedGame | 'points', stage: number, boosted = f
     queryKey: [...queryKeys.board(userId ?? 'anon', game, stage), boosted],
     enabled: Boolean(userId),
     queryFn: () => (game === 'points' ? fetchPointsBoard() : fetchBoard(game, stage, boosted)),
+  })
+}
+
+/** Ranking no oficial de un juego del celular (ninja, skate, entregas, racers). */
+export function useCasualBoard(game: string, enabled = true) {
+  const { session } = useAuth()
+  const userId = session?.user.id
+  return useQuery({
+    queryKey: ['board', userId ?? 'anon', 'casual', game],
+    enabled: Boolean(userId) && enabled,
+    queryFn: () => fetchCasualBoard(game),
   })
 }
 

@@ -94,6 +94,13 @@ export async function fetchBoard(game: RankedGame, stage: number, boosted = fals
   return data as unknown as Board
 }
 
+/** Ranking de un juego que corre en el celular (no oficial: el cliente informa su progreso). */
+export async function fetchCasualBoard(game: string): Promise<Board> {
+  const { data, error } = await supabase.rpc('leaderboard_casual', { p_game: game, p_limit: 20 })
+  if (error) throw error
+  return data as unknown as Board
+}
+
 export async function fetchPointsBoard(): Promise<Board> {
   const { data, error } = await supabase.rpc('leaderboard_points', { p_limit: 20 })
   if (error) throw error

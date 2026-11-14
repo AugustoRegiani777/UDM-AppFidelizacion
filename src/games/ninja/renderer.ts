@@ -410,6 +410,28 @@ export class NinjaRenderer {
       ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2)
     }
 
+    // Aviso de hormiga: una señal quieta en el borde de abajo que se vuelve más clara al acercarse.
+    for (const l of state.launches) {
+      if (!l.used || l.warn <= 0 || l.delay <= 0) continue
+      const k = 1 - Math.min(1, l.delay / l.warn)
+      const wx = ox + Math.max(8, Math.min(FIELD_W - 8, l.x)) * scale
+      const wy = oy + (state.height - 9) * scale
+      const r = 5.5 * scale
+      ctx.setTransform(1, 0, 0, 1, wx, wy)
+      ctx.globalAlpha = 0.45 + 0.5 * k
+      ctx.fillStyle = RED
+      ctx.beginPath()
+      ctx.moveTo(0, -r)
+      ctx.lineTo(r * 1.05, r * 0.8)
+      ctx.lineTo(-r * 1.05, r * 0.8)
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(-r * 0.09, -r * 0.4, r * 0.18, r * 0.65)
+      ctx.fillRect(-r * 0.09, r * 0.4, r * 0.18, r * 0.18)
+    }
+    ctx.globalAlpha = 1
+
     // Mitades.
     const g = state.gravity
     for (const h of this.halves) {

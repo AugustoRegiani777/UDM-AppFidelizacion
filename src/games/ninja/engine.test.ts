@@ -1,7 +1,13 @@
 // @vitest-environment node
 import {
+  ANT_COOLDOWN,
+  ANT_HIT_RADIUS,
+  ANT_MIN_SEP,
+  ANT_WARNING,
   FIELD_W,
+  HIT_RADIUS,
   ITEM_RADIUS,
+  antRamp,
   createGame,
   distSqToSegment,
   endStroke,
@@ -384,6 +390,88 @@ describe('objetivos y estrellas', () => {
     expect(starsOf(s)).toBe(0)
     s.cuts = level.goal.target
     expect(starsOf(s)).toBe(3)
+  })
+})
+
+describe('hormigas justas', () => {
+  /** Recorre una partida sin cortar nada y junta las medidas de justicia. */
+  function audit(level: LevelDef, seed: number) {
+    const s = createGame(level, seed)
+    s.lives = 9999
+    let minSep = Infinity
+    let antsSeen = 0
+    let minSpawnGap = Infinity
+    let lastAnt = -Infinity
+    let maxOnScreen = 0
+    const seen = new Set<number>()
+    let unwarned = 0
+    for (let i = 0; i < 60 * level.seconds && s.status === 'playing'; i++) {
+      const warnedBefore = s.launches.filter((l) => l.used && l.kind === 'ant' && l.warn > 0).length
+      stepGame(s)
+      s.events.length = 0
+      let ants = 0
+      for (const a of s.items) {
+        if (!a.active || a.kind !== 'ant') continue
+        if (!seen.has(a.id)) {
+          seen.add(a.id)
+          antsSeen++
+          minSpawnGap = Math.min(minSpawnGap, s.clock - lastAnt)
+          lastAnt = s.clock
+          // Tuvo que haber una señal de aviso pendiente un paso antes.
+          if (warnedBefore === 0) unwarned++
+        }
+        if (a.y < s.height) ants++
+        for (const o of s.items) {
+          if (!o.active || o === a || a.y > s.height || o.y > s.height) continue
+          minSep = Math.min(minSep, Math.hypot(a.x - o.x, a.y - o.y))
+        }
+      }
+      maxOnScreen = Math.max(maxOnScreen, ants)
+    }
+    return { antsSeen, minSep, minSpawnGap, maxOnScreen, unwarned }
+  }
+
+  const withAnts = LEVELS.filter((l) => l.bombChance > 0)
+
+  it.each(withAnts.map((l) => [l.id, l] as const))(
+    'nivel %i: ninguna hormiga es inevitable (separada de todo, con aviso y sin dos a la vez)',
+    (_, level) => {
+      let total = 0
+      for (let seed = 1; seed <= 12; seed++) {
+        const r = audit(level, seed)
+        total += r.antsSeen
+        // Se puede cortar lo bueno sin rozarlas: queda margen más allá de las dos zonas de golpe.
+        expect(r.minSep).toBeGreaterThan(ANT_MIN_SEP * 0.8)
+        expect(r.minSpawnGap).toBeGreaterThanOrEqual(ANT_COOLDOWN)
+        expect(r.unwarned).toBe(0)
+        // Nunca dos peligros a la vista juntos, y por eso nunca dos que haya que esquivar a la vez.
+        expect(r.maxOnScreen).toBeLessThanOrEqual(1)
+      }
+      expect(total).toBeGreaterThan(0)
+    },
+  )
+
+  it('el aviso dura lo suficiente para reaccionar y la zona de la hormiga es más chica que la de lo bueno', () => {
+    expect(ANT_WARNING).toBeGreaterThanOrEqual(0.8)
+    expect(ANT_HIT_RADIUS).toBeLessThan(ITEM_RADIUS)
+    expect(HIT_RADIUS).toBeGreaterThan(ITEM_RADIUS * 1.3)
+    const s = arena()
+    s.items[0] = item({ kind: 'ant', x: 50, y: 80 })
+    // Pasar rozando el borde del dibujo no cuesta una vida.
+    expect(slash(s, 20, 80 - ITEM_RADIUS * 1.05, 80, 80 - ITEM_RADIUS * 1.05)).toBe(0)
+    expect(s.lives).toBe(levelAt(1).lives)
+  })
+
+  it('la frecuencia de hormigas arranca baja y sube suave hasta el ritmo del nivel', () => {
+    const s = createGame(levelAt(6), 1)
+    const ramps: number[] = []
+    for (let p = 0; p <= 10; p++) {
+      s.ticksLeft = Math.round(s.level.seconds * 60 * (1 - p / 10))
+      ramps.push(antRamp(s))
+    }
+    expect(ramps[0]).toBeCloseTo(0.3, 5)
+    expect(ramps[10]).toBe(1)
+    for (let i = 1; i < ramps.length; i++) expect(ramps[i]!).toBeGreaterThanOrEqual(ramps[i - 1]!)
   })
 })
 

@@ -11,7 +11,15 @@ export const ITEM_RADIUS = 7.5
 export const MAX_ITEMS = 32
 const MAX_LAUNCHES = 64
 const DT = 1 / TICKS_PER_SECOND
-const HIT_RADIUS = ITEM_RADIUS * 1.2
+/** Zona de corte generosa para lo bueno y más chica que el dibujo para las hormigas. */
+export const HIT_RADIUS = ITEM_RADIUS * 1.35
+export const ANT_HIT_RADIUS = ITEM_RADIUS * 0.9
+/** Segundos (de juego) de aviso en el borde antes de que salga una hormiga. */
+export const ANT_WARNING = 0.9
+/** Separación mínima entre una hormiga y cualquier otra cosa mientras ambas están a la vista. */
+export const ANT_MIN_SEP = HIT_RADIUS + ANT_HIT_RADIUS + ITEM_RADIUS * 0.6
+/** Entre hormiga y hormiga pasa al menos esto (segundos de juego). */
+export const ANT_COOLDOWN = 1.1
 /** Cada tantos cortes seguidos se recupera una vida (hasta las del nivel). */
 export const LIFE_STREAK = 12
 /** Un corte seguido dentro de esta ventana mantiene la racha. */
@@ -88,6 +96,8 @@ interface Launch {
   apexX: number
   apexY: number
   kind: ItemKind
+  /** Aviso total de una hormiga (0 = sin aviso); el render dibuja la señal en el borde. */
+  warn: number
 }
 
 export interface GameState {
@@ -117,6 +127,8 @@ export interface GameState {
   freezeTicks: number
   goldenReady: number
   iceReady: number
+  /** Reloj a partir del cual puede salir otra hormiga. */
+  antReady: number
   goalReached: boolean
   status: 'playing' | 'ended'
   win: boolean
@@ -155,7 +167,7 @@ export function createGame(level: LevelDef, seed: number, height = 160): GameSta
   }
   const launches: Launch[] = []
   for (let i = 0; i < MAX_LAUNCHES; i++) {
-    launches.push({ used: false, delay: 0, x: 0, apexX: 0, apexY: 0, kind: 'sandwich' })
+    launches.push({ used: false, delay: 0, x: 0, apexX: 0, apexY: 0, kind: 'sandwich', warn: 0 })
   }
   return {
     level,
@@ -183,6 +195,7 @@ export function createGame(level: LevelDef, seed: number, height = 160): GameSta
     freezeTicks: 0,
     goldenReady: 4,
     iceReady: 7,
+    antReady: 3,
     goalReached: false,
     status: 'playing',
     win: false,
@@ -192,18 +205,22 @@ export function createGame(level: LevelDef, seed: number, height = 160): GameSta
 
 // ---- lanzamientos ------------------------------------------------------------------------
 
-function activeCount(s: GameState, kind?: ItemKind): number {
-  let n = 0
-  for (const item of s.items) if (item.active && (kind === undefined || item.kind === kind)) n++
-  return n
+/** Avance 0..1 del tiempo del nivel. */
+function levelProgress(s: GameState): number {
+  return Math.max(0, Math.min(1, 1 - s.ticksLeft / (s.level.seconds * TICKS_PER_SECOND)))
+}
+
+/** Curva suave 0.3..1: pocas hormigas al empezar, el ritmo completo hacia la mitad del nivel. */
+export function antRamp(s: GameState): number {
+  const p = Math.min(1, levelProgress(s) / 0.55)
+  return 0.3 + 0.7 * p * p * (3 - 2 * p)
 }
 
 function pickKind(s: GameState, allowBomb: boolean): ItemKind {
   if (
     allowBomb &&
     s.level.bombChance > 0 &&
-    rand(s) < s.level.bombChance &&
-    activeCount(s, 'ant') < 3
+    rand(s) < s.level.bombChance * antRamp(s)
   ) {
     return 'ant'
   }
@@ -227,23 +244,138 @@ function queue(
     launch.apexX = apexX
     launch.apexY = apexY
     launch.kind = kind
+    launch.warn = 0
     return
+  }
+}
+
+const spawnY = (s: GameState) => s.height + ITEM_RADIUS * 1.6
+
+/** Velocidad inicial de un lanzamiento (misma fórmula para lanzar y para predecir). */
+function launchVel(s: GameState, launch: Launch, out: { vx: number; vy: number }) {
+  const rise = Math.max(8, spawnY(s) - launch.apexY)
+  out.vy = -Math.sqrt(2 * s.gravity * rise)
+  out.vx = (launch.apexX - launch.x) / (-out.vy / s.gravity)
+}
+
+const velTmp = { vx: 0, vy: 0 }
+
+/** Pasos de la predicción (segundos de juego) y alcance máximo de un vuelo. */
+const PREDICT_STEP = 0.04
+const PREDICT_MAX = 4
+
+/**
+ * Cerca de qué distancia pasan dos trayectorias mientras las dos se ven en pantalla.
+ * `a` y `b` son (x, y, vx, vy, retardo hasta salir); el retardo es 0 si ya está volando.
+ */
+function tooClose(
+  s: GameState,
+  a: readonly [number, number, number, number, number],
+  b: readonly [number, number, number, number, number],
+  minSep: number,
+): boolean {
+  const limit = minSep * minSep
+  const g = s.gravity
+  for (let t = 0; t <= PREDICT_MAX; t += PREDICT_STEP) {
+    const ta = t - a[4]
+    const tb = t - b[4]
+    if (ta < 0 || tb < 0) continue
+    const ya = a[1] + a[3] * ta + 0.5 * g * ta * ta
+    const yb = b[1] + b[3] * tb + 0.5 * g * tb * tb
+    if (ya > s.height + ITEM_RADIUS || yb > s.height + ITEM_RADIUS) continue
+    const dx = a[0] + a[2] * ta - (b[0] + b[2] * tb)
+    const dy = ya - yb
+    if (dx * dx + dy * dy < limit) return true
+  }
+  return false
+}
+
+type Track = [number, number, number, number, number]
+
+function launchTrack(s: GameState, l: Launch): Track {
+  launchVel(s, l, velTmp)
+  return [l.x, spawnY(s), velTmp.vx, velTmp.vy, l.delay]
+}
+
+const itemTrack = (it: Item): Track => [it.x, it.y, it.vx, it.vy, 0]
+
+/**
+ * Deja las hormigas justas: les da aviso y arco lento al empezar, y deshace cualquier
+ * hormiga que no se pueda esquivar (pegada a otra cosa, o dos seguidas muy cerca en el tiempo).
+ * Corre después de armar cada oleada. Sin azar propio: no altera la secuencia del RNG.
+ */
+function makeAntsFair(s: GameState) {
+  const ramp = antRamp(s)
+  const calm = s.level.kinds[0]!
+  for (const l of s.launches) {
+    if (!l.used || l.kind !== 'ant' || l.warn > 0) continue
+    // Una por vez: si no pasó el enfriamiento (o ya hay otra avisada), pasa a ser algo bueno.
+    const taken = s.launches.some((o) => o !== l && o.used && o.kind === 'ant' && o.warn > 0)
+    if (taken || s.clock < s.antReady) {
+      l.kind = calm
+      continue
+    }
+    l.delay += ANT_WARNING
+    l.warn = ANT_WARNING
+    // Más lenta (arco más bajo) al empezar; el arco completo a mitad del nivel.
+    l.apexY = Math.max(l.apexY, s.height * (0.46 - 0.24 * ramp))
+    // La siguiente sale recién cuando ésta ya cayó: nunca dos a la vista a la vez.
+    launchVel(s, l, velTmp)
+    const flight = (-2 * velTmp.vy) / s.gravity
+    s.antReady = s.clock + l.delay + Math.max(ANT_COOLDOWN, flight + 0.15)
+  }
+  // Separación respecto de todo lo demás (lanzamientos pendientes y cosas en vuelo).
+  for (const l of s.launches) {
+    if (!l.used || l.kind !== 'ant') continue
+    const track = launchTrack(s, l)
+    let clash = false
+    for (const o of s.launches) {
+      if (o === l || !o.used) continue
+      if (!tooClose(s, track, launchTrack(s, o), ANT_MIN_SEP)) continue
+      // Lo bueno que la pisaría se descarta (la hormiga manda el espacio); otra hormiga, no.
+      if (o.kind === 'ant') clash = true
+      else o.used = false
+    }
+    if (!clash) {
+      for (const it of s.items) {
+        if (it.active && tooClose(s, track, itemTrack(it), ANT_MIN_SEP)) {
+          clash = true
+          break
+        }
+      }
+    }
+    if (clash) {
+      l.kind = calm
+      l.warn = 0
+      l.delay -= ANT_WARNING
+      if (l.delay < 0) l.delay = 0
+    }
+  }
+  // Lo bueno que sale después de una hormiga ya en vuelo y la pisaría: se descarta.
+  for (const l of s.launches) {
+    if (!l.used || l.kind === 'ant') continue
+    const track = launchTrack(s, l)
+    for (const it of s.items) {
+      if (it.active && it.kind === 'ant' && tooClose(s, track, itemTrack(it), ANT_MIN_SEP)) {
+        l.used = false
+        break
+      }
+    }
   }
 }
 
 function spawnNow(s: GameState, launch: Launch) {
   const item = s.items.find((it) => !it.active)
   if (!item) return
-  const y0 = s.height + ITEM_RADIUS * 1.6
-  const rise = Math.max(8, y0 - launch.apexY)
-  const vy = -Math.sqrt(2 * s.gravity * rise)
-  const tUp = -vy / s.gravity
+  const y0 = spawnY(s)
+  launchVel(s, launch, velTmp)
+  const vy = velTmp.vy
   item.active = true
   item.id = s.nextId++
   item.kind = launch.kind
   item.x = launch.x
   item.y = y0
-  item.vx = (launch.apexX - launch.x) / tUp
+  item.vx = velTmp.vx
   item.vy = vy
   item.rot = rand(s) * Math.PI * 2
   item.spin = range(s, -4, 4)
@@ -348,6 +480,7 @@ function spawnWave(s: GameState) {
     s.iceReady = s.clock + SPECIAL_COOLDOWN
     queue(s, 0.35, range(s, 25, 75), range(s, 35, 65), s.height * 0.3, 'ice')
   }
+  makeAntsFair(s)
 }
 
 // ---- paso de simulación ------------------------------------------------------------------
@@ -519,10 +652,12 @@ export function slash(s: GameState, x0: number, y0: number, x1: number, y1: numb
   if (x0 === x1 && y0 === y1) return 0
   const angle = Math.atan2(y1 - y0, x1 - x0)
   const limit = HIT_RADIUS * HIT_RADIUS
+  const antLimit = ANT_HIT_RADIUS * ANT_HIT_RADIUS
   let count = 0
   for (const item of s.items) {
     if (!item.active) continue
-    if (distSqToSegment(item.x, item.y, x0, y0, x1, y1) > limit) continue
+    if (distSqToSegment(item.x, item.y, x0, y0, x1, y1) > (item.kind === 'ant' ? antLimit : limit))
+      continue
     cutItem(s, item, angle)
     count++
     if (s.status !== 'playing') break
